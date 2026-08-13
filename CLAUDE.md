@@ -171,11 +171,11 @@ Trzy dokumenty wymagane przez `FOUNDATION.md` §4:
 
 1. **OpenAPI** — `dedoc/scramble` v0.13.x (zweryfikowane: rozwiązuje się czysto pod Laravel 13). Publikuje pod `/docs/api`.
 2. **`api-guide.html`** — narracyjny przewodnik, pisany ręcznie. **Jest.** Pod `/docs/api-guide.html`.
-3. **`code-map.html`** — mapa kodu, ta sama skórka co przewodnik.
+3. **`code-map.html`** — mapa kodu, ta sama skórka co przewodnik. **Jest.** Pod `/docs/code-map.html`.
 
 Katalog `docs/` leży poza webrootem, serwowany jedną dynamiczną trasą `docs/{slug}.html` ze slugiem `[A-Za-z0-9_-]+` i dosłownym sufiksem `.html`. Trasa nie koliduje ze Scramble, bo `/docs/api` nie ma sufiksu `.html`.
 
-**Stan:** trasa działa (`App\Http\Controllers\DocsController`), `api-guide.html` napisany. Brakuje `code-map.html`.
+**Stan:** komplet z §4 gotowy — trasa działa (`App\Http\Controllers\DocsController`), `api-guide.html` i `code-map.html` napisane.
 
 Dorzucenie nowej strony to wrzucenie pliku `.html` do `docs/` — bez dopisywania trasy. Zabezpieczenia: wzorzec sluga odcina ukośniki i kropki, a `realpath` weryfikuje, że plik faktycznie leży w `docs/`. Pokrywa to `tests/Feature/DocsRouteTest.php` — traversal, null byte, ścieżka zagnieżdżona, próba pobrania `.md`.
 
@@ -395,4 +395,4 @@ Koperta odpowiedzi wdrożona i pokryta testami (14 testów, 32 asercje), z polem
 
 **Etap 0 zamknięty.** Schemat bazy przebudowany od zera (`migrate:fresh`): `users` bez kolumny `name`, z `incognito` i `deleted_at`; nowe `user_profiles` i `motorcycles`. Modele `User`, `UserProfile`, `Motorcycle` z relacjami 1:1. Scramble wystawia kontrakt pod `/docs/api` z nagłówkiem `X-Robots-Tag: noindex, nofollow` i wpisem w `robots.txt`.
 
-Nie ma jeszcze: `code-map.html`. Żadnego endpointu produktowego — Etap 1 jest następny. Kod produktowy nie został napisany — brak encji domenowych.
+Komplet dokumentacji z `FOUNDATION.md` §4 gotowy. Żadnego endpointu produktowego — Etap 1 jest następny. Kod produktowy nie został napisany — brak encji domenowych.

@@ -15,6 +15,13 @@ class DocsRouteTest extends TestCase
             ->assertSee('Motusy API', false);
     }
 
+    public function test_serves_the_code_map(): void
+    {
+        $this->get('/docs/code-map.html')
+            ->assertStatus(200)
+            ->assertSee('mapa kodu', false);
+    }
+
     public function test_keeps_documentation_out_of_search_engines(): void
     {
         $this->get('/docs/api-guide.html')

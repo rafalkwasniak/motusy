@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Motusy API — mapa kodu</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f6f7f9;
+    --border: #e2e5ea;
+    --text: #1a1d21;
+    --muted: #5c636e;
+    --accent: #b4451f;
+    --accent-soft: #fbeee8;
+    --code-bg: #f2f3f5;
+    --sidebar-w: 262px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c;
+      --surface: #1e2126;
+      --border: #2e333b;
+      --text: #e6e8ea;
+      --muted: #9aa1ab;
+      --accent: #ff8a5c;
+      --accent-soft: #2b1f19;
+      --code-bg: #22262c;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .layout { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); gap: 0; }
+
+  .sidebar { border-right: 1px solid var(--border); background: var(--surface); }
+  .sidebar-inner {
+    position: sticky; top: 0; max-height: 100vh; overflow-y: auto;
+    padding: 26px 18px 40px;
+  }
+  .brand { font-weight: 650; font-size: 15px; letter-spacing: -0.01em; margin: 0 0 4px; }
+  .brand-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 20px; }
+  nav ul { list-style: none; margin: 0; padding: 0; }
+  nav > ul > li { margin-bottom: 2px; }
+  nav a {
+    display: block; padding: 6px 10px; border-radius: 6px;
+    color: var(--muted); text-decoration: none; font-size: 14px; line-height: 1.35;
+  }
+  nav a:hover { color: var(--text); background: var(--bg); }
+  nav a.active { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  nav ul ul a { padding-left: 22px; font-size: 13px; }
+  nav ul ul { margin: 1px 0 6px; }
+  .navsummary { display: none; }
+
+  .content { max-width: 860px; padding: 40px 34px 90px; }
+  header.page { border-bottom: 1px solid var(--border); padding-bottom: 24px; margin-bottom: 8px; }
+  h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h2 {
+    font-size: 21px; margin: 46px 0 14px; padding-top: 22px;
+    border-top: 1px solid var(--border); letter-spacing: -0.01em; scroll-margin-top: 16px;
+  }
+  h3 { font-size: 16px; margin: 26px 0 8px; scroll-margin-top: 16px; }
+  .lead { color: var(--muted); font-size: 17px; margin: 0; }
+  code {
+    background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+    font: 13.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    overflow-wrap: anywhere;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; margin: 12px 0;
+  }
+  pre code { background: none; padding: 0; }
+  .table-wrap { overflow-x: auto; margin: 14px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .note {
+    background: var(--surface); border-left: 3px solid var(--accent);
+    padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 16px 0;
+  }
+  .note strong { color: var(--accent); }
+  .unit {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; margin: 18px 0; background: var(--surface);
+  }
+  .unit h3 { margin-top: 0; }
+  .path {
+    display: block; font: 12.5px ui-monospace, monospace; color: var(--muted);
+    margin-bottom: 10px; overflow-wrap: anywhere;
+  }
+  .methods { margin: 10px 0 0; }
+  .methods dt { font: 600 13.5px ui-monospace, monospace; margin-top: 8px; }
+  .methods dd { margin: 2px 0 0 0; font-size: 14.5px; color: var(--text); }
+  .muted { color: var(--muted); }
+  footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+    .sidebar-inner { position: static; max-height: none; padding: 16px 18px; }
+    .navsummary {
+      display: block; cursor: pointer; font-weight: 600; font-size: 15px;
+      padding: 6px 0; list-style: none;
+    }
+    .navsummary::-webkit-details-marker { display: none; }
+    .navsummary::after { content: " ▾"; color: var(--muted); }
+    details[open] .navsummary::after { content: " ▴"; }
+    .content { padding: 28px 20px 70px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+      <details id="navbox" open>
+        <summary class="navsummary">Spis treści</summary>
+        <p class="brand">Motusy API</p>
+        <p class="brand-sub">mapa kodu</p>
+        <nav>
+          <ul>
+            <li><a href="#jak-czytac">Jak czytać tę mapę</a></li>
+            <li><a href="#droga">Droga żądania</a></li>
+            <li><a href="#kontrakt">Kontrakt odpowiedzi</a></li>
+            <li>
+              <a href="#serwisy">Serwisy</a>
+              <ul>
+                <li><a href="#s-auth">AuthService</a></li>
+                <li><a href="#s-profile">ProfileService</a></li>
+                <li><a href="#s-ble">BleIdentityService</a></li>
+                <li><a href="#s-meeting">MeetingService</a></li>
+                <li><a href="#s-discord">DiscordErrorReporter</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#modele">Modele</a>
+              <ul>
+                <li><a href="#m-user">User</a></li>
+                <li><a href="#m-profile">UserProfile</a></li>
+                <li><a href="#m-motorcycle">Motorcycle</a></li>
+                <li><a href="#m-ble">BleIdentity</a></li>
+                <li><a href="#m-device">Device</a></li>
+                <li><a href="#m-meeting">Meeting</a></li>
+              </ul>
+            </li>
+            <li><a href="#kontrolery">Kontrolery</a></li>
+            <li><a href="#requesty">Form Requesty</a></li>
+            <li><a href="#middleware">Middleware i wyjątki</a></li>
+            <li><a href="#komendy">Komendy</a></li>
+            <li><a href="#konfiguracja">Konfiguracja</a></li>
+            <li><a href="#baza">Baza danych</a></li>
+            <li><a href="#testy">Testy</a></li>
+            <li><a href="#gdzie-dodac">Gdzie dodać nową rzecz</a></li>
+          </ul>
+        </nav>
+      </details>
+    </div>
+  </aside>
+
+  <main class="content">
+
+    <header class="page">
+      <h1>Motusy API — mapa kodu</h1>
+      <p class="lead">Gdzie co mieszka i dlaczego akurat tam. Opisuje klasy i ich publiczne metody,
+      nie każdą linię. Jak <em>wołać</em> API — to w <code>/docs/api-guide.html</code>.</p>
+    </header>
+
+    <h2 id="jak-czytac">Jak czytać tę mapę</h2>
+
+    <p>Aplikacja trzyma się jednego podziału i warto go znać, zanim zajrzysz w cokolwiek innego:</p>
+
+    <div class="table-wrap">
+    <table>
+      <tr><th>Warstwa</th><th>Odpowiada za</th><th>Czego tam nie ma</th></tr>
+      <tr><td>Form Request</td><td>sprawdzenie, czy dane mają sens</td><td>logiki biznesowej</td></tr>
+      <tr><td>Kontroler</td><td>przyjęcie żądania i zwrócenie odpowiedzi</td><td>reguł domenowych</td></tr>
+      <tr><td>Serwis</td><td>reguły biznesowe i zapis</td><td>wiedzy o HTTP</td></tr>
+      <tr><td>Model</td><td>dane, relacje i serializacja</td><td>reguł wielokrokowych</td></tr>
+    </table>
+    </div>
+
+    <div class="note">
+      <strong>Kontrolery są cienkie z premedytacją.</strong> Najdłuższy ma nieco ponad sześćdziesiąt linii
+      razem z komentarzami. Jeśli któryś zaczyna puchnąć, to sygnał, że logika wyciekła z serwisu — a nie
+      powód, żeby dopisać tam jeszcze trochę.
+    </div>
+
+    <h2 id="droga">Droga żądania</h2>
+
+    <p>Prześledźmy jedno wywołanie od początku do końca — zgłoszenie spotkania, bo przechodzi przez
+    wszystkie warstwy:</p>
+
+    <pre><code>routes/api.php
+   └─ auth:sanctum                    czy token jest ważny
+       └─ RecordMeetingsRequest       czy dane mają sens
+           └─ MeetingController@store cienki, deleguje
+               └─ MeetingService      reguły: karencja, incognito, potwierdzenie
+                   ├─ BleIdentityService  token → osoba
+                   ├─ Meeting             zapis
+                   └─ Meeting::card()     co zobaczy klient
+                       └─ User::card()    filtr prywatności
+                           └─ ApiResponse koperta</code></pre>
+
+    <p>Każda warstwa może powiedzieć „nie" i wtedy dalsze nie są wołane. To dlatego reguły domenowe
+    siedzą w serwisie, a nie w kontrolerze — kontroler nie wie, czym jest karencja.</p>
+
+    <h2 id="kontrakt">Kontrakt odpowiedzi</h2>
+
+    <div class="unit">
+      <h3>ApiResponse</h3>
+      <span class="path">app/Http/Responses/ApiResponse.php</span>
+      <p><strong>Jedyne</strong> miejsce, w którym powstaje koperta odpowiedzi. Wszystkie kontrolery
+      i handler wyjątków przechodzą przez nie, żeby kształt nie mógł się rozjechać między endpointami.</p>
+      <dl class="methods">
+        <dt>success()</dt>
+        <dd>Odpowiedź udana. <code>null</code> jako dane pomija klucz, pusta tablica go zostawia — dzięki
+        temu pusta lista to <code>data: []</code>, a nie brak klucza.</dd>
+        <dt>paginated()</dt>
+        <dd>To samo plus blok <code>pagination</code> zbudowany z paginatora Laravela.</dd>
+        <dt>error()</dt>
+        <dd>Odpowiedź błędna. Pierwszy argument to stabilny <code>code</code>, po którym rozgałęzia się
+        aplikacja — nigdy po treści komunikatu.</dd>
+        <dt>fromException()</dt>
+        <dd>Mapuje wyjątek na kod i status. Nieznany wyjątek zwija się do generycznego 500: diagnostyka
+        zostaje w logach i nie wychodzi do klienta.</dd>
+      </dl>
+    </div>
+
+    <h2 id="serwisy">Serwisy</h2>
+
+    <p>Tu mieszkają reguły. Serwis nie wie nic o HTTP — nie zna żądania ani odpowiedzi, przyjmuje dane
+    i zwraca dane, więc da się go wołać także z komendy konsolowej.</p>
+
+    <div class="unit">
+      <h3 id="s-auth">AuthService</h3>
+      <span class="path">app/Services/AuthService.php</span>
+      <dl class="methods">
+        <dt>register()</dt>
+        <dd>Zakłada konto i od razu wydaje token, żeby po rejestracji nie trzeba było logować się osobno.</dd>
+        <dt>login()</dt>
+        <dd>Sprawdza dane i wydaje token. Nieznany e-mail i złe hasło dają <strong>identyczny</strong>
+        wynik, żeby endpoint nie służył do sprawdzania, kto ma konto.</dd>
+        <dt>logout()</dt>
+        <dd>Unieważnia wyłącznie token użyty w tym żądaniu. Pozostałe urządzenia zostają zalogowane.</dd>
+      </dl>
+    </div>
+
+    <div class="unit">
+      <h3 id="s-profile">ProfileService</h3>
+      <span class="path">app/Services/ProfileService.php</span>
+      <p>Profil, motocykl i ich zdjęcia. Zapisy są typu „wstaw albo zaktualizuj", więc aplikacja wysyła
+      cały formularz i nie musi wiedzieć, czy to pierwszy raz.</p>
+      <dl class="methods">
+        <dt>saveProfile(), saveMotorcycle()</dt>
+        <dd>Zapis danych. Po zapisie odświeżają relację na modelu, żeby zwrócone konto było aktualne.</dd>
+        <dt>storeAvatar(), storeMotorcyclePhoto()</dt>
+        <dd>Przetwarzają obraz i zapisują plik. Nazwa jest generowana, rozszerzenie bierze się z
+        rozpoznanego typu obrazu — te pliki leżą pod webrootem, więc nazwa od klienta byłaby ryzykiem.</dd>
+        <dt>removeAvatar(), removeMotorcyclePhoto()</dt>
+        <dd>Czyszczą kolumnę i kasują plik z dysku.</dd>
+      </dl>
+      <p class="muted">Prywatne <code>replaceFile()</code> zapisuje nowy plik <strong>przed</strong>
+      skasowaniem starego — odwrotna kolejność przy błędzie zostawiłaby rekord wskazujący na nieistniejący plik.</p>
+    </div>
+
+    <div class="unit">
+      <h3 id="s-ble">BleIdentityService</h3>
+      <span class="path">app/Services/BleIdentityService.php</span>
+      <p>Tożsamość rozgłaszana przez Bluetooth. Polityka rotacji jest tutaj, a nie w aplikacji — telefon
+      tylko pyta, więc zmiana częstotliwości nie wymaga wydania nowej wersji aplikacji.</p>
+      <dl class="methods">
+        <dt>current()</dt>
+        <dd>Token do rozgłaszania. Sam podmienia go, gdy poprzedni się zestarzeje.</dd>
+        <dt>rotate()</dt>
+        <dd>Wycofuje bieżący token i wydaje nowy. Pod funkcją „zresetuj moją tożsamość".</dd>
+        <dt>resolve()</dt>
+        <dd>Token widziany przez BLE → osoba. Wykonuje się przy każdym spotkaniu, więc to jedno
+        wyszukiwanie po unikalnym indeksie. Token wycofany działa jeszcze przez okno karencji, bo
+        zgłoszenia offline przychodzą z opóźnieniem.</dd>
+      </dl>
+    </div>
+
+    <div class="unit">
+      <h3 id="s-meeting">MeetingService</h3>
+      <span class="path">app/Services/MeetingService.php</span>
+      <p>Najgęstszy kawałek logiki w projekcie. Zgłoszenie przechodzi kolejno przez: duplikat, czas
+      z przyszłości, zbyt stare, rozpoznanie tokena, spotkanie z samym sobą, incognito, karencję. Dopiero
+      potem powstaje zapis.</p>
+      <dl class="methods">
+        <dt>record()</dt>
+        <dd>Przetwarza całą paczkę wykryć i zwraca wynik dla każdego osobno — odrzucenie jednego nic nie
+        mówi o pozostałych.</dd>
+        <dt>pruneUnconfirmed()</dt>
+        <dd>Usuwa zgłoszenia, których druga strona nigdy nie sparowała. Są niewidoczne, więc chodzi
+        wyłącznie o to, żeby tabela nie puchła.</dd>
+      </dl>
+      <p class="muted">Prywatne <code>withinCooldown()</code> liczy karencję od <strong>czasu wykrycia</strong>,
+      nie od chwili zapisu — inaczej paczka zaległych zgłoszeń wysłana po powrocie w zasięg dałaby tyle
+      spotkań, ile zgłoszeń. <code>confirmAgainstMirror()</code> szuka lustrzanego zapisu drugiej strony
+      i dopiero on czyni spotkanie widocznym.</p>
+    </div>
+
+    <div class="unit">
+      <h3 id="s-discord">DiscordErrorReporter</h3>
+      <span class="path">app/Services/DiscordErrorReporter.php</span>
+      <dl class="methods">
+        <dt>report()</dt>
+        <dd>Wyjątek na kanał alertów jako embed. Ten sam błąd trafia tam raz na kwadrans — zepsuty deploy
+        zamienia każde żądanie w ten sam wyjątek i bez wyciszenia kanał tonie w kopiach.</dd>
+        <dt>alert()</dt>
+        <dd>Zdarzenie warte uwagi, przy którym nic się nie zepsuło. Inny kolor, brak stosu wywołań.</dd>
+      </dl>
+      <p class="muted">Błąd dostarczenia jest połykany celowo: wypuszczony wróciłby do handlera wyjątków
+      i zapętliłby raportowanie. Ścieżki w treści są skracane do względnych, żeby nie publikować układu serwera.</p>
+    </div>
+
+    <h2 id="modele">Modele</h2>
+
+    <div class="unit">
+      <h3 id="m-user">User</h3>
+      <span class="path">app/Models/User.php</span>
+      <p>Konto, czyli wyłącznie e-mail, hasło i <code>incognito</code>. Dane osobowe mieszkają osobno —
+      dzięki temu usunięcie konta może wyczyścić profil, nie ruszając kluczy obcych.</p>
+      <dl class="methods">
+        <dt>profile(), motorcycle(), bleIdentities(), devices(), meetings()</dt>
+        <dd>Relacje. Pierwsze dwie są jeden-do-jednego, pozostałe jeden-do-wielu.</dd>
+        <dt>card()</dt>
+        <dd><strong>Jedyne źródło</strong> tego, jak użytkownik wygląda dla innych. Zestaw kluczy jest
+        zawsze taki sam; pola ukryte wracają jako <code>null</code>, żeby klient nie musiał odróżniać
+        „ukryte" od „nie ma w tej odpowiedzi". Odporne na brak profilu.</dd>
+        <dt>account()</dt>
+        <dd>Widok własnego konta: karta plus <code>incognito</code>, <code>profile_complete</code>
+        i ustawienia widoczności.</dd>
+        <dt>hasCompleteProfile()</dt>
+        <dd>Czy onboarding domknięty — profil i motocykl istnieją.</dd>
+      </dl>
+    </div>
+
+    <div class="unit">
+      <h3 id="m-profile">UserProfile</h3>
+      <span class="path">app/Models/UserProfile.php</span>
+      <p>Nick, płeć i dane opcjonalne wraz z flagami <code>*_visible</code>, które decydują, co widzą inni.
+      Sam model tylko przechowuje — filtrowanie robi <code>User::card()</code>, żeby reguła była w jednym miejscu.</p>
+    </div>
+
+    <div class="unit">
+      <h3 id="m-motorcycle">Motorcycle</h3>
+      <span class="path">app/Models/Motorcycle.php</span>
+      <p>Jeden motocykl na konto w MVP. Marka, model, rocznik, kolor, opcjonalny opis i zdjęcie.</p>
+    </div>
+
+    <div class="unit">
+      <h3 id="m-ble">BleIdentity</h3>
+      <span class="path">app/Models/BleIdentity.php</span>
+      <p>Wiele wierszy na użytkownika — jeden aktywny, reszta wycofana. Taki schemat od początku, bo
+      dołożenie rotacji później oznaczałoby migrację na żywej bazie.</p>
+      <dl class="methods">
+        <dt>scopeResolvable()</dt>
+        <dd>Tokeny, które wolno jeszcze zamienić na osobę: aktywny albo wycofany, ale w oknie karencji.</dd>
+      </dl>
+    </div>
+
+    <div class="unit">
+      <h3 id="m-device">Device</h3>
+      <span class="path">app/Models/Device.php</span>
+      <p>Urządzenia konta, z <code>push_token</code> gotowym pod Firebase i powiązaniem z tokenem
+      dostępowym, którym się zalogowały. Bez tego powiadomienie nie miałoby jak trafić na konkretny telefon.
+      <code>device_id</code> jest unikalny w obrębie konta, nie globalnie — jeden telefon może obsłużyć dwa konta.</p>
+    </div>
+
+    <div class="unit">
+      <h3 id="m-meeting">Meeting</h3>
+      <span class="path">app/Models/Meeting.php</span>
+      <p>Jeden wiersz na stronę spotkania, z własnym GPS-em i własnym czasem. Dwa telefony nigdy nie są
+      w tym samym punkcie w tej samej sekundzie, więc wspólny rekord byłby kłamstwem.</p>
+      <dl class="methods">
+        <dt>user(), metUser()</dt>
+        <dd>Kto wykrył i kogo wykrył.</dd>
+        <dt>card()</dt>
+        <dd>Spotkanie widziane oczami właściciela wpisu. Woła <code>User::card()</code>, więc ukryte pola
+        drugiej osoby pozostają ukryte.</dd>
+      </dl>
+    </div>
+
+    <h2 id="kontrolery">Kontrolery</h2>
+
+    <div class="table-wrap">
+    <table>
+      <tr><th>Klasa</th><th>Metody</th><th>Uwagi</th></tr>
+      <tr><td>AuthController</td><td>register, login, logout, me</td><td>rejestracja i logowanie za limitem prób</td></tr>
+      <tr><td>ProfileController</td><td>update, uploadAvatar, deleteAvatar</td><td>upload wymaga istniejącego profilu, inaczej 409</td></tr>
+      <tr><td>MotorcycleController</td><td>update, uploadPhoto, deletePhoto</td><td>jak wyżej, dla motocykla</td></tr>
+      <tr><td>BleIdentityController</td><td>show, rotate</td><td>zwraca też <code>should_broadcast</code></td></tr>
+      <tr><td>DeviceController</td><td>store</td><td>wstaw-albo-zaktualizuj po <code>device_id</code></td></tr>
+      <tr><td>MeetingController</td><td>store, index, show</td><td>historia pokazuje tylko potwierdzone</td></tr>
+      <tr><td>DocsController</td><td>show</td><td>serwuje ten plik i przewodnik</td></tr>
+    </table>
+    </div>
+
+    <p class="muted">Wszystkie API-owe leżą w <code>app/Http/Controllers/Api/V1/</code>. Katalog z wersją
+    jest po to, żeby druga wersja API mogła kiedyś stanąć obok pierwszej, a nie ją zastąpić.</p>
+
+    <h2 id="requesty">Form Requesty</h2>
+
+    <p>Cała walidacja jest tutaj — w kontrolerach nie ma ani jednego <code>validate()</code>.
+    W <code>app/Http/Requests/Api/V1/</code>, pogrupowane w <code>Auth/</code>, <code>Profile/</code>,
+    <code>Device/</code> i <code>Meeting/</code>.</p>
+
+    <div class="note">
+      <strong>Limity nie są wpisane w reguły.</strong> Długości pól, zakres rocznika, dozwolone typy plików
+      i wielkość paczki pochodzą z <code>config/motusy.php</code>. Zmiana limitu to zmiana konfiguracji,
+      nie kodu — i od razu przenosi się do kontraktu OpenAPI, bo ten powstaje z tych właśnie reguł.
+    </div>
+
+    <p><code>RecordMeetingsRequest</code> odrzuca tylko problemy strukturalne. Karencja, nieznany token czy
+    zbyt stare wykrycie wracają jako wynik z powodem, żeby jedno złe zgłoszenie nie topiło całej paczki.</p>
+
+    <h2 id="middleware">Middleware i wyjątki</h2>
+
+    <div class="unit">
+      <h3>NoIndex</h3>
+      <span class="path">app/Http/Middleware/NoIndex.php</span>
+      <p>Dokłada <code>X-Robots-Tag</code> do dokumentacji. To blokada indeksowania, <strong>nie</strong>
+      kontrola dostępu — kto zna adres, ten wejdzie.</p>
+    </div>
+
+    <div class="unit">
+      <h3>InvalidCredentialsException</h3>
+      <span class="path">app/Exceptions/InvalidCredentialsException.php</span>
+      <p>Złe hasło, celowo odrębne od „brak tokena". Aplikacja reaguje inaczej na jedno i drugie, więc
+      nie mogą dzielić kodu odpowiedzi. Wpisany na listę wyjątków nieraportowanych — inaczej każda literówka
+      w haśle dzwoniłaby na Discorda.</p>
+    </div>
+
+    <p>Reszta konfiguracji obsługi żądań siedzi w <code>bootstrap/app.php</code>: prefiks
+    <code>api/v1</code>, mapowanie wyjątków na kopertę oraz <code>redirectGuestsTo()</code> zwracające
+    <code>null</code> dla API — bez tego niezalogowane żądanie bez nagłówka <code>Accept</code> kończyło się
+    błędem 500 zamiast 401.</p>
+
+    <h2 id="komendy">Komendy</h2>
+
+    <div class="unit">
+      <h3>meetings:prune</h3>
+      <span class="path">app/Console/Commands/PruneUnconfirmedMeetings.php</span>
+      <p>Sprząta niesparowane zgłoszenia. Harmonogram w <code>routes/console.php</code>, co godzinę.
+      Wymaga crona wołającego <code>schedule:run</code> — jest ustawiony dla tej domeny.</p>
+    </div>
+
+    <h2 id="konfiguracja">Konfiguracja</h2>
+
+    <div class="table-wrap">
+    <table>
+      <tr><th>Plik</th><th>Co trzyma</th></tr>
+      <tr><td><code>config/motusy.php</code></td><td>wszystkie strojalne stałe produktu: limity logowania, długości pól, rozmiary zdjęć, rotacja BLE, karencja spotkań</td></tr>
+      <tr><td><code>config/services.php</code></td><td>webhook Discorda i okno wyciszania powtórek</td></tr>
+      <tr><td><code>config/scramble.php</code></td><td>dokumentacja OpenAPI i jej dostępność</td></tr>
+    </table>
+    </div>
+
+    <div class="note">
+      <strong>Stałe biznesowe nie mieszkają w kodzie ani w <code>.env</code>.</strong> Szukając liczby,
+      zacznij od <code>config/motusy.php</code> — jest tam wszystko, co kiedykolwiek będziesz chciał
+      pokręcić bez zmiany logiki.
+    </div>
+
+    <h2 id="baza">Baza danych</h2>
+
+    <div class="table-wrap">
+    <table>
+      <tr><th>Tabela</th><th>Rola</th></tr>
+      <tr><td><code>users</code></td><td>konto: e-mail, hasło, incognito, soft delete</td></tr>
+      <tr><td><code>user_profiles</code></td><td>dane osobowe i flagi widoczności</td></tr>
+      <tr><td><code>motorcycles</code></td><td>jeden motocykl na konto</td></tr>
+      <tr><td><code>ble_identities</code></td><td>tokeny rozgłoszeniowe, jeden aktywny plus wycofane</td></tr>
+      <tr><td><code>devices</code></td><td>urządzenia, token push, powiązanie z tokenem logowania</td></tr>
+      <tr><td><code>meetings</code></td><td>spotkania, jeden wiersz na stronę</td></tr>
+    </table>
+    </div>
+
+    <p class="muted">Klucze główne to <code>bigint</code>. Indeksy na <code>meetings</code> obsługują dwa
+    zapytania, które będą najczęstsze: sprawdzenie karencji dla pary użytkowników i listę historii.</p>
+
+    <h2 id="testy">Testy</h2>
+
+    <div class="table-wrap">
+    <table>
+      <tr><th>Plik</th><th>Testów</th><th>Czego pilnuje</th></tr>
+      <tr><td>MeetingTest</td><td>23</td><td>potwierdzanie, karencja, duplikaty, incognito, paczki</td></tr>
+      <tr><td>UploadTest</td><td>15</td><td>skalowanie, konwersja, podszywanie się pod obraz</td></tr>
+      <tr><td>AuthTest</td><td>13</td><td>rejestracja, tokeny per urządzenie, limit prób</td></tr>
+      <tr><td>BleIdentityTest</td><td>11</td><td>rotacja, okno karencji tokena, koszt rozpoznania</td></tr>
+      <tr><td>ProfileTest</td><td>10</td><td>zapisy, widoczność pól, cudze dane</td></tr>
+      <tr><td>DiscordErrorReporterTest</td><td>10</td><td>kształt embeda, wyciszanie powtórek</td></tr>
+      <tr><td>ResponseContractTest</td><td>7</td><td>koperta, kody, brak wycieku diagnostyki</td></tr>
+      <tr><td>DeviceTest</td><td>7</td><td>wstaw-albo-zaktualizuj, powiązanie z tokenem</td></tr>
+      <tr><td>ApiResponseTest</td><td>7</td><td>kształty koperty, pusta kolekcja, paginacja</td></tr>
+      <tr><td>DocsRouteTest</td><td>6</td><td>wyjście poza katalog, serwowanie tylko <code>.html</code></td></tr>
+      <tr><td>NoOutboundCallsInTestsTest</td><td>3</td><td>żeby testy nie dzwoniły na prawdziwy Discord</td></tr>
+    </table>
+    </div>
+
+    <div class="note">
+      <strong>Bazowy <code>TestCase</code> blokuje wyjścia na zewnątrz.</strong> Nauczka z prawdziwego
+      zdarzenia: uruchomienie testów wysłało wiadomość na produkcyjny kanał Discorda, bo testy celowo
+      rzucają wyjątkami. Wyciszenie siedzi w <code>setUp()</code>, a nie tylko w <code>phpunit.xml</code> —
+      scache'owany config unieważnia wpisy <code>&lt;env&gt;</code>.
+    </div>
+
+    <h2 id="gdzie-dodac">Gdzie dodać nową rzecz</h2>
+
+    <p>Kolejność, która utrzymuje spójność:</p>
+
+    <ol>
+      <li><strong>Migracja i model</strong> — jeśli dochodzą nowe dane.</li>
+      <li><strong>Form Request</strong> — reguły walidacji, limity z <code>config/motusy.php</code>.</li>
+      <li><strong>Serwis</strong> — logika. Jeśli mieści się w jednej metodzie kontrolera, prawdopodobnie
+      i tak należy do serwisu.</li>
+      <li><strong>Kontroler</strong> — pobierz, deleguj, zwróć przez <code>ApiResponse</code>.</li>
+      <li><strong>Trasa</strong> w <code>routes/api.php</code>, wewnątrz grupy <code>auth:sanctum</code>.</li>
+      <li><strong>Tłumaczenia</strong> — <code>lang/pl/api.php</code>, plus etykiety pól w
+      <code>lang/pl/validation.php</code>.</li>
+      <li><strong>Testy</strong> — ścieżka szczęśliwa, odmowa dostępu i przypadek brzegowy.</li>
+      <li><strong>Dokumentacja</strong> — przewodnik i ta mapa, w tym samym kroku co kod.</li>
+    </ol>
+
+    <div class="note">
+      <strong>Kontrakt OpenAPI aktualizuje się sam.</strong> Powstaje z Form Requestów i sygnatur, więc
+      nie da się go zapomnieć — ale też nie da się go poprawić w oderwaniu od kodu.
+    </div>
+
+    <footer>
+      Jak wołać API: <code>/docs/api-guide.html</code> · Kontrakt: <code>/docs/api</code> ·
+      Zasady projektu: <code>CLAUDE.md</code> w repozytorium.<br>
+      Mapa jest pisana ręcznie i aktualizowana razem ze zmianami w strukturze klas.
+    </footer>
+
+  </main>
+</div>
+
+<script>
+  if (window.innerWidth <= 900) {
+    document.getElementById('navbox').removeAttribute('open');
+  }
+
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav a'));
+    var targets = links
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+
+    if (!('IntersectionObserver' in window) || !targets.length) return;
+
+    var visible = new Set();
+
+    function paint() {
+      var current = targets.filter(function (t) { return visible.has(t.id); })[0];
+      if (!current) return;
+      links.forEach(function (a) {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + current.id);
+      });
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) { visible.add(entry.target.id); }
+        else { visible.delete(entry.target.id); }
+      });
+      paint();
+    }, { rootMargin: '0px 0px -75% 0px' });
+
+    targets.forEach(function (t) { observer.observe(t); });
+  })();
+</script>
+</body>
+</html>
