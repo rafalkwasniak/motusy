@@ -27,6 +27,29 @@ return [
         'genders' => ['male', 'female', 'other'],
     ],
 
+    'uploads' => [
+        'disk' => 'public',
+        'max_kilobytes' => 5120,
+
+        // The stored extension is derived from these, never from the uploaded file
+        // name, so nothing executable can land under the webroot.
+        'mimes' => ['jpeg', 'jpg', 'png', 'webp'],
+
+        'avatar_directory' => 'avatars',
+        'motorcycle_photo_directory' => 'motorcycles',
+
+        // Everything is re-encoded to one format. Besides cutting the weight, the
+        // re-encode strips EXIF, which on phone photos carries the GPS coordinates of
+        // the place the picture was taken.
+        'format' => 'webp',
+        'quality' => 82,
+
+        // Longest edge, in pixels. Aspect ratio is preserved and images smaller than
+        // this are left alone rather than upscaled.
+        'avatar_max_dimension' => 600,
+        'motorcycle_photo_max_dimension' => 1200,
+    ],
+
     'motorcycle' => [
         'brand_max_length' => 60,
         'model_max_length' => 60,

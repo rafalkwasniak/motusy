@@ -19,5 +19,10 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
+    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar']);
+
     Route::post('/motorcycle', [MotorcycleController::class, 'update']);
+    Route::post('/motorcycle/photo', [MotorcycleController::class, 'uploadPhoto']);
+    Route::delete('/motorcycle/photo', [MotorcycleController::class, 'deletePhoto']);
 });

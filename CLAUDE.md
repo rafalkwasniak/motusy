@@ -90,7 +90,7 @@ Ustalenie nadrzędne: **jedna koperta dla wszystkiego**. Sukces i błąd mają t
 }
 ```
 
-`code` jest **stabilnym identyfikatorem maszynowym** — aplikacja rozgałęzia logikę na nim, nigdy na `message`, który jest tłumaczony i może się zmienić bez uprzedzenia. Obecne kody: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `INVALID_CREDENTIALS`, `FORBIDDEN`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `CONFLICT`, `TOO_MANY_REQUESTS`, `BAD_REQUEST`, `SERVER_ERROR`.
+`code` jest **stabilnym identyfikatorem maszynowym** — aplikacja rozgałęzia logikę na nim, nigdy na `message`, który jest tłumaczony i może się zmienić bez uprzedzenia. Obecne kody: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `INVALID_CREDENTIALS`, `FORBIDDEN`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `CONFLICT`, `PROFILE_REQUIRED`, `MOTORCYCLE_REQUIRED`, `TOO_MANY_REQUESTS`, `BAD_REQUEST`, `SERVER_ERROR`.
 
 **`UNAUTHENTICATED` i `INVALID_CREDENTIALS` to celowo różne kody.** Pierwszy znaczy „brak lub wygasły token” — aplikacja ma wylogować i pokazać ekran logowania. Drugi znaczy „złe hasło” — aplikacja zostawia użytkownika na formularzu. Zlanie ich w jedno zmusiłoby FlutterFlow do zgadywania. Nowe kody dopisujemy do tej listy przy dodawaniu endpointów.
 
@@ -193,8 +193,8 @@ Kolejność podyktowana tym, czego potrzebuje aplikacja we FlutterFlow, a nie ko
 | 0 | Fundament: migracje `users`, `user_profiles`, `motorcycles`, `code` w kopercie, Scramble | **zrobione** |
 | 1 | Auth: `register`, `login`, `logout`, `me` | **zrobione** |
 | 2 | Profil i motocykl (bez uploadu zdjęć) | **zrobione** |
-| 2b | Upload avatara i zdjęcia motocykla | następny |
-| 3 | Tożsamość BLE, urządzenia, `push_token` | |
+| 2b | Upload avatara i zdjęcia motocykla | **zrobione** |
+| 3 | Tożsamość BLE, urządzenia, `push_token` | następny |
 | 4 | Spotkania: zapis z obustronnym potwierdzeniem, karencja, historia | |
 | 5 | Relacje: obserwowanie, zaproszenia, znajomi, liczniki | |
 | 6 | Statusy i awarie | |
@@ -217,6 +217,32 @@ Upload zdjęć celowo wydzielony do 2b: multipart we FlutterFlow to osobny temat
 
 ---
 
+## 6d. Pliki
+
+Dysk `public` (`storage/app/public`, symlink `public/storage`), adresy absolutne przez `APP_URL`.
+
+**W bazie trzymamy ścieżkę względną, klientowi zwracamy pełny adres** — zmiana domeny albo dysku nie wymaga wtedy poprawiania danych. Konwersję robi `User::fileUrl()`.
+
+Bezpieczeństwo, bo te pliki lądują pod webrootem:
+
+- nazwa pliku jest generowana (UUID), rozszerzenie bierze się z rozpoznanego typu obrazu, **nigdy z nazwy przesłanego pliku**,
+- reguła `image` sprawdza zawartość pliku, nie deklarowany typ ani nazwę — PHP przebrany za `.jpg` dostaje 422 (zweryfikowane na produkcji),
+- limit i dozwolone typy w `config/motusy.php`.
+
+**Przetwarzanie obrazu** przez `Illuminate\Image` (Laravel 13) na sterowniku `intervention/image` — ta paczka jest w `suggest`, nie w `require`, więc trzeba ją mieć jawnie w `composer.json`. Serwer ma `gd`, `imagick` i `exif`; domyślny sterownik to `gd`.
+
+Kolejność operacji ma znaczenie: `orient()` **przed** skalowaniem, bo flaga obrotu siedzi w EXIF, który ginie przy przekodowaniu.
+
+`scale()` mapuje się na `scaleDown` — proporcje zostają, obrazy mniejsze od limitu nie są powiększane. Wymiary, jakość i format w `config/motusy.php`.
+
+Przekodowanie **usuwa EXIF, w tym współrzędne GPS** miejsca wykonania zdjęcia. To nie jest efekt uboczny, tylko wymóg — bez tego zdjęcie motocykla zrobione przed domem zdradzałoby adres użytkownika.
+
+Podmiana zdjęcia kasuje poprzedni plik, ale **dopiero po udanym zapisie nowego** — nieudany zapis nie zostawia rekordu wskazującego na nieistniejący plik.
+
+Upload doczepia się do istniejącego profilu lub motocykla. Gdy ich nie ma, zwracamy `409` z kodem `PROFILE_REQUIRED` albo `MOTORCYCLE_REQUIRED`, zamiast cicho tworzyć niepełny rekord.
+
+---
+
 ## 7. Do ustalenia
 
 - **Odzyskiwanie konta po usunięciu.** Pomysł Rafała: gdy ktoś rejestruje się na adres należący do usuniętego konta, system pyta, czy podnieść stare konto, czy założyć nowe. Obecny schemat już to umożliwia — `users` ma soft delete, więc wiersz zostaje. **Ale jest tu haczyk:** unikalny indeks na `email` obejmuje też wiersze usunięte, a reguła `unique:users,email` ich nie wyklucza. Dopóki nie ma endpointu usuwania konta, nic się nie psuje. Zanim powstanie, trzeba rozstrzygnąć: albo indeks unikalny liczy tylko żywe konta, albo rejestracja na zajęty-ale-usunięty adres celowo wpada w ścieżkę „podnieś konto".
@@ -224,6 +250,7 @@ Upload zdjęć celowo wydzielony do 2b: multipart we FlutterFlow to osobny temat
 - Limity długości pól, karencja spotkań, czasy statusów i awarii — specyfikacja §115 ma pełną listę piętnastu pozycji. Rozstrzygamy je etapami, przy dochodzeniu do konkretnego etapu, nie wszystkie naraz.
 - Rate limiting poza auth: zapis spotkań i awarie. Auth ma już limit 10/min per IP w `config/motusy.php`.
 - Nick **nie jest unikalny** (decyzja Rafała); unikalny jest wyłącznie e-mail.
+- HEIC z iPhone'a: `imagick` go obsługuje, `gd` nie, a reguła walidacji `image` i tak go nie przepuszcza. Większość pickerów we Flutterze konwertuje HEIC do JPEG przed wysyłką — do sprawdzenia na prawdziwym iPhonie, zanim uznamy temat za zamknięty.
 - Marka i model motocykla: słownik czy wolny tekst. Różnica między danymi filtrowalnymi a bałaganem literówek.
 - Blokowanie i zgłaszanie użytkownika — nie ma tego w specyfikacji, a przy aplikacji kojarzącej nieznajomych w terenie zwykle okazuje się potrzebne szybciej, niż się zakłada.
 
@@ -248,6 +275,10 @@ Token przekazujemy nagłówkiem `Authorization: Bearer <token>`.
 
 | POST | `/profile` | tak | `200`, `data` = konto po zapisie |
 | POST | `/motorcycle` | tak | `200`, `data` = konto po zapisie |
+| POST | `/profile/avatar` | tak | `200`, multipart, pole `avatar` |
+| DELETE | `/profile/avatar` | tak | `200` |
+| POST | `/motorcycle/photo` | tak | `200`, multipart, pole `photo` |
+| DELETE | `/motorcycle/photo` | tak | `200` |
 
 `/profile` i `/motorcycle` są **upsertami** — aplikacja wysyła cały formularz i nie musi wiedzieć, czy to pierwszy zapis po rejestracji, czy późniejsza edycja. Oba zwracają pełne konto, więc po zapisie nie trzeba wołać `/auth/me`.
 

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['email', 'password', 'incognito'])]
@@ -50,7 +51,7 @@ class User extends Authenticatable
             'gender' => $profile?->gender,
             'first_name' => $visible($profile?->first_name, (bool) $profile?->first_name_visible),
             'last_name' => $visible($profile?->last_name, (bool) $profile?->last_name_visible),
-            'avatar' => $profile?->avatar,
+            'avatar' => $this->fileUrl($profile?->avatar),
             'bio' => $profile?->bio,
             'phone' => $visible($profile?->phone, (bool) $profile?->phone_visible),
             'email' => $visible($this->email, (bool) $profile?->email_visible),
@@ -95,8 +96,19 @@ class User extends Authenticatable
             'production_year' => $motorcycle?->production_year,
             'color' => $motorcycle?->color,
             'description' => $motorcycle?->description,
-            'photo' => $motorcycle?->photo,
+            'photo' => $this->fileUrl($motorcycle?->photo),
         ];
+    }
+
+    /**
+     * The database stores a relative path; clients get an absolute URL. Keeping the
+     * path in the column means moving domain or disk does not require a data fix.
+     */
+    private function fileUrl(?string $path): ?string
+    {
+        return $path === null
+            ? null
+            : Storage::disk(config('motusy.uploads.disk'))->url($path);
     }
 
     /**

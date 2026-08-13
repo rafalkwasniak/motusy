@@ -1,13 +1,19 @@
 <?php
 
 return [
+    'avatar_removed' => 'Zdjęcie profilowe zostało usunięte.',
+    'avatar_saved' => 'Zdjęcie profilowe zostało zapisane.',
     'bad_request' => 'Nieprawidłowe żądanie.',
     'conflict' => 'Żądanie jest sprzeczne z aktualnym stanem zasobu.',
     'fetched' => 'Pobrano dane.',
     'invalid_credentials' => 'Nieprawidłowy adres e-mail lub hasło.',
     'logged_in' => 'Zalogowano.',
     'logged_out' => 'Wylogowano.',
+    'motorcycle_photo_removed' => 'Zdjęcie motocykla zostało usunięte.',
+    'motorcycle_photo_saved' => 'Zdjęcie motocykla zostało zapisane.',
+    'motorcycle_required' => 'Najpierw uzupełnij dane motocykla.',
     'motorcycle_saved' => 'Dane motocykla zostały zapisane.',
+    'profile_required' => 'Najpierw uzupełnij profil.',
     'profile_saved' => 'Profil został zapisany.',
     'registered' => 'Konto zostało utworzone.',
     'forbidden' => 'Brak uprawnień do wykonania tej akcji.',

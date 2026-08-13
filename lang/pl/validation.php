@@ -165,6 +165,7 @@ return [
     ],
 
     'attributes' => [
+        'avatar' => 'zdjęcie profilowe',
         'bio' => 'opis',
         'brand' => 'marka',
         'color' => 'kolor',
@@ -178,6 +179,7 @@ return [
         'nickname' => 'nick',
         'password' => 'hasło',
         'phone' => 'numer telefonu',
+        'photo' => 'zdjęcie motocykla',
         'production_year' => 'rocznik',
     ],
 

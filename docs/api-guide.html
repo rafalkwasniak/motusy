@@ -144,6 +144,7 @@
                 <li><a href="#ep-logout">Wylogowanie</a></li>
                 <li><a href="#ep-profile">Profil</a></li>
                 <li><a href="#ep-motorcycle">Motocykl</a></li>
+                <li><a href="#ep-uploads">Zdjęcia</a></li>
               </ul>
             </li>
             <li><a href="#widocznosc">Widoczność danych</a></li>
@@ -231,6 +232,8 @@
       <tr><td><code>INVALID_CREDENTIALS</code></td><td>401</td><td>Zostaw użytkownika na logowaniu, pokaż błąd</td></tr>
       <tr><td><code>UNAUTHENTICATED</code></td><td>401</td><td>Token wygasł lub go nie ma — wyczyść i wróć na ekran logowania</td></tr>
       <tr><td><code>TOO_MANY_REQUESTS</code></td><td>429</td><td>Za dużo prób, poproś o chwilę przerwy</td></tr>
+      <tr><td><code>PROFILE_REQUIRED</code></td><td>409</td><td>Najpierw zapisz profil, potem wyślij zdjęcie</td></tr>
+      <tr><td><code>MOTORCYCLE_REQUIRED</code></td><td>409</td><td>Najpierw zapisz motocykl, potem jego zdjęcie</td></tr>
       <tr><td><code>NOT_FOUND</code></td><td>404</td><td>Zasób nie istnieje</td></tr>
       <tr><td><code>SERVER_ERROR</code></td><td>500</td><td>Błąd po naszej stronie, pokaż komunikat ogólny</td></tr>
     </table>
@@ -362,6 +365,58 @@
       Nie musisz po zapisie wołać <code>/auth/me</code>, żeby odświeżyć ekran — masz świeże dane od razu.
     </div>
 
+
+    <h3 id="ep-uploads">Zdjęcia</h3>
+
+    <div class="endpoint">
+      <h3><span class="method">POST</span> <span class="path">/profile/avatar</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>Wysyłasz jako <code>multipart/form-data</code>, pole nazywa się <code>avatar</code>. Nie JSON.</p>
+      <p class="muted">Przyjmujemy JPEG, PNG i WEBP, do 5&nbsp;MB. Nowe zdjęcie zastępuje poprzednie, stary plik jest kasowany z dysku.</p>
+      <p>Zwraca pełne konto — w <code>data.avatar</code> masz gotowy adres do wyświetlenia.</p>
+    </div>
+
+    <div class="endpoint">
+      <h3><span class="method">DELETE</span> <span class="path">/profile/avatar</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>Usuwa zdjęcie profilowe. Po tym <code>data.avatar</code> jest <code>null</code>.</p>
+    </div>
+
+    <div class="endpoint">
+      <h3><span class="method">POST</span> <span class="path">/motorcycle/photo</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>To samo dla zdjęcia motocykla, pole nazywa się <code>photo</code>. Adres wraca w <code>data.motorcycle.photo</code>.</p>
+    </div>
+
+    <div class="endpoint">
+      <h3><span class="method">DELETE</span> <span class="path">/motorcycle/photo</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>Usuwa zdjęcie motocykla.</p>
+    </div>
+
+    <div class="note">
+      <strong>Zdjęcia są przetwarzane po stronie API — nie musisz nic zmniejszać w aplikacji.</strong>
+      Wysyłasz oryginał prosto z aparatu, a API sam skaluje, konwertuje do WEBP i czyści metadane.
+      Avatar mieści się w 600&nbsp;px, zdjęcie motocykla w 1200&nbsp;px na dłuższym boku. Proporcje zostają,
+      a zdjęcia mniejsze od limitu nie są powiększane. Przykład z produkcji: plik 1320&nbsp;KB o wymiarach
+      3000×2000 wyszedł jako 29&nbsp;KB (avatar) i 170&nbsp;KB (motocykl).
+    </div>
+
+    <div class="note">
+      <strong>Metadane EXIF są usuwane.</strong> Zdjęcia z telefonu niosą w sobie współrzędne GPS miejsca,
+      w którym powstały — bez tego czyszczenia użytkownik, który sfotografował motocykl przed domem,
+      udostępniałby wszystkim swój adres. Przy okazji API prostuje orientację, więc zdjęcia robione
+      pionowo nie wychodzą obrócone.
+    </div>
+
+    <div class="note">
+      <strong>Kolejność ma znaczenie.</strong> Zdjęcie doczepia się do istniejącego profilu albo motocykla.
+      Wysłanie avatara przed zapisaniem profilu zwróci <code>409</code> z kodem <code>PROFILE_REQUIRED</code>
+      — to nie błąd aplikacji, tylko informacja, że najpierw trzeba zapisać formularz.
+    </div>
+
+    <div class="note">
+      <strong>Adresy zdjęć są absolutne</strong>, na przykład
+      <code>https://motusy.top/storage/avatars/2b3949cd-....png</code>. Wstawiasz je wprost do komponentu
+      obrazka, bez sklejania z niczym. Gdy zdjęcia nie ma, pole jest <code>null</code>.
+    </div>
+
     <h2 id="widocznosc">Widoczność danych</h2>
 
     <p>Użytkownik decyduje, które dane widzą inni. Flagi <code>*_visible</code> ustawiasz przy zapisie profilu.</p>
@@ -427,7 +482,6 @@
     <p>Żeby nie szukać na próżno — te rzeczy są zaplanowane, ale jeszcze nie istnieją:</p>
 
     <ul>
-      <li>upload avatara i zdjęcia motocykla (pola <code>avatar</code> i <code>photo</code> przychodzą jako <code>null</code>),</li>
       <li>tożsamość BLE i rejestracja urządzeń,</li>
       <li>spotkania i ich historia,</li>
       <li>obserwowanie, zaproszenia, znajomi,</li>
