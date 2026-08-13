@@ -11,6 +11,7 @@ return [
     'invalid_credentials' => 'Nieprawidłowy adres e-mail lub hasło.',
     'logged_in' => 'Zalogowano.',
     'logged_out' => 'Wylogowano.',
+    'meetings_processed' => 'Zgłoszenia zostały przetworzone.',
     'motorcycle_photo_removed' => 'Zdjęcie motocykla zostało usunięte.',
     'motorcycle_photo_saved' => 'Zdjęcie motocykla zostało zapisane.',
     'motorcycle_required' => 'Najpierw uzupełnij dane motocykla.',

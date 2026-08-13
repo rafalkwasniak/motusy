@@ -27,6 +27,24 @@ return [
         'genders' => ['male', 'female', 'other'],
     ],
 
+    'meetings' => [
+        // One encounter per pair per this window. BLE re-detects the same person every
+        // few seconds while riding together, and that must stay a single entry.
+        'cooldown_hours' => 6,
+
+        // Detections older than this are dropped. Reports arrive late when the phone
+        // had no coverage, but a week-old detection is more likely junk than a ride.
+        'max_report_age_hours' => 24,
+
+        // How far apart the two sides may be for their reports to count as the same
+        // encounter. Two phones never detect each other in the same second.
+        'confirmation_window_minutes' => 30,
+
+        // Riding in a group means passing several people at once, so the endpoint
+        // takes a batch instead of one request per rider.
+        'max_batch_size' => 20,
+    ],
+
     'ble' => [
         // 128 bits, hex encoded. Must stay short: a BLE advertisement carries about
         // 31 bytes in total, so a long random string would not fit in the frame.

@@ -147,6 +147,7 @@
                 <li><a href="#ep-uploads">Zdjęcia</a></li>
                 <li><a href="#ep-ble">Tożsamość BLE</a></li>
                 <li><a href="#ep-devices">Urządzenia</a></li>
+                <li><a href="#ep-meetings">Spotkania</a></li>
               </ul>
             </li>
             <li><a href="#widocznosc">Widoczność danych</a></li>
@@ -484,6 +485,119 @@
       i wysłać powiadomienie na konkretny telefon, a nie na całe konto.
     </div>
 
+
+    <h3 id="ep-meetings">Spotkania</h3>
+
+    <div class="note">
+      <strong>Spotkanie liczy się dopiero, gdy zgłoszą je oba telefony.</strong> Jeżeli tylko Twój telefon
+      wykryje drugiego motocyklistę, a jego nie wykryje Ciebie, spotkanie nie powstaje — nie pojawi się
+      w historii i nie dostaniesz o nim powiadomienia. Z punktu widzenia użytkownika po prostu się nie
+      wydarzyło.
+    </div>
+
+    <div class="endpoint">
+      <h3><span class="method">POST</span> <span class="path">/meetings</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>Zgłasza motocyklistów wykrytych przez BLE. Przyjmuje <strong>tablicę</strong>, bo mijając grupę
+      wykryjesz kilku naraz i to ma być jedno żądanie, nie pięć.</p>
+      <pre><code>{
+  "detections": [
+    {
+      "event_id": "wygenerowany-przez-aplikacje",
+      "ble_token": "aca75088d1a96c3dfe6a3df2a9a8182f",
+      "latitude": 50.4201,
+      "longitude": 18.9273,
+      "detected_at": "2026-08-13T18:42:15Z"
+    }
+  ]
+}</code></pre>
+      <p>Wysyłasz <strong>token BLE</strong>, nie identyfikator użytkownika — telefon go nie zna i nie musi.
+      Rozpoznaniem zajmuje się API.</p>
+      <p class="muted">Współrzędne to pozycja <em>Twojego</em> telefonu w chwili wykrycia, nie punkt pomiędzy
+      wami. Każda strona zapisuje własną.</p>
+    </div>
+
+    <h3>Odpowiedź</h3>
+
+    <p>Każde zgłoszenie dostaje własny wynik — odrzucenie jednego nic nie mówi o pozostałych.</p>
+
+    <pre><code>{
+  "success": true,
+  "data": {
+    "results": [
+      {
+        "event_id": "wygenerowany-przez-aplikacje",
+        "created": true,
+        "confirmed": false,
+        "reason": null,
+        "meeting": null
+      }
+    ]
+  }
+}</code></pre>
+
+    <div class="table-wrap">
+    <table>
+      <tr><th>Pole</th><th>Znaczenie</th></tr>
+      <tr><td><code>created</code></td><td>zgłoszenie zostało zapisane</td></tr>
+      <tr><td><code>confirmed</code></td><td>drugi telefon też zgłosił — <strong>dopiero teraz jest spotkanie</strong></td></tr>
+      <tr><td><code>meeting</code></td><td>dane spotkanej osoby; wypełnione <strong>wyłącznie</strong> gdy <code>confirmed</code></td></tr>
+      <tr><td><code>reason</code></td><td>dlaczego nic nie powstało, gdy <code>created</code> jest <code>false</code></td></tr>
+    </table>
+    </div>
+
+    <div class="note">
+      <strong>Powiadomienie pokazuj tylko wtedy, gdy <code>confirmed</code> jest <code>true</code>.</strong>
+      Wtedy w <code>meeting.user</code> masz nick i motocykl, czyli wszystko, czego potrzebujesz na
+      „Spotkałeś Marka, Yamaha MT-07”. Przy <code>confirmed: false</code> nie ma czego pokazywać —
+      i nie ma o kim, bo API celowo nie zdradza wtedy tożsamości.
+    </div>
+
+    <div class="note">
+      <strong>Twoje zgłoszenie bywa tym pierwszym.</strong> Wtedy dostaniesz <code>confirmed: false</code>,
+      a spotkanie „dojrzeje”, gdy drugi telefon się odezwie. Zobaczysz je przy kolejnym pobraniu historii.
+      Docelowo poinformuje o tym powiadomienie push.
+    </div>
+
+    <h3>Możliwe wartości <code>reason</code></h3>
+
+    <div class="table-wrap">
+    <table>
+      <tr><td><code>cooldown</code></td><td>tę osobę masz już zapisaną w okresie karencji</td></tr>
+      <tr><td><code>duplicate</code></td><td>to <code>event_id</code> już przyszło; wynik jest ten sam co poprzednio</td></tr>
+      <tr><td><code>unknown_token</code></td><td>token nieznany lub zbyt stary, by go rozpoznać</td></tr>
+      <tr><td><code>incognito</code></td><td>któraś ze stron ma włączone incognito</td></tr>
+      <tr><td><code>too_old</code></td><td>wykrycie starsze niż dopuszczalne opóźnienie</td></tr>
+      <tr><td><code>invalid_time</code></td><td>czas wykrycia z przyszłości</td></tr>
+      <tr><td><code>self</code></td><td>to Twój własny token</td></tr>
+    </table>
+    </div>
+
+    <div class="note">
+      <strong><code>event_id</code> generuj sam i zapamiętaj.</strong> Jeśli wyślesz żądanie i nie doczekasz
+      odpowiedzi, ponów je z tym samym <code>event_id</code> — nie powstanie drugie spotkanie, a odpowiedź
+      będzie taka jak za pierwszym razem. Bez tego utracona odpowiedź oznacza spotkanie, o którym
+      użytkownik nigdy się nie dowie.
+    </div>
+
+    <div class="note">
+      <strong>Nie wołaj API przy każdym skanie.</strong> BLE wykrywa tę samą osobę co kilka sekund.
+      Trzymaj lokalnie listę już zgłoszonych i odezwij się raz. API i tak pilnuje karencji, ale nie po to,
+      żeby aplikacja mogła go zalewać.
+    </div>
+
+    <div class="endpoint">
+      <h3><span class="method">GET</span> <span class="path">/meetings</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>Historia spotkań, od najnowszych. Stronicowana: <code>?page=1&amp;per_page=20</code>, maksymalnie 50.</p>
+      <p class="muted">Zawiera wyłącznie spotkania potwierdzone przez oba telefony. Pusta historia zwraca
+      <code>data: []</code>, nigdy braku klucza.</p>
+    </div>
+
+    <div class="endpoint">
+      <h3><span class="method">GET</span> <span class="path">/meetings/{id}</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>Szczegóły jednego spotkania — pod kliknięcie w powiadomienie albo w pozycję historii.</p>
+      <p class="muted">Czytelne wyłącznie dla właściciela wpisu. Cudze spotkanie zwraca <code>404</code>.</p>
+    </div>
+
     <h2 id="widocznosc">Widoczność danych</h2>
 
     <p>Użytkownik decyduje, które dane widzą inni. Flagi <code>*_visible</code> ustawiasz przy zapisie profilu.</p>
@@ -549,7 +663,6 @@
     <p>Żeby nie szukać na próżno — te rzeczy są zaplanowane, ale jeszcze nie istnieją:</p>
 
     <ul>
-      <li>spotkania i ich historia,</li>
       <li>obserwowanie, zaproszenia, znajomi,</li>
       <li>statusy „Lecę na moto” i zgłoszenia awarii,</li>
       <li>dashboard,</li>

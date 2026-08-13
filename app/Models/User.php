@@ -42,6 +42,11 @@ class User extends Authenticatable
         return $this->hasMany(Device::class);
     }
 
+    public function meetings(): HasMany
+    {
+        return $this->hasMany(Meeting::class);
+    }
+
     /**
      * How this user looks to somebody else. The key set never changes: fields the
      * owner keeps private come back as null rather than disappearing, so the client

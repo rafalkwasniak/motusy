@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BleIdentityController;
 use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\MeetingController;
 use App\Http\Controllers\Api\V1\MotorcycleController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -32,4 +33,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ble/identity/rotate', [BleIdentityController::class, 'rotate']);
 
     Route::post('/devices', [DeviceController::class, 'store']);
+
+    Route::post('/meetings', [MeetingController::class, 'store']);
+    Route::get('/meetings', [MeetingController::class, 'index']);
+    Route::get('/meetings/{meeting}', [MeetingController::class, 'show']);
 });

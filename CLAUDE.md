@@ -195,8 +195,8 @@ Kolejność podyktowana tym, czego potrzebuje aplikacja we FlutterFlow, a nie ko
 | 2 | Profil i motocykl (bez uploadu zdjęć) | **zrobione** |
 | 2b | Upload avatara i zdjęcia motocykla | **zrobione** |
 | 3 | Tożsamość BLE, urządzenia, `push_token` | **zrobione** |
-| 4 | Spotkania: zapis z obustronnym potwierdzeniem, karencja, historia | następny |
-| 5 | Relacje: obserwowanie, zaproszenia, znajomi, liczniki | |
+| 4 | Spotkania: zapis z obustronnym potwierdzeniem, karencja, historia | **zrobione** |
+| 5 | Relacje: obserwowanie, zaproszenia, znajomi, liczniki | następny |
 | 6 | Statusy i awarie | |
 | 7 | Dashboard | |
 
@@ -278,12 +278,51 @@ Wymagania wydajnościowe dla Etapu 4, wprost od Rafała:
 
 ---
 
+## 6g. Spotkania
+
+**Spotkanie istnieje dopiero, gdy zgłoszą je oba telefony.** Decyzja Rafała, doprecyzowana po mojej niejasno postawionej propozycji. Jednostronne zgłoszenie zostaje w bazie **wyłącznie** po to, by druga strona miała się z czym sparować — nie trafia do historii, nie zwraca danych osoby, nie generuje powiadomienia.
+
+Konsekwencja, którą trzeba pamiętać: **pierwszy zgłaszający nie dowie się od razu, kogo minął.** Dane wracają dopiero temu, kto domyka parę. Pierwszy zobaczy spotkanie przy kolejnym pobraniu historii, a docelowo dostanie push.
+
+Uboczna korzyść z tej reguły: **rozpoznanie tokena nie ujawnia tożsamości bez zgody drugiej strony**. Ktoś, kto zbierze cudze tokeny skanerem i sfabrykuje zgłoszenia, nie dowie się niczego — bo ofiara nie zgłosi spotkania z nim. To rozwiązuje obawę o zbieranie tożsamości, którą sygnalizowałem przy §6f.
+
+### Model danych
+
+Jeden wiersz na stronę (specyfikacja §34–35): własny GPS i własny czas wykrycia, bo dwa telefony nigdy nie są w tym samym miejscu w tej samej sekundzie.
+
+### Ustalenia liczbowe (wszystkie w `config/motusy.php`)
+
+| Ustawienie | Wartość | Dlaczego |
+|---|---|---|
+| `cooldown_hours` | 6 | rzadko jeździ się razem dłużej; po tym czasie kolejne spotkanie to nowy wpis |
+| `max_report_age_hours` | 24 | zgłoszenia offline; starsze to raczej śmieci niż jazda |
+| `confirmation_window_minutes` | 30 | jak daleko od siebie mogą być oba zgłoszenia |
+| `max_batch_size` | 20 | mijając grupę wykrywasz kilku naraz |
+
+### Pułapki rozwiązane
+
+- **Karencja liczona względem `detected_at`, nie chwili zapisu.** Inaczej dwadzieścia zaległych zgłoszeń wysłanych po powrocie w zasięg dałoby dwadzieścia wpisów. Okno działa w obie strony, bo zaległości przychodzą w losowej kolejności.
+- **Idempotencja przez `event_id`** generowany przez aplikację (§48). Ponowione żądanie zwraca oryginalny wynik razem z kartą, więc utracona odpowiedź nie oznacza spotkania, o którym nikt się nie dowie.
+- **Incognito sprawdzane po obu stronach** (§45). To jest to zabezpieczenie serwerowe, którego brakowało po Etapie 3.
+- **Błędy strukturalne to 422, wyniki biznesowe to 200 z `reason`** — jedno odrzucone wykrycie nie topi całej paczki.
+
+### Sprzątanie
+
+`meetings:prune` co godzinę usuwa zgłoszenia starsze niż okno potwierdzenia, których nikt nie sparował. Są niewidoczne, więc chodzi wyłącznie o to, żeby tabela nie puchła. **Wymaga działającego crona na serwerze — do sprawdzenia.**
+
+### Rozbieżność ze specyfikacją
+
+§39 pokazuje żądanie z `met_user_id`, ale §112 mówi, że identyfikacja należy do API, a telefon zna tylko token. Przyjęliśmy `ble_token` w żądaniu: jedno wywołanie zamiast dwóch i **brak otwartego endpointu zamieniającego tokeny na tożsamości**, który byłby narzędziem do masowego zbierania danych.
+
+---
+
 ## 7. Do ustalenia
 
 - **Odzyskiwanie konta po usunięciu.** Pomysł Rafała: gdy ktoś rejestruje się na adres należący do usuniętego konta, system pyta, czy podnieść stare konto, czy założyć nowe. Obecny schemat już to umożliwia — `users` ma soft delete, więc wiersz zostaje. **Ale jest tu haczyk:** unikalny indeks na `email` obejmuje też wiersze usunięte, a reguła `unique:users,email` ich nie wyklucza. Dopóki nie ma endpointu usuwania konta, nic się nie psuje. Zanim powstanie, trzeba rozstrzygnąć: albo indeks unikalny liczy tylko żywe konta, albo rejestracja na zajęty-ale-usunięty adres celowo wpada w ścieżkę „podnieś konto".
 
 - Limity długości pól, karencja spotkań, czasy statusów i awarii — specyfikacja §115 ma pełną listę piętnastu pozycji. Rozstrzygamy je etapami, przy dochodzeniu do konkretnego etapu, nie wszystkie naraz.
 - Rate limiting poza auth: zapis spotkań i awarie. Auth ma już limit 10/min per IP w `config/motusy.php`.
+- Czy cron na serwerze jest skonfigurowany (`schedule:run` co minutę). Bez niego `meetings:prune` nie zadziała.
 - Nick **nie jest unikalny** (decyzja Rafała); unikalny jest wyłącznie e-mail.
 - HEIC z iPhone'a: `imagick` go obsługuje, `gd` nie, a reguła walidacji `image` i tak go nie przepuszcza. Większość pickerów we Flutterze konwertuje HEIC do JPEG przed wysyłką — do sprawdzenia na prawdziwym iPhonie, zanim uznamy temat za zamknięty.
 - Marka i model motocykla: słownik czy wolny tekst. Różnica między danymi filtrowalnymi a bałaganem literówek.
@@ -316,6 +355,9 @@ Token przekazujemy nagłówkiem `Authorization: Bearer <token>`.
 | GET | `/ble/identity` | tak | `200`, token do rozgłaszania |
 | POST | `/ble/identity/rotate` | tak | `200`, wymuszona zmiana tożsamości |
 | POST | `/devices` | tak | `200`, upsert po `device_id` |
+| POST | `/meetings` | tak | `200`, tablica wykryć, wynik per element |
+| GET | `/meetings` | tak | `200`, historia stronicowana |
+| GET | `/meetings/{id}` | tak | `200`, szczegóły; cudze `404` |
 | DELETE | `/motorcycle/photo` | tak | `200` |
 
 `/profile` i `/motorcycle` są **upsertami** — aplikacja wysyła cały formularz i nie musi wiedzieć, czy to pierwszy zapis po rejestracji, czy późniejsza edycja. Oba zwracają pełne konto, więc po zapisie nie trzeba wołać `/auth/me`.
