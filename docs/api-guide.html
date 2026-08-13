@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Motusy API — przewodnik</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f6f7f9;
+    --border: #e2e5ea;
+    --text: #1a1d21;
+    --muted: #5c636e;
+    --accent: #b4451f;
+    --accent-soft: #fbeee8;
+    --code-bg: #f2f3f5;
+    --sidebar-w: 262px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c;
+      --surface: #1e2126;
+      --border: #2e333b;
+      --text: #e6e8ea;
+      --muted: #9aa1ab;
+      --accent: #ff8a5c;
+      --accent-soft: #2b1f19;
+      --code-bg: #22262c;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .layout { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); gap: 0; }
+
+  /* Sidebar */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .sidebar-inner {
+    position: sticky; top: 0; max-height: 100vh; overflow-y: auto;
+    padding: 26px 18px 40px;
+  }
+  .brand { font-weight: 650; font-size: 15px; letter-spacing: -0.01em; margin: 0 0 4px; }
+  .brand-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 20px; }
+  nav ul { list-style: none; margin: 0; padding: 0; }
+  nav > ul > li { margin-bottom: 2px; }
+  nav a {
+    display: block; padding: 6px 10px; border-radius: 6px;
+    color: var(--muted); text-decoration: none; font-size: 14px; line-height: 1.35;
+  }
+  nav a:hover { color: var(--text); background: var(--bg); }
+  nav a.active { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  nav ul ul a { padding-left: 22px; font-size: 13px; }
+  nav ul ul { margin: 1px 0 6px; }
+  .navsummary { display: none; }
+
+  /* Content */
+  .content { max-width: 840px; padding: 40px 34px 90px; }
+  header.page { border-bottom: 1px solid var(--border); padding-bottom: 24px; margin-bottom: 8px; }
+  h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h2 {
+    font-size: 21px; margin: 46px 0 14px; padding-top: 22px;
+    border-top: 1px solid var(--border); letter-spacing: -0.01em; scroll-margin-top: 16px;
+  }
+  h3 { font-size: 16px; margin: 26px 0 8px; scroll-margin-top: 16px; }
+  .lead { color: var(--muted); font-size: 17px; margin: 0; }
+  code {
+    background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+    font: 13.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    overflow-wrap: anywhere;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; margin: 12px 0;
+  }
+  pre code { background: none; padding: 0; }
+  .table-wrap { overflow-x: auto; margin: 14px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .method {
+    display: inline-block; font: 600 11.5px/1 ui-monospace, monospace; letter-spacing: 0.06em;
+    padding: 4px 7px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border);
+  }
+  .note {
+    background: var(--surface); border-left: 3px solid var(--accent);
+    padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 16px 0;
+  }
+  .note strong { color: var(--accent); }
+  .endpoint {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; margin: 18px 0; background: var(--surface);
+  }
+  .endpoint h3 { margin-top: 0; }
+  .path { font: 14px ui-monospace, monospace; overflow-wrap: anywhere; }
+  .muted { color: var(--muted); }
+  footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+    .sidebar-inner { position: static; max-height: none; padding: 16px 18px; }
+    .navsummary {
+      display: block; cursor: pointer; font-weight: 600; font-size: 15px;
+      padding: 6px 0; list-style: none;
+    }
+    .navsummary::-webkit-details-marker { display: none; }
+    .navsummary::after { content: " ▾"; color: var(--muted); }
+    details[open] .navsummary::after { content: " ▴"; }
+    .content { padding: 28px 20px 70px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+      <details id="navbox" open>
+        <summary class="navsummary">Spis treści</summary>
+        <p class="brand">Motusy API</p>
+        <p class="brand-sub">przewodnik</p>
+        <nav>
+          <ul>
+            <li><a href="#podstawy">Podstawy</a></li>
+            <li><a href="#koperta">Kształt odpowiedzi</a></li>
+            <li><a href="#kody">Kody błędów</a></li>
+            <li><a href="#sciezka">Cała ścieżka użytkownika</a></li>
+            <li>
+              <a href="#endpointy">Endpointy</a>
+              <ul>
+                <li><a href="#ep-register">Rejestracja</a></li>
+                <li><a href="#ep-login">Logowanie</a></li>
+                <li><a href="#ep-me">Moje konto</a></li>
+                <li><a href="#ep-logout">Wylogowanie</a></li>
+                <li><a href="#ep-profile">Profil</a></li>
+                <li><a href="#ep-motorcycle">Motocykl</a></li>
+              </ul>
+            </li>
+            <li><a href="#widocznosc">Widoczność danych</a></li>
+            <li>
+              <a href="#flutterflow">FlutterFlow</a>
+              <ul>
+                <li><a href="#ff-sciezki">Ścieżki do wartości</a></li>
+                <li><a href="#ff-token">Token</a></li>
+                <li><a href="#ff-pierwszy-ekran">Pierwszy ekran</a></li>
+              </ul>
+            </li>
+            <li><a href="#brakujace">Czego jeszcze nie ma</a></li>
+          </ul>
+        </nav>
+      </details>
+    </div>
+  </aside>
+
+  <main class="content">
+
+    <header class="page">
+      <h1>Motusy API — przewodnik</h1>
+      <p class="lead">Jak rozmawiać z API aplikacji dla motocyklistów. Pisany ręcznie, po ludzku.
+      Formalny kontrakt (OpenAPI) żyje osobno pod <code>/docs/api</code>.</p>
+    </header>
+
+    <h2 id="podstawy">Podstawy</h2>
+
+    <div class="table-wrap">
+    <table>
+      <tr><th>Adres bazowy</th><td><code>https://motusy.top/api/v1</code></td></tr>
+      <tr><th>Format</th><td>JSON w obie strony</td></tr>
+      <tr><th>Nagłówki</th><td><code>Accept: application/json</code><br><code>Content-Type: application/json</code></td></tr>
+      <tr><th>Uwierzytelnianie</th><td><code>Authorization: Bearer &lt;token&gt;</code></td></tr>
+      <tr><th>Język</th><td>polski — komunikaty przychodzą gotowe do pokazania użytkownikowi</td></tr>
+    </table>
+    </div>
+
+    <div class="note">
+      <strong>Nagłówek <code>Accept</code> wysyłaj zawsze.</strong> API i tak odpowie JSON-em na całej ścieżce
+      <code>/api/</code>, ale to jest zabezpieczenie po naszej stronie, nie zaproszenie do pomijania nagłówka.
+    </div>
+
+    <h2 id="koperta">Kształt odpowiedzi</h2>
+
+    <p>Każda odpowiedź, sukces czy błąd, ma tę samą kopertę. Różni się tylko zawartością.</p>
+
+    <h3>Sukces</h3>
+    <pre><code>{
+  "success": true,
+  "message": "Profil został zapisany.",
+  "data": { ... }
+}</code></pre>
+
+    <h3>Błąd</h3>
+    <pre><code>{
+  "success": false,
+  "code": "VALIDATION_ERROR",
+  "message": "Podane dane są nieprawidłowe.",
+  "errors": {
+    "gender": ["Wybrana wartość pola płeć jest nieprawidłowa."]
+  }
+}</code></pre>
+
+    <div class="note">
+      <strong>Rozgałęziaj logikę na <code>code</code>, nigdy na <code>message</code>.</strong>
+      <code>code</code> jest stały. <code>message</code> jest tłumaczony i może się zmienić przy dowolnej poprawce
+      językowej — warunek oparty na jego treści pęknie po cichu.
+    </div>
+
+    <h3>Zasady, na których możesz polegać</h3>
+    <ul>
+      <li><code>data</code> pojawia się tylko wtedy, gdy jest co zwrócić.</li>
+      <li>Listy <strong>zawsze</strong> zwracają <code>data: []</code>, nawet puste — nie musisz rozróżniać „brak klucza” od „brak wyników”.</li>
+      <li><code>errors</code> występuje wyłącznie przy błędach walidacji, z podziałem na pola.</li>
+      <li>Kody HTTP są prawidłowe: <code>200</code>, <code>201</code>, <code>401</code>, <code>422</code>, <code>429</code>.</li>
+    </ul>
+
+    <h2 id="kody">Kody błędów</h2>
+
+    <div class="table-wrap">
+    <table>
+      <tr><th>Kod</th><th>HTTP</th><th>Co zrobić w aplikacji</th></tr>
+      <tr><td><code>VALIDATION_ERROR</code></td><td>422</td><td>Pokaż błędy przy polach formularza — masz je w <code>errors</code></td></tr>
+      <tr><td><code>INVALID_CREDENTIALS</code></td><td>401</td><td>Zostaw użytkownika na logowaniu, pokaż błąd</td></tr>
+      <tr><td><code>UNAUTHENTICATED</code></td><td>401</td><td>Token wygasł lub go nie ma — wyczyść i wróć na ekran logowania</td></tr>
+      <tr><td><code>TOO_MANY_REQUESTS</code></td><td>429</td><td>Za dużo prób, poproś o chwilę przerwy</td></tr>
+      <tr><td><code>NOT_FOUND</code></td><td>404</td><td>Zasób nie istnieje</td></tr>
+      <tr><td><code>SERVER_ERROR</code></td><td>500</td><td>Błąd po naszej stronie, pokaż komunikat ogólny</td></tr>
+    </table>
+    </div>
+
+    <div class="note">
+      <strong><code>INVALID_CREDENTIALS</code> i <code>UNAUTHENTICATED</code> to nie to samo</strong>, choć oba
+      zwracają 401. Pierwszy znaczy „złe hasło” i użytkownik zostaje na formularzu. Drugi znaczy „nie jesteś
+      zalogowany” i trzeba go wylogować. Potraktowanie ich jednakowo daje albo wylogowywanie przy literówce
+      w haśle, albo zapętlony ekran z martwym tokenem.
+    </div>
+
+    <h2 id="sciezka">Cała ścieżka użytkownika</h2>
+
+    <ol>
+      <li><strong>Rejestracja</strong> — e-mail i hasło. Konto działa od razu, dostajesz token.</li>
+      <li><strong>Profil</strong> — nick i płeć. Bez tego konto jest niekompletne.</li>
+      <li><strong>Motocykl</strong> — marka, model, rocznik, kolor.</li>
+      <li>Po obu zapisach <code>profile_complete</code> zmienia się na <code>true</code> i można wpuścić użytkownika do aplikacji.</li>
+    </ol>
+
+    <p>Logowanie kolejnym razem to po prostu <code>/auth/login</code> i ten sam token w nagłówku.</p>
+
+    <h2 id="endpointy">Endpointy</h2>
+
+    <div class="endpoint">
+      <h3 id="ep-register"><span class="method">POST</span> <span class="path">/auth/register</span></h3>
+      <p class="muted">Zakłada konto. Zwraca token, więc po rejestracji nie musisz logować się osobno.</p>
+      <pre><code>{
+  "email": "rafal@example.com",
+  "password": "tajne-haslo-123",
+  "device_name": "telefon"
+}</code></pre>
+      <p>Odpowiedź <code>201</code>, w <code>data</code> znajdziesz <code>token</code> i <code>user</code>.</p>
+      <p class="muted"><code>device_name</code> jest opcjonalne, ale warto je wysyłać — patrz sekcja o wylogowaniu.
+      Hasło ma minimum 8 znaków.</p>
+    </div>
+
+    <div class="endpoint">
+      <h3 id="ep-login"><span class="method">POST</span> <span class="path">/auth/login</span></h3>
+      <pre><code>{
+  "email": "rafal@example.com",
+  "password": "tajne-haslo-123",
+  "device_name": "telefon"
+}</code></pre>
+      <p>Odpowiedź <code>200</code>, ta sama struktura co przy rejestracji.</p>
+      <p class="muted">Nieznany e-mail i złe hasło dają identyczną odpowiedź. To celowe — inaczej można by
+      sprawdzać, kto ma konto w aplikacji. Limit: 10 prób na minutę.</p>
+    </div>
+
+    <div class="endpoint">
+      <h3 id="ep-me"><span class="method">GET</span> <span class="path">/auth/me</span> <span class="muted">— wymaga tokena</span></h3>
+      <p class="muted">Konto zalogowanego użytkownika: profil, motocykl, ustawienia widoczności, incognito.</p>
+      <pre><code>{
+  "success": true,
+  "message": "Pobrano dane.",
+  "data": {
+    "id": 1,
+    "nickname": "Rafal",
+    "gender": "male",
+    "first_name": null,
+    "last_name": null,
+    "avatar": null,
+    "bio": null,
+    "phone": "600100200",
+    "email": "rafal@example.com",
+    "motorcycle": {
+      "brand": "Yamaha",
+      "model": "MT-07",
+      "production_year": 2021,
+      "color": "czarny",
+      "description": null,
+      "photo": null
+    },
+    "incognito": false,
+    "profile_complete": true,
+    "visibility": {
+      "first_name_visible": false,
+      "last_name_visible": false,
+      "phone_visible": true,
+      "email_visible": false
+    }
+  }
+}</code></pre>
+    </div>
+
+    <div class="endpoint">
+      <h3 id="ep-logout"><span class="method">POST</span> <span class="path">/auth/logout</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>Unieważnia <strong>tylko ten jeden token</strong>. Pozostałe urządzenia zostają zalogowane.</p>
+      <p class="muted">Dlatego warto wysyłać <code>device_name</code> przy logowaniu — dzięki temu tokeny da się
+      rozróżnić, a wylogowanie na telefonie nie wyrzuca użytkownika z tabletu.</p>
+    </div>
+
+    <div class="endpoint">
+      <h3 id="ep-profile"><span class="method">POST</span> <span class="path">/profile</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>Tworzy profil albo aktualizuje istniejący. Wysyłasz cały formularz, nie musisz sprawdzać, czy profil już jest.</p>
+      <pre><code>{
+  "nickname": "Rafal",
+  "gender": "male",
+  "first_name": "Rafał",
+  "last_name": "Kwaśniak",
+  "bio": "Jeżdżę od 2009.",
+  "phone": "600100200",
+  "first_name_visible": false,
+  "last_name_visible": false,
+  "phone_visible": true,
+  "email_visible": false
+}</code></pre>
+      <p>Wymagane są tylko <code>nickname</code> i <code>gender</code>. Reszta jest opcjonalna.</p>
+      <p class="muted"><code>gender</code> przyjmuje wyłącznie <code>male</code>, <code>female</code>,
+      <code>other</code>. To kody techniczne — etykiety („Mężczyzna”, „Kobieta”) budujesz w aplikacji.</p>
+    </div>
+
+    <div class="endpoint">
+      <h3 id="ep-motorcycle"><span class="method">POST</span> <span class="path">/motorcycle</span> <span class="muted">— wymaga tokena</span></h3>
+      <pre><code>{
+  "brand": "Yamaha",
+  "model": "MT-07",
+  "production_year": 2021,
+  "color": "czarny",
+  "description": "Po serwisie."
+}</code></pre>
+      <p class="muted">Wszystko poza <code>description</code> jest wymagane. Rocznik od 1900 do przyszłego roku.
+      W MVP jedno konto to jeden motocykl.</p>
+    </div>
+
+    <div class="note">
+      <strong>Oba zapisy zwracają pełne konto</strong>, dokładnie w tej samej postaci co <code>/auth/me</code>.
+      Nie musisz po zapisie wołać <code>/auth/me</code>, żeby odświeżyć ekran — masz świeże dane od razu.
+    </div>
+
+    <h2 id="widocznosc">Widoczność danych</h2>
+
+    <p>Użytkownik decyduje, które dane widzą inni. Flagi <code>*_visible</code> ustawiasz przy zapisie profilu.</p>
+
+    <p><strong>Ważne dla aplikacji:</strong> ukryte pole nie znika z odpowiedzi — przychodzi jako
+    <code>null</code>. Zestaw kluczy jest zawsze taki sam, niezależnie od tego, kto patrzy. Dzięki temu nie
+    musisz sprawdzać, czy klucz w ogóle istnieje.</p>
+
+    <p>Własne dane widzisz zawsze w całości. Filtrowanie dotyczy tylko tego, co widzą inni.</p>
+
+    <h2 id="flutterflow">Co to znaczy w praktyce dla FlutterFlow</h2>
+
+    <p>Nie znam Twojej wersji edytora na tyle, żeby opisywać kliknięcia, ale niezależnie od wersji FlutterFlow
+    zapyta o te same rzeczy. Poniżej to, co trzeba mu podać.</p>
+
+    <div class="table-wrap">
+    <table>
+      <tr><th>O co zapyta</th><th>Co wpisać</th></tr>
+      <tr><td>Adres endpointu</td><td><code>https://motusy.top/api/v1/auth/login</code></td></tr>
+      <tr><td>Metoda</td><td><code>POST</code> — poza <code>/auth/me</code>, które jest <code>GET</code></td></tr>
+      <tr><td>Nagłówki</td><td><code>Accept: application/json</code>, a przy chronionych też <code>Authorization: Bearer [token]</code></td></tr>
+      <tr><td>Ciało żądania</td><td>JSON dokładnie taki jak w przykładach wyżej</td></tr>
+    </table>
+    </div>
+
+    <h3 id="ff-sciezki">Ścieżki do wartości w odpowiedzi</h3>
+
+    <p>Do wyciągania danych z JSON-a FlutterFlow używa notacji ze ścieżką. Najczęściej potrzebne:</p>
+
+    <div class="table-wrap">
+    <table>
+      <tr><th>Co chcesz</th><th>Ścieżka</th></tr>
+      <tr><td>Token po zalogowaniu</td><td><code>$.data.token</code></td></tr>
+      <tr><td>Nick użytkownika</td><td><code>$.data.user.nickname</code> (po logowaniu)<br><code>$.data.nickname</code> (z <code>/auth/me</code>)</td></tr>
+      <tr><td>Czy onboarding skończony</td><td><code>$.data.user.profile_complete</code></td></tr>
+      <tr><td>Marka motocykla</td><td><code>$.data.motorcycle.brand</code></td></tr>
+      <tr><td>Kod błędu</td><td><code>$.code</code></td></tr>
+      <tr><td>Komunikat do pokazania</td><td><code>$.message</code></td></tr>
+    </table>
+    </div>
+
+    <div class="note">
+      <strong>Uwaga na różnicę.</strong> <code>/auth/login</code> i <code>/auth/register</code> pakują konto
+      w <code>data.user</code>, bo obok leży <code>data.token</code>. Natomiast <code>/auth/me</code>,
+      <code>/profile</code> i <code>/motorcycle</code> zwracają konto wprost w <code>data</code>.
+      To najczęstsze miejsce na pomyłkę w ścieżce.
+    </div>
+
+    <h3 id="ff-token">Token</h3>
+    <p>Token nie wygasa sam z siebie — traci ważność dopiero przy wylogowaniu. Zapisz go w bezpiecznym magazynie
+    urządzenia, nie w zwykłej zmiennej, i dokładaj do każdego chronionego żądania.</p>
+
+    <h3 id="ff-pierwszy-ekran">Kolejność przy pierwszym ekranie</h3>
+    <ol>
+      <li>Masz zapisany token? Zawołaj <code>/auth/me</code>.</li>
+      <li>Dostałeś <code>200</code> i <code>profile_complete: true</code> → ekran główny.</li>
+      <li>Dostałeś <code>200</code>, ale <code>profile_complete: false</code> → onboarding.</li>
+      <li>Dostałeś <code>401</code> z <code>UNAUTHENTICATED</code> → wyczyść token, ekran logowania.</li>
+    </ol>
+
+    <h2 id="brakujace">Czego jeszcze nie ma</h2>
+
+    <p>Żeby nie szukać na próżno — te rzeczy są zaplanowane, ale jeszcze nie istnieją:</p>
+
+    <ul>
+      <li>upload avatara i zdjęcia motocykla (pola <code>avatar</code> i <code>photo</code> przychodzą jako <code>null</code>),</li>
+      <li>tożsamość BLE i rejestracja urządzeń,</li>
+      <li>spotkania i ich historia,</li>
+      <li>obserwowanie, zaproszenia, znajomi,</li>
+      <li>statusy „Lecę na moto” i zgłoszenia awarii,</li>
+      <li>dashboard,</li>
+      <li>usuwanie konta,</li>
+      <li>powiadomienia push.</li>
+    </ul>
+
+    <footer>
+      Kontrakt OpenAPI: <code>/docs/api</code> · Specyfikacja produktowa: <code>docs/motusy-api.md</code> w repozytorium.<br>
+      Ten przewodnik jest pisany ręcznie i aktualizowany razem ze zmianami w API.
+    </footer>
+
+  </main>
+</div>
+
+<script>
+  // Collapse the table of contents on narrow screens so it does not push the
+  // content off the first screen.
+  if (window.innerWidth <= 900) {
+    document.getElementById('navbox').removeAttribute('open');
+  }
+
+  // Highlight the section currently in view.
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav a'));
+    var targets = links
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+
+    if (!('IntersectionObserver' in window) || !targets.length) return;
+
+    var visible = new Set();
+
+    function paint() {
+      var current = targets.filter(function (t) { return visible.has(t.id); })[0];
+      if (!current) return;
+      links.forEach(function (a) {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + current.id);
+      });
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) { visible.add(entry.target.id); }
+        else { visible.delete(entry.target.id); }
+      });
+      paint();
+    }, { rootMargin: '0px 0px -75% 0px' });
+
+    targets.forEach(function (t) { observer.observe(t); });
+  })();
+</script>
+</body>
+</html>

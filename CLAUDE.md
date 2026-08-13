@@ -157,10 +157,14 @@ Dwie gałęzie wprowadzamy dopiero, gdy każda dostanie własne środowisko (np.
 Trzy dokumenty wymagane przez `FOUNDATION.md` §4:
 
 1. **OpenAPI** — `dedoc/scramble` v0.13.x (zweryfikowane: rozwiązuje się czysto pod Laravel 13). Publikuje pod `/docs/api`.
-2. **`api-guide.html`** — narracyjny przewodnik, pisany ręcznie.
+2. **`api-guide.html`** — narracyjny przewodnik, pisany ręcznie. **Jest.** Pod `/docs/api-guide.html`.
 3. **`code-map.html`** — mapa kodu, ta sama skórka co przewodnik.
 
 Katalog `docs/` leży poza webrootem, serwowany jedną dynamiczną trasą `docs/{slug}.html` ze slugiem `[A-Za-z0-9_-]+` i dosłownym sufiksem `.html`. Trasa nie koliduje ze Scramble, bo `/docs/api` nie ma sufiksu `.html`.
+
+**Stan:** trasa działa (`App\Http\Controllers\DocsController`), `api-guide.html` napisany. Brakuje `code-map.html`.
+
+Dorzucenie nowej strony to wrzucenie pliku `.html` do `docs/` — bez dopisywania trasy. Zabezpieczenia: wzorzec sluga odcina ukośniki i kropki, a `realpath` weryfikuje, że plik faktycznie leży w `docs/`. Pokrywa to `tests/Feature/DocsRouteTest.php` — traversal, null byte, ścieżka zagnieżdżona, próba pobrania `.md`.
 
 ### Dostęp
 
