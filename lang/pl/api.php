@@ -7,6 +7,8 @@ return [
     'invalid_credentials' => 'Nieprawidłowy adres e-mail lub hasło.',
     'logged_in' => 'Zalogowano.',
     'logged_out' => 'Wylogowano.',
+    'motorcycle_saved' => 'Dane motocykla zostały zapisane.',
+    'profile_saved' => 'Profil został zapisany.',
     'registered' => 'Konto zostało utworzone.',
     'forbidden' => 'Brak uprawnień do wykonania tej akcji.',
     'method_not_allowed' => 'Niedozwolona metoda.',

@@ -93,7 +93,7 @@ class ResponseContractTest extends TestCase
         $response = $this->postJson('/api/v1/testing/translated', ['email' => 'zly']);
 
         $response->assertStatus(422)
-            ->assertJsonPath('errors.email.0', 'Pole email musi być prawidłowym adresem e-mail.');
+            ->assertJsonPath('errors.email.0', 'Pole adres e-mail musi być prawidłowym adresem e-mail.');
     }
 
     public function test_unmapped_exception_returns_500_envelope_without_diagnostics(): void

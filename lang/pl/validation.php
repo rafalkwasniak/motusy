@@ -164,6 +164,21 @@ return [
         ],
     ],
 
-    'attributes' => [],
+    'attributes' => [
+        'bio' => 'opis',
+        'brand' => 'marka',
+        'color' => 'kolor',
+        'description' => 'opis',
+        'device_name' => 'nazwa urządzenia',
+        'email' => 'adres e-mail',
+        'first_name' => 'imię',
+        'gender' => 'płeć',
+        'last_name' => 'nazwisko',
+        'model' => 'model',
+        'nickname' => 'nick',
+        'password' => 'hasło',
+        'phone' => 'numer telefonu',
+        'production_year' => 'rocznik',
+    ],
 
 ];

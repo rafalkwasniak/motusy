@@ -188,8 +188,8 @@ Kolejność podyktowana tym, czego potrzebuje aplikacja we FlutterFlow, a nie ko
 |---|---|---|
 | 0 | Fundament: migracje `users`, `user_profiles`, `motorcycles`, `code` w kopercie, Scramble | **zrobione** |
 | 1 | Auth: `register`, `login`, `logout`, `me` | **zrobione** |
-| 2 | Profil i motocykl (bez uploadu zdjęć) | następny |
-| 2b | Upload avatara i zdjęcia motocykla | |
+| 2 | Profil i motocykl (bez uploadu zdjęć) | **zrobione** |
+| 2b | Upload avatara i zdjęcia motocykla | następny |
 | 3 | Tożsamość BLE, urządzenia, `push_token` | |
 | 4 | Spotkania: zapis z obustronnym potwierdzeniem, karencja, historia | |
 | 5 | Relacje: obserwowanie, zaproszenia, znajomi, liczniki | |
@@ -215,14 +215,17 @@ Upload zdjęć celowo wydzielony do 2b: multipart we FlutterFlow to osobny temat
 
 ## 7. Do ustalenia
 
+- **Odzyskiwanie konta po usunięciu.** Pomysł Rafała: gdy ktoś rejestruje się na adres należący do usuniętego konta, system pyta, czy podnieść stare konto, czy założyć nowe. Obecny schemat już to umożliwia — `users` ma soft delete, więc wiersz zostaje. **Ale jest tu haczyk:** unikalny indeks na `email` obejmuje też wiersze usunięte, a reguła `unique:users,email` ich nie wyklucza. Dopóki nie ma endpointu usuwania konta, nic się nie psuje. Zanim powstanie, trzeba rozstrzygnąć: albo indeks unikalny liczy tylko żywe konta, albo rejestracja na zajęty-ale-usunięty adres celowo wpada w ścieżkę „podnieś konto".
+
 - Limity długości pól, karencja spotkań, czasy statusów i awarii — specyfikacja §115 ma pełną listę piętnastu pozycji. Rozstrzygamy je etapami, przy dochodzeniu do konkretnego etapu, nie wszystkie naraz.
 - Rate limiting poza auth: zapis spotkań i awarie. Auth ma już limit 10/min per IP w `config/motusy.php`.
+- Nick **nie jest unikalny** (decyzja Rafała); unikalny jest wyłącznie e-mail.
 - Marka i model motocykla: słownik czy wolny tekst. Różnica między danymi filtrowalnymi a bałaganem literówek.
 - Blokowanie i zgłaszanie użytkownika — nie ma tego w specyfikacji, a przy aplikacji kojarzącej nieznajomych w terenie zwykle okazuje się potrzebne szybciej, niż się zakłada.
 
 ---
 
-## 7a. Endpointy Etapu 1
+## 7a. Endpointy
 
 Baza dla FlutterFlow: `https://motusy.top/api/v1`
 
@@ -238,6 +241,15 @@ Token przekazujemy nagłówkiem `Authorization: Bearer <token>`.
 `register` i `login` przyjmują opcjonalne `device_name` — nazwa tokena. Dzięki temu wylogowanie na telefonie nie wyrzuca użytkownika z tabletu. Domyślnie `mobile`.
 
 `data.user.profile_complete` mówi aplikacji, czy pokazać onboarding. Po samej rejestracji jest `false`, bo profil i motocykl powstają dopiero w Etapie 2.
+
+| POST | `/profile` | tak | `200`, `data` = konto po zapisie |
+| POST | `/motorcycle` | tak | `200`, `data` = konto po zapisie |
+
+`/profile` i `/motorcycle` są **upsertami** — aplikacja wysyła cały formularz i nie musi wiedzieć, czy to pierwszy zapis po rejestracji, czy późniejsza edycja. Oba zwracają pełne konto, więc po zapisie nie trzeba wołać `/auth/me`.
+
+Płeć to stabilny kod: `male`, `female`, `other`. Lista w `config/motusy.php`, etykiety po stronie aplikacji.
+
+Limity długości pól i rocznika też siedzą w `config/motusy.php`, zgodnie z `FOUNDATION.md` §5.
 
 Kontrakt OpenAPI: `/docs/api` — dokumentuje też, które endpointy wymagają tokena.
 

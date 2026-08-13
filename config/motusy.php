@@ -17,8 +17,22 @@ return [
     ],
 
     'profile' => [
+        'nickname_min_length' => 2,
         'nickname_max_length' => 30,
         'bio_max_length' => 500,
+        'name_max_length' => 60,
+        'phone_max_length' => 20,
+
+        // Stable codes, never shown to the user as-is. The app maps them to labels.
+        'genders' => ['male', 'female', 'other'],
+    ],
+
+    'motorcycle' => [
+        'brand_max_length' => 60,
+        'model_max_length' => 60,
+        'color_max_length' => 30,
+        'description_max_length' => 1000,
+        'min_production_year' => 1900,
     ],
 
 ];
