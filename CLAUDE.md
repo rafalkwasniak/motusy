@@ -90,7 +90,9 @@ Ustalenie nadrzędne: **jedna koperta dla wszystkiego**. Sukces i błąd mają t
 }
 ```
 
-`code` jest **stabilnym identyfikatorem maszynowym** — aplikacja rozgałęzia logikę na nim, nigdy na `message`, który jest tłumaczony i może się zmienić bez uprzedzenia. Obecne kody: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `CONFLICT`, `TOO_MANY_REQUESTS`, `BAD_REQUEST`, `SERVER_ERROR`. Nowe kody dopisujemy do tej listy przy dodawaniu endpointów.
+`code` jest **stabilnym identyfikatorem maszynowym** — aplikacja rozgałęzia logikę na nim, nigdy na `message`, który jest tłumaczony i może się zmienić bez uprzedzenia. Obecne kody: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `INVALID_CREDENTIALS`, `FORBIDDEN`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `CONFLICT`, `TOO_MANY_REQUESTS`, `BAD_REQUEST`, `SERVER_ERROR`.
+
+**`UNAUTHENTICATED` i `INVALID_CREDENTIALS` to celowo różne kody.** Pierwszy znaczy „brak lub wygasły token” — aplikacja ma wylogować i pokazać ekran logowania. Drugi znaczy „złe hasło” — aplikacja zostawia użytkownika na formularzu. Zlanie ich w jedno zmusiłoby FlutterFlow do zgadywania. Nowe kody dopisujemy do tej listy przy dodawaniu endpointów.
 
 ### Reguły
 
@@ -185,8 +187,8 @@ Kolejność podyktowana tym, czego potrzebuje aplikacja we FlutterFlow, a nie ko
 | Etap | Zakres | Stan |
 |---|---|---|
 | 0 | Fundament: migracje `users`, `user_profiles`, `motorcycles`, `code` w kopercie, Scramble | **zrobione** |
-| 1 | Auth: `register`, `login`, `logout`, `me` | następny |
-| 2 | Profil i motocykl (bez uploadu zdjęć) | |
+| 1 | Auth: `register`, `login`, `logout`, `me` | **zrobione** |
+| 2 | Profil i motocykl (bez uploadu zdjęć) | następny |
 | 2b | Upload avatara i zdjęcia motocykla | |
 | 3 | Tożsamość BLE, urządzenia, `push_token` | |
 | 4 | Spotkania: zapis z obustronnym potwierdzeniem, karencja, historia | |
@@ -214,9 +216,30 @@ Upload zdjęć celowo wydzielony do 2b: multipart we FlutterFlow to osobny temat
 ## 7. Do ustalenia
 
 - Limity długości pól, karencja spotkań, czasy statusów i awarii — specyfikacja §115 ma pełną listę piętnastu pozycji. Rozstrzygamy je etapami, przy dochodzeniu do konkretnego etapu, nie wszystkie naraz.
-- Rate limiting: ostry na `login` i `register`, luźniejszy na zapisie spotkań, osobny na awariach.
+- Rate limiting poza auth: zapis spotkań i awarie. Auth ma już limit 10/min per IP w `config/motusy.php`.
 - Marka i model motocykla: słownik czy wolny tekst. Różnica między danymi filtrowalnymi a bałaganem literówek.
 - Blokowanie i zgłaszanie użytkownika — nie ma tego w specyfikacji, a przy aplikacji kojarzącej nieznajomych w terenie zwykle okazuje się potrzebne szybciej, niż się zakłada.
+
+---
+
+## 7a. Endpointy Etapu 1
+
+Baza dla FlutterFlow: `https://motusy.top/api/v1`
+
+| Metoda | Ścieżka | Auth | Zwraca |
+|---|---|---|---|
+| POST | `/auth/register` | nie | `201`, `data.token`, `data.user` |
+| POST | `/auth/login` | nie | `200`, `data.token`, `data.user` |
+| POST | `/auth/logout` | tak | `200`, unieważnia **tylko bieżący** token |
+| GET | `/auth/me` | tak | `200`, `data` = konto użytkownika |
+
+Token przekazujemy nagłówkiem `Authorization: Bearer <token>`.
+
+`register` i `login` przyjmują opcjonalne `device_name` — nazwa tokena. Dzięki temu wylogowanie na telefonie nie wyrzuca użytkownika z tabletu. Domyślnie `mobile`.
+
+`data.user.profile_complete` mówi aplikacji, czy pokazać onboarding. Po samej rejestracji jest `false`, bo profil i motocykl powstają dopiero w Etapie 2.
+
+Kontrakt OpenAPI: `/docs/api` — dokumentuje też, które endpointy wymagają tokena.
 
 ---
 

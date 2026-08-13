@@ -31,6 +31,75 @@ class User extends Authenticatable
     }
 
     /**
+     * How this user looks to somebody else. The key set never changes: fields the
+     * owner keeps private come back as null rather than disappearing, so the client
+     * never has to tell "hidden" apart from "not in this response".
+     *
+     * Null-safe on purpose — a freshly registered account has no profile yet.
+     */
+    public function card(?self $viewer = null): array
+    {
+        $profile = $this->profile;
+        $isSelf = $viewer !== null && $viewer->id === $this->id;
+
+        $visible = fn (?string $value, bool $flag) => $isSelf || $flag ? $value : null;
+
+        return [
+            'id' => $this->id,
+            'nickname' => $profile?->nickname,
+            'gender' => $profile?->gender,
+            'first_name' => $visible($profile?->first_name, (bool) $profile?->first_name_visible),
+            'last_name' => $visible($profile?->last_name, (bool) $profile?->last_name_visible),
+            'avatar' => $profile?->avatar,
+            'bio' => $profile?->bio,
+            'phone' => $visible($profile?->phone, (bool) $profile?->phone_visible),
+            'email' => $visible($this->email, (bool) $profile?->email_visible),
+            'motorcycle' => $this->motorcycleCard(),
+        ];
+    }
+
+    /**
+     * The owner's own account view: everything from the card plus account-level state
+     * the app needs to decide what screen to show first.
+     */
+    public function account(): array
+    {
+        return [
+            ...$this->card($this),
+            'incognito' => $this->incognito,
+            'profile_complete' => $this->hasCompleteProfile(),
+            'visibility' => [
+                'first_name_visible' => (bool) $this->profile?->first_name_visible,
+                'last_name_visible' => (bool) $this->profile?->last_name_visible,
+                'phone_visible' => (bool) $this->profile?->phone_visible,
+                'email_visible' => (bool) $this->profile?->email_visible,
+            ],
+        ];
+    }
+
+    /**
+     * Onboarding is finished once the mandatory profile and motorcycle fields exist.
+     */
+    public function hasCompleteProfile(): bool
+    {
+        return $this->profile !== null && $this->motorcycle !== null;
+    }
+
+    private function motorcycleCard(): array
+    {
+        $motorcycle = $this->motorcycle;
+
+        return [
+            'brand' => $motorcycle?->brand,
+            'model' => $motorcycle?->model,
+            'production_year' => $motorcycle?->production_year,
+            'color' => $motorcycle?->color,
+            'description' => $motorcycle?->description,
+            'photo' => $motorcycle?->photo,
+        ];
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

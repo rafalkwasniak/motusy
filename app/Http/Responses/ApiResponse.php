@@ -2,6 +2,7 @@
 
 namespace App\Http\Responses;
 
+use App\Exceptions\InvalidCredentialsException;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -94,6 +95,12 @@ class ApiResponse
                 __('api.validation_failed'),
                 $e->errors(),
                 422,
+            ),
+            $e instanceof InvalidCredentialsException => self::error(
+                'INVALID_CREDENTIALS',
+                __('api.invalid_credentials'),
+                null,
+                401,
             ),
             $e instanceof AuthenticationException => self::error('UNAUTHENTICATED', __('api.unauthenticated'), null, 401),
             $e instanceof AuthorizationException => self::error('FORBIDDEN', __('api.forbidden'), null, 403),

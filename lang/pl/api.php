@@ -3,6 +3,11 @@
 return [
     'bad_request' => 'Nieprawidłowe żądanie.',
     'conflict' => 'Żądanie jest sprzeczne z aktualnym stanem zasobu.',
+    'fetched' => 'Pobrano dane.',
+    'invalid_credentials' => 'Nieprawidłowy adres e-mail lub hasło.',
+    'logged_in' => 'Zalogowano.',
+    'logged_out' => 'Wylogowano.',
+    'registered' => 'Konto zostało utworzone.',
     'forbidden' => 'Brak uprawnień do wykonania tej akcji.',
     'method_not_allowed' => 'Niedozwolona metoda.',
     'not_found' => 'Nie znaleziono zasobu.',

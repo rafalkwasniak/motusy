@@ -17,7 +17,7 @@ class ResponseContractTest extends TestCase
      */
     public function test_protected_endpoint_returns_401_envelope_without_accept_header(): void
     {
-        $response = $this->get('/api/v1/user');
+        $response = $this->get('/api/v1/auth/me');
 
         $response->assertStatus(401)
             ->assertExactJson([
@@ -29,7 +29,7 @@ class ResponseContractTest extends TestCase
 
     public function test_protected_endpoint_returns_401_envelope_with_accept_header(): void
     {
-        $response = $this->getJson('/api/v1/user');
+        $response = $this->getJson('/api/v1/auth/me');
 
         $response->assertStatus(401)
             ->assertExactJson([
@@ -53,7 +53,7 @@ class ResponseContractTest extends TestCase
 
     public function test_wrong_method_returns_405_envelope(): void
     {
-        $response = $this->postJson('/api/v1/user');
+        $response = $this->postJson('/api/v1/auth/me');
 
         $response->assertStatus(405)
             ->assertExactJson([
