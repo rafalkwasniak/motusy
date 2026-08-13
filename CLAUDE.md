@@ -47,7 +47,7 @@ Ustalenie nadrzędne: **jedna koperta dla wszystkiego**. Sukces i błąd mają t
 ```json
 {
   "success": true,
-  "message": "Resource retrieved.",
+  "message": "Pobrano zasób.",
   "data": { },
   "pagination": { }
 }
@@ -58,8 +58,8 @@ Ustalenie nadrzędne: **jedna koperta dla wszystkiego**. Sukces i błąd mają t
 ```json
 {
   "success": false,
-  "message": "The given data was invalid.",
-  "errors": { "email": ["The email field is required."] }
+  "message": "Podane dane są nieprawidłowe.",
+  "errors": { "email": ["Pole email jest wymagane."] }
 }
 ```
 
@@ -69,16 +69,26 @@ Ustalenie nadrzędne: **jedna koperta dla wszystkiego**. Sukces i błąd mają t
 - `pagination` wyłącznie przy listingach stronicowanych.
 - `errors` wyłącznie przy błędach walidacji.
 - Kody HTTP zostają prawidłowe (422, 401, 403, 404, 500) — koperta ich nie zastępuje.
-- **Handler musi wymuszać JSON dla całego `/api/*` niezależnie od nagłówka `Accept`.** Znany defekt szkieletu: bez `Accept: application/json` żądanie do chronionego endpointu zwraca 500 (`Route [login] not defined`) zamiast 401, bo `AuthenticationException` próbuje przekierować na nieistniejącą trasę `login`. Sam `shouldRenderJsonWhen` w `bootstrap/app.php` tego nie łapie. Do naprawienia razem z kopertą.
+- **Handler wymusza JSON dla całego `/api/*` niezależnie od nagłówka `Accept`.** Realizują to dwa elementy w `bootstrap/app.php` i oba są potrzebne:
+  - `redirectGuestsTo()` zwraca `null` dla `api/*`, dzięki czemu middleware `Authenticate` rzuca `AuthenticationException` zamiast budować przekierowanie na nieistniejącą trasę `login`. Bez tego żądanie bez nagłówka `Accept` kończyło się 500 (`RouteNotFoundException`), bo redirect powstawał **wewnątrz middleware**, zanim wyjątek dotarł do handlera.
+  - `$exceptions->render()` mapuje wyjątki na kopertę.
+
+  Regresję zamyka `test_protected_endpoint_returns_401_envelope_without_accept_header`.
 - Zmiana kształtu zwrotki jest **addytywna** i pokryta testem zamykającym kontrakt.
 
-### Kształt `pagination` — do potwierdzenia
-
-`FOUNDATION.md` narzuca nazwę klucza, nie jego zawartość. Propozycja:
+### Kształt `pagination` (ustalony)
 
 ```json
 { "current_page": 1, "per_page": 25, "total": 137, "last_page": 6 }
 ```
+
+### Implementacja
+
+`App\Http\Responses\ApiResponse` jest **jedynym** źródłem koperty — kontrolery i handler wyjątków delegują do niego, żeby kształt nie mógł się rozjechać. Metody: `success()`, `paginated()`, `error()`, `fromException()`.
+
+Zasada `data`: `null` pomija klucz, `[]` go zostawia. Kolekcje zawsze przekazują tablicę.
+
+Komunikaty idą przez warstwę tłumaczeń (`lang/pl/api.php`).
 
 ---
 
@@ -88,6 +98,18 @@ Ustalenie nadrzędne: **jedna koperta dla wszystkiego**. Sukces i błąd mają t
 - **Create i update przez POST.** Update rozróżnia ID w URL: `POST /api/v1/res/{id}`. Powód: PHP nie parsuje multipartu dla PUT/PATCH, a spoofing `_method` działa tylko gdy żądanie jest POST-em. `PUT` i `PATCH` nie występują w kontrakcie.
 - **Delete przez `DELETE /api/v1/res/{id}`.**
 - Walidacja wyłącznie w Form Requestach, kontrolery cienkie, logika w serwisach.
+
+---
+
+## 4a. Gałęzie i wdrożenie
+
+**Pracujemy wyłącznie na `main`.** `FOUNDATION.md` §3 dopuszcza to wprost — `develop` jest tam wartością domyślną, a nie wymogiem.
+
+Powód jest techniczny, nie estetyczny: **docroot serwuje katalog roboczy repozytorium** (`public_html` → `public` wewnątrz drzewa gita). Produkcja pokazuje więc tę gałąź, która jest aktualnie wyczekowana. Druga gałąź niczego by nie izolowała — byłaby drugim wskaźnikiem, który z czasem zaczyna kłamać o tym, co jest na żywo.
+
+Dwie gałęzie wprowadzamy dopiero, gdy każda dostanie własne środowisko (np. `dev.motusy.top` z osobnym checkoutem). Gdy potrzebna jest recenzja pojedynczej zmiany: krótkożyjąca gałąź funkcyjna → PR → `main` → kasujemy.
+
+**Ryzyko do świadomego zaadresowania:** skoro produkcja to katalog roboczy, każda niezacommitowana zmiana jest natychmiast na żywo, także w połowie refaktoru. Git tego nie chroni. Do rozstrzygnięcia przed pierwszym realnym ruchem — osobny checkout produkcyjny albo świadoma zgoda na ten model.
 
 ---
 
@@ -115,19 +137,34 @@ Na tym etapie dokumenty są **ogólnodostępne, ale nieindeksowalne**: nagłówe
 
 ---
 
+## 6a. Język aplikacji
+
+**Aplikacja jest jednojęzyczna — polski.** `APP_LOCALE=pl`, `APP_FALLBACK_LOCALE=pl`, `APP_FAKER_LOCALE=pl_PL`.
+
+To **świadome odstępstwo od `FOUNDATION.md` §5**, które każe trzymać dwa locale w synchronizacji. Tu drugiego języka nie ma i nie utrzymujemy go — zgodnie z zasadą, że specyfika projektu z `CLAUDE.md` ma pierwszeństwo w sprawach projektowych.
+
+Konsekwencja praktyczna: skoro `APP_FALLBACK_LOCALE` też jest `pl`, **brak klucza nie ma na co się zdegradować** i walidator zwraca klientowi surowy klucz (`validation.email`). Dlatego `lang/pl/` musi zawierać komplet plików frameworka — `validation.php`, `auth.php`, `passwords.php`, `pagination.php` — a nie tylko `api.php`. Pilnuje tego test `test_validation_errors_are_translated_not_raw_keys`.
+
+Przy dodawaniu reguł walidacji spoza standardu Laravela dopisujemy klucz do `lang/pl/validation.php` w tym samym kroku.
+
+---
+
 ## 7. Do ustalenia
 
 - Model uwierzytelniania: czy tokeny Sanctuma osobowe, czy dostęp maszynowy (client credentials). Wpływa na kształt `/api/v1/auth/*`.
 - Rate limiting: limity per token i per IP.
 - Zakres domeny produktowej — jakie encje, jakie pola karty (`card()`).
-- Które dwa locale trzymamy w synchronizacji (obecnie `APP_LOCALE=en`).
 
 ---
 
 ## 8. Stan na 2026-08-13
 
-Zainstalowany czysty szkielet Laravel 13 z warstwą API (Sanctum, `routes/api.php`, `HasApiTokens` na modelu `User`). Migracje bazowe wykonane. Zweryfikowane na żywo: `/` 200, `/up` 200, `/api/user` 401 JSON, `.env` niedostępny z zewnątrz.
+Zainstalowany czysty szkielet Laravel 13 z warstwą API (Sanctum, `routes/api.php`, `HasApiTokens` na modelu `User`). Migracje bazowe wykonane. Zweryfikowane na żywo: `/` 200, `/up` 200, `/api/v1/user` 401 JSON, `.env` niedostępny z zewnątrz.
 
 Logi przestawione na dzienne z retencją 14 dni. Webhook Discorda wpisany do `.env`, kanał niepodpięty.
 
-Nie ma jeszcze: repozytorium Git, kontraktu odpowiedzi, prefiksu `/api/v1`, Scramble, trasy docs, kanału Discord, testów. Kod produktowy nie został napisany.
+Repozytorium: `git@github.com:rafalkwasniak/motusy.git`, deploy key `~/.ssh/id_ed25519_motusy` z aliasem `github.com-motusy`.
+
+Koperta odpowiedzi wdrożona i pokryta testami (14 testów, 31 asercji). Aplikacja przestawiona na polski, komplet tłumaczeń frameworka w `lang/pl/`. Prefiks `/api/v1` aktywny. Placeholdery ze skeletonu usunięte.
+
+Nie ma jeszcze: Scramble, trasy docs, `api-guide.html`, `code-map.html`, kanału Discord. Kod produktowy nie został napisany — brak encji domenowych.
