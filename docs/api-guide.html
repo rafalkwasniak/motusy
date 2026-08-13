@@ -145,6 +145,8 @@
                 <li><a href="#ep-profile">Profil</a></li>
                 <li><a href="#ep-motorcycle">Motocykl</a></li>
                 <li><a href="#ep-uploads">Zdjęcia</a></li>
+                <li><a href="#ep-ble">Tożsamość BLE</a></li>
+                <li><a href="#ep-devices">Urządzenia</a></li>
               </ul>
             </li>
             <li><a href="#widocznosc">Widoczność danych</a></li>
@@ -417,6 +419,71 @@
       obrazka, bez sklejania z niczym. Gdy zdjęcia nie ma, pole jest <code>null</code>.
     </div>
 
+
+    <h3 id="ep-ble">Tożsamość BLE</h3>
+
+    <div class="endpoint">
+      <h3><span class="method">GET</span> <span class="path">/ble/identity</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>Zwraca identyfikator, który telefon ma rozgłaszać przez BLE.</p>
+      <pre><code>{
+  "token": "aca75088d1a96c3dfe6a3df2a9a8182f",
+  "refresh_after": "2026-08-14T19:06:52+00:00",
+  "should_broadcast": true
+}</code></pre>
+      <p class="muted">Token ma 32 znaki szesnastkowe, czyli 128 bitów — tyle, ile mieści się w ramce
+      rozgłoszeniowej BLE.</p>
+    </div>
+
+    <div class="note">
+      <strong>Token sam się zmienia — pytaj o niego regularnie.</strong> Endpoint podmienia go, gdy
+      poprzedni się zestarzeje, więc aplikacja może wołać go przy każdym starcie i zawsze dostanie
+      właściwą wartość. Pole <code>refresh_after</code> mówi, kiedy najwcześniej warto zapytać ponownie.
+      Nie zapisuj tokena na stałe.
+    </div>
+
+    <div class="note">
+      <strong>Po co rotacja.</strong> Gdyby identyfikator był stały, telefon rozgłaszałby przez całe życie
+      konta tę samą wartość — ktoś ze zwykłym skanerem BLE mógłby bez aplikacji i bez zgody logować,
+      kiedy konkretny motocyklista przejeżdża obok. Rotacja zamyka to okno. Stary token pozostaje
+      rozpoznawalny jeszcze przez pewien czas, żeby spotkania zapisane bez zasięgu i wysłane później
+      nadal dało się rozpoznać.
+    </div>
+
+    <div class="endpoint">
+      <h3><span class="method">POST</span> <span class="path">/ble/identity/rotate</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>Wymusza natychmiastową zmianę identyfikatora. To gotowa funkcja „zresetuj moją tożsamość"
+      dla użytkownika, który czuje się śledzony.</p>
+    </div>
+
+    <div class="note">
+      <strong><code>should_broadcast</code> respektuj.</strong> Gdy użytkownik włączy tryb incognito, pole
+      jest <code>false</code> i telefon ma przestać rozgłaszać. To najszczelniejszy wariant incognito
+      i przy okazji oszczędza baterię.
+    </div>
+
+    <h3 id="ep-devices">Urządzenia</h3>
+
+    <div class="endpoint">
+      <h3><span class="method">POST</span> <span class="path">/devices</span> <span class="muted">— wymaga tokena</span></h3>
+      <pre><code>{
+  "device_id": "telefon-rafala",
+  "platform": "android",
+  "app_version": "1.0.0",
+  "push_token": "fcm-abc"
+}</code></pre>
+      <p>Rejestruje urządzenie albo odświeża to, co o nim wiemy. Możesz wołać przy każdym starcie —
+      to nadpisanie, nie tworzenie kolejnego wpisu.</p>
+      <p class="muted"><code>platform</code> przyjmuje <code>ios</code> albo <code>android</code>.
+      <code>push_token</code> jest opcjonalny i na razie nieużywany, ale gdy dojdzie Firebase, będzie już
+      na miejscu. Wyślij go ponownie, gdy się zmieni — Firebase je wymienia.</p>
+    </div>
+
+    <div class="note">
+      <strong>Zarejestruj urządzenie po każdym zalogowaniu.</strong> Rejestracja wiąże je z tokenem
+      dostępowym, którego właśnie użyłeś. Dzięki temu da się później wylogować pojedyncze urządzenie
+      i wysłać powiadomienie na konkretny telefon, a nie na całe konto.
+    </div>
+
     <h2 id="widocznosc">Widoczność danych</h2>
 
     <p>Użytkownik decyduje, które dane widzą inni. Flagi <code>*_visible</code> ustawiasz przy zapisie profilu.</p>
@@ -482,7 +549,6 @@
     <p>Żeby nie szukać na próżno — te rzeczy są zaplanowane, ale jeszcze nie istnieją:</p>
 
     <ul>
-      <li>tożsamość BLE i rejestracja urządzeń,</li>
       <li>spotkania i ich historia,</li>
       <li>obserwowanie, zaproszenia, znajomi,</li>
       <li>statusy „Lecę na moto” i zgłoszenia awarii,</li>

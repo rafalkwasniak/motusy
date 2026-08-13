@@ -194,8 +194,8 @@ Kolejność podyktowana tym, czego potrzebuje aplikacja we FlutterFlow, a nie ko
 | 1 | Auth: `register`, `login`, `logout`, `me` | **zrobione** |
 | 2 | Profil i motocykl (bez uploadu zdjęć) | **zrobione** |
 | 2b | Upload avatara i zdjęcia motocykla | **zrobione** |
-| 3 | Tożsamość BLE, urządzenia, `push_token` | następny |
-| 4 | Spotkania: zapis z obustronnym potwierdzeniem, karencja, historia | |
+| 3 | Tożsamość BLE, urządzenia, `push_token` | **zrobione** |
+| 4 | Spotkania: zapis z obustronnym potwierdzeniem, karencja, historia | następny |
 | 5 | Relacje: obserwowanie, zaproszenia, znajomi, liczniki | |
 | 6 | Statusy i awarie | |
 | 7 | Dashboard | |
@@ -243,6 +243,41 @@ Upload doczepia się do istniejącego profilu lub motocykla. Gdy ich nie ma, zwr
 
 ---
 
+## 6e. BLE i urządzenia
+
+**Tokeny BLE rotują.** Decyzja Rafała, wbrew prostszemu wariantowi ze stałym tokenem. Powód: stały identyfikator to dożywotni beacon — ktoś ze skanerem BLE mógłby bez aplikacji i bez zgody logować przejazdy konkretnej osoby. Schemat dopuszcza wiele wierszy na użytkownika z flagą `active`, więc częstotliwość rotacji to jedna liczba w `config/motusy.php`, a nie migracja.
+
+Retirowany token **pozostaje rozpoznawalny przez okno karencji** (`resolvable_after_rotation_hours`), bo specyfikacja §47 dopuszcza spotkania zapisane offline i wysłane później.
+
+Token ma 128 bitów zapisanych szesnastkowo. **Nie może być dłuższy** — ramka rozgłoszeniowa BLE to około 31 bajtów łącznie.
+
+Rotacja dzieje się **po stronie serwera**: `GET /ble/identity` sam podmienia token, gdy poprzedni się zestarzeje. Aplikacja tylko pyta, więc zmiana polityki nie wymaga wydania nowej wersji aplikacji.
+
+**Urządzenie jest wiązane z tokenem Sanctuma** (`devices.personal_access_token_id`). Bez tego nie da się sensownie ani wylogować pojedynczego urządzenia, ani zaadresować push do konkretnego telefonu.
+
+`device_id` jest unikalny **w obrębie konta**, nie globalnie — to samo urządzenie może obsługiwać dwa konta.
+
+**Incognito:** telefon przestaje rozgłaszać (`should_broadcast: false`). Zabezpieczenie serwerowe — odmowa zapisu spotkania — należy do Etapu 4 i **jeszcze go nie ma**.
+
+---
+
+## 6f. Identyfikacja a powiadomienia
+
+Specyfikacja §112 przypisuje identyfikację użytkownika do API: telefon widzi tylko token, nie wie, kto to.
+
+**Decyzja Rafała: powiadomienie ma zawierać nick.** Wynika z tego, że rozpoznanie tokena musi wrócić **od razu przy zgłoszeniu spotkania**, przed obustronnym potwierdzeniem. Podział ról jest więc taki:
+
+- **rozpoznanie tokena** ujawnia tożsamość każdemu, kto ma świeży token — czyli komuś, kto fizycznie był obok. Rotacja ogranicza okno dla tokenów zebranych wcześniej.
+- **obustronne potwierdzenie** chroni **zapis w historii**, nie samo rozpoznanie.
+
+Wymagania wydajnościowe dla Etapu 4, wprost od Rafała:
+
+- endpoint spotkań musi przyjmować **wiele tokenów naraz**, nie jedno żądanie na każdego mijanego motocyklistę,
+- karencja egzekwowana **po stronie serwera**, żeby naiwny klient nie zalał API przy jeździe w grupie,
+- aplikacja dodatkowo pilnuje lokalnie, żeby nie zgłaszać w kółko tego samego tokena.
+
+---
+
 ## 7. Do ustalenia
 
 - **Odzyskiwanie konta po usunięciu.** Pomysł Rafała: gdy ktoś rejestruje się na adres należący do usuniętego konta, system pyta, czy podnieść stare konto, czy założyć nowe. Obecny schemat już to umożliwia — `users` ma soft delete, więc wiersz zostaje. **Ale jest tu haczyk:** unikalny indeks na `email` obejmuje też wiersze usunięte, a reguła `unique:users,email` ich nie wyklucza. Dopóki nie ma endpointu usuwania konta, nic się nie psuje. Zanim powstanie, trzeba rozstrzygnąć: albo indeks unikalny liczy tylko żywe konta, albo rejestracja na zajęty-ale-usunięty adres celowo wpada w ścieżkę „podnieś konto".
@@ -278,6 +313,9 @@ Token przekazujemy nagłówkiem `Authorization: Bearer <token>`.
 | POST | `/profile/avatar` | tak | `200`, multipart, pole `avatar` |
 | DELETE | `/profile/avatar` | tak | `200` |
 | POST | `/motorcycle/photo` | tak | `200`, multipart, pole `photo` |
+| GET | `/ble/identity` | tak | `200`, token do rozgłaszania |
+| POST | `/ble/identity/rotate` | tak | `200`, wymuszona zmiana tożsamości |
+| POST | `/devices` | tak | `200`, upsert po `device_id` |
 | DELETE | `/motorcycle/photo` | tak | `200` |
 
 `/profile` i `/motorcycle` są **upsertami** — aplikacja wysyła cały formularz i nie musi wiedzieć, czy to pierwszy zapis po rejestracji, czy późniejsza edycja. Oba zwracają pełne konto, więc po zapisie nie trzeba wołać `/auth/me`.

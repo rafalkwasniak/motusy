@@ -27,6 +27,21 @@ return [
         'genders' => ['male', 'female', 'other'],
     ],
 
+    'ble' => [
+        // 128 bits, hex encoded. Must stay short: a BLE advertisement carries about
+        // 31 bytes in total, so a long random string would not fit in the frame.
+        'token_bytes' => 16,
+
+        // How long a token is broadcast before a new one takes over. Rotation is what
+        // stops the identifier from becoming a lifelong beacon that anyone with a
+        // cheap scanner could log without the app.
+        'rotation_hours' => 24,
+
+        // A retired token still resolves for this long, so meetings recorded offline
+        // and sent late can still be matched to a person.
+        'resolvable_after_rotation_hours' => 72,
+    ],
+
     'uploads' => [
         'disk' => 'public',
         'max_kilobytes' => 5120,

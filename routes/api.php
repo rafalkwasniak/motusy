@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BleIdentityController;
+use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\MotorcycleController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -25,4 +27,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/motorcycle', [MotorcycleController::class, 'update']);
     Route::post('/motorcycle/photo', [MotorcycleController::class, 'uploadPhoto']);
     Route::delete('/motorcycle/photo', [MotorcycleController::class, 'deletePhoto']);
+
+    Route::get('/ble/identity', [BleIdentityController::class, 'show']);
+    Route::post('/ble/identity/rotate', [BleIdentityController::class, 'rotate']);
+
+    Route::post('/devices', [DeviceController::class, 'store']);
 });
