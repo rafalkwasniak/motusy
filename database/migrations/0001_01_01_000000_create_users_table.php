@@ -11,14 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Account credentials only. Personal data lives in user_profiles so that
+        // deleting an account can wipe the profile while meetings recorded by the
+        // other party survive as anonymised history.
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('incognito')->default(false);
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

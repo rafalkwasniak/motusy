@@ -63,12 +63,17 @@ class ApiResponse
         );
     }
 
+    /**
+     * $code is a stable machine-readable identifier. Clients branch on it instead of
+     * on $message, which is translated and free to change without breaking anything.
+     */
     public static function error(
+        string $code,
         string $message,
         ?array $errors = null,
         int $status = 400,
     ): JsonResponse {
-        $payload = ['success' => false, 'message' => $message];
+        $payload = ['success' => false, 'code' => $code, 'message' => $message];
 
         if ($errors !== null) {
             $payload['errors'] = $errors;
@@ -85,31 +90,33 @@ class ApiResponse
     {
         return match (true) {
             $e instanceof ValidationException => self::error(
+                'VALIDATION_ERROR',
                 __('api.validation_failed'),
                 $e->errors(),
                 422,
             ),
-            $e instanceof AuthenticationException => self::error(__('api.unauthenticated'), null, 401),
-            $e instanceof AuthorizationException => self::error(__('api.forbidden'), null, 403),
-            $e instanceof ModelNotFoundException => self::error(__('api.not_found'), null, 404),
-            $e instanceof HttpExceptionInterface => self::error(
-                self::messageForStatus($e->getStatusCode()),
-                null,
-                $e->getStatusCode(),
-            ),
-            default => self::error(__('api.server_error'), null, 500),
+            $e instanceof AuthenticationException => self::error('UNAUTHENTICATED', __('api.unauthenticated'), null, 401),
+            $e instanceof AuthorizationException => self::error('FORBIDDEN', __('api.forbidden'), null, 403),
+            $e instanceof ModelNotFoundException => self::error('NOT_FOUND', __('api.not_found'), null, 404),
+            $e instanceof HttpExceptionInterface => self::forStatus($e->getStatusCode()),
+            default => self::error('SERVER_ERROR', __('api.server_error'), null, 500),
         };
     }
 
-    private static function messageForStatus(int $status): string
+    private static function forStatus(int $status): JsonResponse
     {
-        return match ($status) {
-            401 => __('api.unauthenticated'),
-            403 => __('api.forbidden'),
-            404 => __('api.not_found'),
-            405 => __('api.method_not_allowed'),
-            429 => __('api.too_many_requests'),
-            default => $status >= 500 ? __('api.server_error') : __('api.bad_request'),
+        [$code, $message] = match ($status) {
+            401 => ['UNAUTHENTICATED', __('api.unauthenticated')],
+            403 => ['FORBIDDEN', __('api.forbidden')],
+            404 => ['NOT_FOUND', __('api.not_found')],
+            405 => ['METHOD_NOT_ALLOWED', __('api.method_not_allowed')],
+            409 => ['CONFLICT', __('api.conflict')],
+            429 => ['TOO_MANY_REQUESTS', __('api.too_many_requests')],
+            default => $status >= 500
+                ? ['SERVER_ERROR', __('api.server_error')]
+                : ['BAD_REQUEST', __('api.bad_request')],
         };
+
+        return self::error($code, $message, null, $status);
     }
 }

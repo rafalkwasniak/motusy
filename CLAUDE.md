@@ -8,7 +8,33 @@ W razie konfliktu: `FOUNDATION.md` wygrywa w sprawach współpracy (komunikacja,
 
 ## 1. Czym jest projekt
 
-API pod domeną `motusy.top`. Docelowo produkt czysto API-owy; strona informacyjna możliwa w przyszłości, ale nie jest przedmiotem prac na tym etapie.
+API pod domeną `motusy.top`, zasilające **aplikację mobilną dla motocyklistów** budowaną we FlutterFlow.
+
+Produkt w skrócie: aplikacja działa w tle, wykrywa innych motocyklistów w pobliżu i zapisuje spotkania. Drugi filar to zgłaszanie awarii wraz z lokalizacją. Do tego relacje społeczne (obserwowanie, znajomi), statusy i tryb incognito.
+
+**Wykrywanie bliskości dzieje się na telefonie, po BLE. API jest magazynem danych, nie silnikiem wykrywania.** Serwer nie zna trasy użytkownika.
+
+### Specyfikacja produktowa
+
+[docs/motusy-api.md](docs/motusy-api.md) — 115 sekcji ze schematami tabel i listą endpointów.
+
+**Uwaga o jej statusie:** została wygenerowana przez AI jako punkt wyjścia i **nie jest zabetonowana**. Nie znała zasad z `FOUNDATION.md`, więc miejscami im przeczy. W razie rozbieżności **nasze ustalenia mają pierwszeństwo przed specyfikacją**, a rozstrzygnięcia zapisujemy tutaj.
+
+Rozbieżności rozstrzygnięte do tej pory:
+
+| Specyfikacja | Ustalenie | Powód |
+|---|---|---|
+| `meta`, `error: {code, message, fields}` (§97–98) | nasza koperta + `code` | `FOUNDATION.md` §5 narzuca `pagination`; `code` przejęty ze specyfikacji, bo jest dobry |
+| `PATCH /profile`, `PATCH /motorcycle` (§88–89) | `POST` | `FOUNDATION.md` §5; dodatkowo PHP nie parsuje multipartu dla PATCH, a te endpointy przyjmują zdjęcia |
+| klucze główne `UUID` | `bigint` | decyzja Rafała. Konsekwencja do pilnowania: sekwencyjne ID pozwalają enumerować konta, więc endpointy profilu muszą tego zabraniać autoryzacją |
+| brak push w MVP (§110), aplikacja odpytuje API | push z API przez FCM, docelowo | odpytywanie przy 10 000 użytkowników generuje ruch niezależny od tego, czy coś się dzieje |
+
+### Powiadomienia — podział odpowiedzialności
+
+- **Telefon generuje lokalnie** to, co sam wykrył przez BLE: spotkanie, awaria w pobliżu.
+- **API wypycha przez FCM** to, o czym telefon nie ma skąd wiedzieć: status znajomego, awaria znajomego, zaproszenie do znajomych.
+
+Firebase jest odłożony, ale **nie projektujemy pod odpytywanie**. `devices` dostaje kolumnę `push_token` od razu, żeby uniknąć późniejszej migracji na żywej bazie połączonej z ponownym zbieraniem tokenów ze wszystkich urządzeń.
 
 ---
 
@@ -58,10 +84,13 @@ Ustalenie nadrzędne: **jedna koperta dla wszystkiego**. Sukces i błąd mają t
 ```json
 {
   "success": false,
+  "code": "VALIDATION_ERROR",
   "message": "Podane dane są nieprawidłowe.",
   "errors": { "email": ["Pole email jest wymagane."] }
 }
 ```
+
+`code` jest **stabilnym identyfikatorem maszynowym** — aplikacja rozgałęzia logikę na nim, nigdy na `message`, który jest tłumaczony i może się zmienić bez uprzedzenia. Obecne kody: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `CONFLICT`, `TOO_MANY_REQUESTS`, `BAD_REQUEST`, `SERVER_ERROR`. Nowe kody dopisujemy do tej listy przy dodawaniu endpointów.
 
 ### Reguły
 
@@ -149,11 +178,45 @@ Przy dodawaniu reguł walidacji spoza standardu Laravela dopisujemy klucz do `la
 
 ---
 
+## 6b. Plan etapów
+
+Kolejność podyktowana tym, czego potrzebuje aplikacja we FlutterFlow, a nie kolejnością rozdziałów specyfikacji.
+
+| Etap | Zakres | Stan |
+|---|---|---|
+| 0 | Fundament: migracje `users`, `user_profiles`, `motorcycles`, `code` w kopercie, Scramble | **zrobione** |
+| 1 | Auth: `register`, `login`, `logout`, `me` | następny |
+| 2 | Profil i motocykl (bez uploadu zdjęć) | |
+| 2b | Upload avatara i zdjęcia motocykla | |
+| 3 | Tożsamość BLE, urządzenia, `push_token` | |
+| 4 | Spotkania: zapis z obustronnym potwierdzeniem, karencja, historia | |
+| 5 | Relacje: obserwowanie, zaproszenia, znajomi, liczniki | |
+| 6 | Statusy i awarie | |
+| 7 | Dashboard | |
+
+**Po Etapie 1 przerwa na FlutterFlow.** Rafał buduje logowanie w aplikacji i potwierdza, że komunikacja działa, zanim powstanie więcej endpointów. Sens: wychwycić problemy przy czterech endpointach, nie przy trzydziestu.
+
+Etapy 5 i 6 są niezależne — kolejność do zamiany, jeśli po spotkaniach ważniejsze okażą się awarie.
+
+Upload zdjęć celowo wydzielony do 2b: multipart we FlutterFlow to osobny temat i nie mieszamy go z nauką podstaw.
+
+---
+
+## 6c. Model danych — decyzje
+
+- **Klucze główne: `bigint` auto-increment.** Nie UUID, wbrew specyfikacji.
+- **Dane logowania oddzielone od danych osobowych.** `users` trzyma e-mail, hasło i `incognito`; wszystko, co osobowe, jest w `user_profiles`. To nie jest kosmetyka — pozwala usunąć konto, wyczyścić dane osobowe i **zostawić historię spotkań u drugiej strony** w formie zanonimizowanej.
+- **Usunięcie konta = soft delete plus anonimizacja**, nie kaskadowe kasowanie. Spotkanie należy do dwóch osób i historia drugiej strony nie może zniknąć.
+- **Widoczność pól per odbiorca** przez flagi `*_visible` w `user_profiles`. `card()` **zawsze zwraca ten sam zestaw kluczy**; pola ukryte przychodzą jako `null` lub pusty string. Kształt nigdy się nie zmienia, zmieniają się wartości.
+
+---
+
 ## 7. Do ustalenia
 
-- Model uwierzytelniania: czy tokeny Sanctuma osobowe, czy dostęp maszynowy (client credentials). Wpływa na kształt `/api/v1/auth/*`.
-- Rate limiting: limity per token i per IP.
-- Zakres domeny produktowej — jakie encje, jakie pola karty (`card()`).
+- Limity długości pól, karencja spotkań, czasy statusów i awarii — specyfikacja §115 ma pełną listę piętnastu pozycji. Rozstrzygamy je etapami, przy dochodzeniu do konkretnego etapu, nie wszystkie naraz.
+- Rate limiting: ostry na `login` i `register`, luźniejszy na zapisie spotkań, osobny na awariach.
+- Marka i model motocykla: słownik czy wolny tekst. Różnica między danymi filtrowalnymi a bałaganem literówek.
+- Blokowanie i zgłaszanie użytkownika — nie ma tego w specyfikacji, a przy aplikacji kojarzącej nieznajomych w terenie zwykle okazuje się potrzebne szybciej, niż się zakłada.
 
 ---
 
@@ -165,6 +228,8 @@ Logi przestawione na dzienne z retencją 14 dni. Webhook Discorda wpisany do `.e
 
 Repozytorium: `git@github.com:rafalkwasniak/motusy.git`, deploy key `~/.ssh/id_ed25519_motusy` z aliasem `github.com-motusy`.
 
-Koperta odpowiedzi wdrożona i pokryta testami (14 testów, 31 asercji). Aplikacja przestawiona na polski, komplet tłumaczeń frameworka w `lang/pl/`. Prefiks `/api/v1` aktywny. Placeholdery ze skeletonu usunięte.
+Koperta odpowiedzi wdrożona i pokryta testami (14 testów, 32 asercje), z polem `code`. Aplikacja przestawiona na polski, komplet tłumaczeń frameworka w `lang/pl/`. Prefiks `/api/v1` aktywny.
 
-Nie ma jeszcze: Scramble, trasy docs, `api-guide.html`, `code-map.html`, kanału Discord. Kod produktowy nie został napisany — brak encji domenowych.
+**Etap 0 zamknięty.** Schemat bazy przebudowany od zera (`migrate:fresh`): `users` bez kolumny `name`, z `incognito` i `deleted_at`; nowe `user_profiles` i `motorcycles`. Modele `User`, `UserProfile`, `Motorcycle` z relacjami 1:1. Scramble wystawia kontrakt pod `/docs/api` z nagłówkiem `X-Robots-Tag: noindex, nofollow` i wpisem w `robots.txt`.
+
+Nie ma jeszcze: trasy `docs/{slug}.html`, `api-guide.html`, `code-map.html`, kanału Discord. Żadnego endpointu produktowego — Etap 1 jest następny. Kod produktowy nie został napisany — brak encji domenowych.

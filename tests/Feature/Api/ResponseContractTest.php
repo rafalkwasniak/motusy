@@ -22,6 +22,7 @@ class ResponseContractTest extends TestCase
         $response->assertStatus(401)
             ->assertExactJson([
                 'success' => false,
+                'code' => 'UNAUTHENTICATED',
                 'message' => 'Brak uwierzytelnienia.',
             ]);
     }
@@ -33,6 +34,7 @@ class ResponseContractTest extends TestCase
         $response->assertStatus(401)
             ->assertExactJson([
                 'success' => false,
+                'code' => 'UNAUTHENTICATED',
                 'message' => 'Brak uwierzytelnienia.',
             ]);
     }
@@ -44,6 +46,7 @@ class ResponseContractTest extends TestCase
         $response->assertStatus(404)
             ->assertExactJson([
                 'success' => false,
+                'code' => 'NOT_FOUND',
                 'message' => 'Nie znaleziono zasobu.',
             ]);
     }
@@ -55,6 +58,7 @@ class ResponseContractTest extends TestCase
         $response->assertStatus(405)
             ->assertExactJson([
                 'success' => false,
+                'code' => 'METHOD_NOT_ALLOWED',
                 'message' => 'Niedozwolona metoda.',
             ]);
     }
@@ -70,9 +74,10 @@ class ResponseContractTest extends TestCase
         $response->assertStatus(422)
             ->assertJson([
                 'success' => false,
+                'code' => 'VALIDATION_ERROR',
                 'message' => 'Podane dane są nieprawidłowe.',
             ])
-            ->assertJsonStructure(['success', 'message', 'errors' => ['email']]);
+            ->assertJsonStructure(['success', 'code', 'message', 'errors' => ['email']]);
     }
 
     /**
@@ -102,6 +107,7 @@ class ResponseContractTest extends TestCase
         $response->assertStatus(500)
             ->assertExactJson([
                 'success' => false,
+                'code' => 'SERVER_ERROR',
                 'message' => 'Błąd serwera.',
             ]);
 

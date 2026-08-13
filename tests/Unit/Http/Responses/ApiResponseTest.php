@@ -62,11 +62,11 @@ class ApiResponseTest extends TestCase
 
     public function test_error_omits_errors_key_when_there_are_no_field_errors(): void
     {
-        $response = ApiResponse::error('Resource not found.', null, 404);
+        $response = ApiResponse::error('NOT_FOUND', 'Nie znaleziono zasobu.', null, 404);
 
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame(
-            ['success' => false, 'message' => 'Resource not found.'],
+            ['success' => false, 'code' => 'NOT_FOUND', 'message' => 'Nie znaleziono zasobu.'],
             $this->decode($response),
         );
     }
@@ -74,10 +74,10 @@ class ApiResponseTest extends TestCase
     public function test_error_carries_field_errors(): void
     {
         $payload = $this->decode(
-            ApiResponse::error('The given data was invalid.', ['email' => ['Required.']], 422),
+            ApiResponse::error('VALIDATION_ERROR', 'Podane dane są nieprawidłowe.', ['email' => ['Wymagane.']], 422),
         );
 
-        $this->assertSame(['email' => ['Required.']], $payload['errors']);
+        $this->assertSame(['email' => ['Wymagane.']], $payload['errors']);
     }
 
     private function decode(\Illuminate\Http\JsonResponse $response): array
