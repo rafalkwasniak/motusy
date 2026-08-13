@@ -1,6 +1,8 @@
 <?php
 
+use App\Exceptions\InvalidCredentialsException;
 use App\Http\Responses\ApiResponse;
+use App\Services\DiscordErrorReporter;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -25,6 +27,16 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // A wrong password is a normal event, not a fault. Laravel already keeps
+        // validation, auth and 404s out of reporting; this one is ours, so without
+        // it every mistyped password would ring the alert channel.
+        $exceptions->dontReport(InvalidCredentialsException::class);
+
+        // Alongside the log, not instead of it.
+        $exceptions->report(function (Throwable $e): void {
+            app(DiscordErrorReporter::class)->report($e);
+        });
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );

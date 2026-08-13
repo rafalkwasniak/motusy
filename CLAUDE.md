@@ -62,6 +62,8 @@ Artisan odpala Composera przez `php` z `PATH`, więc przy komendach typu `instal
 
 **Config jest cache'owany.** Po każdej zmianie `.env` trzeba wykonać `php artisan config:cache`, inaczej zmiana nie zadziała. To samo dotyczy `route:cache` po zmianach w routingu.
 
+**Scache'owany config unieważnia wpisy `<env>` z `phpunit.xml`.** Wartości są zapiekane w pliku cache, więc testy czytają produkcyjne ustawienia. Kosztowało nas to wysłanie prawdziwej wiadomości na kanał Discord przy uruchomieniu testów. Dlatego wyciszenia wrażliwych usług na czas testów siedzą w `tests/TestCase::setUp()` przez `config([...])`, a nie tylko w `phpunit.xml` — tam wygrywają niezależnie od cache'u. Pilnuje tego `tests/Feature/NoOutboundCallsInTestsTest.php`, a `Http::preventStrayRequests()` w bazowym `TestCase` blokuje każde niezamockowane wyjście na zewnątrz.
+
 ---
 
 ## 3. Kontrakt odpowiedzi API
@@ -147,7 +149,18 @@ Dwie gałęzie wprowadzamy dopiero, gdy każda dostanie własne środowisko (np.
 ## 5. Logowanie i alerty
 
 - Kanał `stack` → `daily`, retencja **14 dni** (`LOG_STACK=daily`, `LOG_DAILY_DAYS=14`).
-- **Discord webhook: URL jest już w `.env` pod `LOG_DISCORD_WEBHOOK_URL`.** Kanał logujący nie jest jeszcze podpięty — do zrobienia. Przy podpinaniu: poziom `error` i wyżej, bez payloadów z danymi osobowymi, wysyłka nieblokująca (kolejka lub `Http::async`), żeby padnięty Discord nie wywracał żądania API.
+- **Discord podpięty.** `App\Services\DiscordErrorReporter`, webhook w `.env` pod `DISCORD_WEBHOOK_URL` — nazwa ujednolicona z `kramio.pl`, żeby konwencja była wspólna dla projektów Rafała.
+
+  Wzorzec przeniesiony z `kramio.pl`: natywny embed Discorda, czerwień dla błędów, bursztyn dla `alert()`, pola Type / Location / Source, sześć ramek stosu.
+
+  **Czego reporter nie robi i to jest celowe:**
+  - nie wypuszcza błędu dostarczenia — poleciałby z powrotem do handlera wyjątków i zapętliłby się,
+  - nie wysyła nic, gdy webhook jest pusty,
+  - nie publikuje ścieżek bezwzględnych; są skracane do względnych, żeby nie wystawiać układu serwera.
+
+  **Odstępstwo od wersji z `kramio.pl`:** ten sam błąd jest raportowany **raz na 15 minut** (`services.discord.repeat_minutes`), odcisk palca liczony z klasy, pliku i linii. Powód: zepsuty deploy zamienia każde żądanie w ten sam wyjątek — bez wyciszania kanał tonie w kopiach, Discord zaczyna odrzucać wiadomości i ginie ten alert, który miał znaczenie.
+
+  **`InvalidCredentialsException` jest na liście `dontReport`.** Laravel domyślnie nie raportuje walidacji, autoryzacji ani 404, ale ten wyjątek jest nasz — bez wpisu każde pomylone hasło dzwoniłoby na kanał.
 - `LOG_LEVEL` jest teraz `debug` — przy pierwszym realnym ruchu produkcyjnym rozważyć `info` lub `error`.
 
 ---
@@ -374,7 +387,7 @@ Kontrakt OpenAPI: `/docs/api` — dokumentuje też, które endpointy wymagają t
 
 Zainstalowany czysty szkielet Laravel 13 z warstwą API (Sanctum, `routes/api.php`, `HasApiTokens` na modelu `User`). Migracje bazowe wykonane. Zweryfikowane na żywo: `/` 200, `/up` 200, `/api/v1/user` 401 JSON, `.env` niedostępny z zewnątrz.
 
-Logi przestawione na dzienne z retencją 14 dni. Webhook Discorda wpisany do `.env`, kanał niepodpięty.
+Logi dzienne z retencją 14 dni. Kanał Discord podpięty i zweryfikowany na żywym webhooku.
 
 Repozytorium: `git@github.com:rafalkwasniak/motusy.git`, deploy key `~/.ssh/id_ed25519_motusy` z aliasem `github.com-motusy`.
 
@@ -382,4 +395,4 @@ Koperta odpowiedzi wdrożona i pokryta testami (14 testów, 32 asercje), z polem
 
 **Etap 0 zamknięty.** Schemat bazy przebudowany od zera (`migrate:fresh`): `users` bez kolumny `name`, z `incognito` i `deleted_at`; nowe `user_profiles` i `motorcycles`. Modele `User`, `UserProfile`, `Motorcycle` z relacjami 1:1. Scramble wystawia kontrakt pod `/docs/api` z nagłówkiem `X-Robots-Tag: noindex, nofollow` i wpisem w `robots.txt`.
 
-Nie ma jeszcze: trasy `docs/{slug}.html`, `api-guide.html`, `code-map.html`, kanału Discord. Żadnego endpointu produktowego — Etap 1 jest następny. Kod produktowy nie został napisany — brak encji domenowych.
+Nie ma jeszcze: `code-map.html`. Żadnego endpointu produktowego — Etap 1 jest następny. Kod produktowy nie został napisany — brak encji domenowych.

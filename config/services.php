@@ -28,6 +28,14 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'discord' => [
+        // Channel webhook that alerts are posted to. Empty disables reporting.
+        'webhook' => env('DISCORD_WEBHOOK_URL'),
+
+        // How long the same error stays silenced after being reported once.
+        'repeat_minutes' => env('DISCORD_REPEAT_MINUTES', 15),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
