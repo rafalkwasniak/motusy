@@ -383,6 +383,14 @@ Kontrakt OpenAPI: `/docs/api` — dokumentuje też, które endpointy wymagają t
 
 ---
 
+## 7b. Log prac
+
+[docs/worklog.md](docs/worklog.md) — chronologiczny zapis decyzji wykraczających poza specyfikację i stanu na koniec sesji, wymagany przez `FOUNDATION.md` §6. Nie powtarza ustaleń z tego pliku ani historii gita: zapisuje **dlaczego** i **czego jeszcze nie ma**.
+
+Dopisujemy do niego na koniec każdej sesji.
+
+---
+
 ## 8. Stan na 2026-08-13
 
 Zainstalowany czysty szkielet Laravel 13 z warstwą API (Sanctum, `routes/api.php`, `HasApiTokens` na modelu `User`). Migracje bazowe wykonane. Zweryfikowane na żywo: `/` 200, `/up` 200, `/api/v1/user` 401 JSON, `.env` niedostępny z zewnątrz.
