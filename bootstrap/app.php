@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\InvalidCredentialsException;
+use App\Http\Middleware\LogApiTraffic;
 use App\Http\Responses\ApiResponse;
 use App\Services\DiscordErrorReporter;
 use Illuminate\Foundation\Application;
@@ -17,6 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api/v1',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Prepended globally, not appended to the api group: Laravel reorders the stack
+        // by middleware priority and Authenticate sits high in it, so a group middleware
+        // never sees a request that failed authentication — the very case worth tracing.
+        $middleware->prepend(LogApiTraffic::class);
+
         // Returning null makes the Authenticate middleware throw AuthenticationException
         // instead of building a redirect to the "login" route, which does not exist here
         // and would surface as a 500 before the exception handler ever sees it.

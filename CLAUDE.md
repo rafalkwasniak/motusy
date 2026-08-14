@@ -64,6 +64,8 @@ Artisan odpala Composera przez `php` z `PATH`, więc przy komendach typu `instal
 
 **Scache'owany config unieważniał wpisy `<env>` z `phpunit.xml`.** Wartości są zapiekane w pliku cache, więc testy czytały ustawienia produkcyjne. Raz kosztowało to wysłanie prawdziwej wiadomości na kanał Discord — ale skutek dużo gorszy wyszedł dopiero teraz: **cała suita chodziła po produkcyjnej bazie**, a `RefreshDatabase` zaczyna od `migrate:fresh`, czyli skasowania wszystkich tabel. Uratowało nas wyłącznie to, że baza była jeszcze pusta.
 
+**Middleware dopisane do grupy `api` nie widzi żądań bez tokena.** Laravel sortuje stos według `middlewarePriority`, a `Authenticate` stoi w nim wysoko — wszystko, co dopiszemy przez `$middleware->api(append: ...)`, wykona się dopiero po nim, czyli nigdy dla żądania odrzuconego na uwierzytelnianiu. Cokolwiek ma obserwować albo obsługiwać **wszystkie** żądania, musi iść przez `$middleware->prepend()`. Wyszło to przy diagnostyce, która milczała dokładnie w przypadku, dla którego powstała.
+
 Zamknięte u źródła: `phpunit.xml` ustawia `APP_CONFIG_CACHE` na nieistniejący plik, więc w testach framework wczytuje konfigurację z plików i wszystkie wpisy `<env>` znów obowiązują — łącznie z bazą SQLite w pamięci. Pilnują tego dwa testy: `tests/Feature/TestDatabaseIsIsolatedTest.php` (baza) i `tests/Feature/NoOutboundCallsInTestsTest.php` (ruch na zewnątrz). Wyciszenia w `tests/TestCase::setUp()` i `Http::preventStrayRequests()` zostają jako druga warstwa.
 
 ---

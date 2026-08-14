@@ -104,3 +104,23 @@ Zrobione w tej sesji: Etap 4a (UUID-y BLE, `POST /profile/incognito`, `should_sc
 **Nadal nie sprawdzone:** czy cron faktycznie woła `schedule:run` — teraz zależy od tego `ble:prune-identities`. Oraz to samo co poprzednio: nic z tego nie było jeszcze wołane z FlutterFlow.
 
 **Etap 5 jest następny.** Obie decyzje sprzed poprzedniej sesji nadal czekają.
+
+### Pierwsze zderzenie z FlutterFlow (ten sam dzień, wieczorem)
+
+Rafał przeszedł w aplikacji całą ścieżkę onboardingu. Do tej pory API nie było wołane z prawdziwego klienta mobilnego — to była pierwsza okazja, żeby sprawdzić, czy kontrakt trzyma się w praktyce. Trzyma się; wszystkie potknięcia były po stronie aplikacji albo po stronie widoczności zdarzeń, nie w regułach.
+
+**Log produkcyjny nie nadawał się do diagnozy i to nie był przypadek.** Odrzucenie formularza (422), brak tokena (401) i brak profilu (409) to normalne odpowiedzi, nie błędy, więc Laravel ich nie loguje. Z zewnątrz wygląda to identycznie jak „aplikacja w ogóle nie zawołała". Powstał `LogApiTraffic` — ślad żądań włączany z `.env`, wyłączony domyślnie, z hasłami i tokenami wyciętymi z zapisu.
+
+**Ślad w pierwszej wersji nie widział żądań bez tokena** — czyli przypadku, dla którego powstał. Powód w `CLAUDE.md` §2: Laravel sortuje middleware według priorytetu i `Authenticate` wchodzi przed tym, co dopisane do grupy `api`. Przeniesione na `prepend()`.
+
+**Czego ślad nie zobaczył od razu, a zobaczył po dołożeniu jednej rzeczy.** Nieudany upload avatara wyglądał identycznie jak źle nazwane pole. Dopiero `content_length` i lista plików rozdzieliły „przyszło pole o złej nazwie" od „nie przyszło nic". Wniosek na przyszłość: przy diagnostyce liczy się to, co pozwala **odróżnić** hipotezy, a nie to, co potwierdza tę pierwszą.
+
+**Hipoteza, która okazała się fałszywa.** Podejrzewałem znak `+` w boundary generowanym przez Darta. Odtworzyłem żądanie z dokładnie tym samym boundary — przeszło z kodem 200. Poprzednia porażka wynikała z tego, że sam źle zbudowałem ciało testowe. Wniosek: reprodukcja musi być sprawdzona w wariancie pozytywnym, zanim uzna się ją za dowód.
+
+**Realne przyczyny po stronie aplikacji:** nieaktualny token po skasowaniu konta (stąd 401 mimo obecnego nagłówka), wysyłka pustego formularza motocykla z `production_year: 0` zamiast pominięcia pola, oraz żądanie uploadu bez dołączonego pliku. Żadna nie wymagała zmiany w API.
+
+**Zmiany, które z tego wyszły:** `Access-Control-Allow-Origin: *` na `/storage/` — Flutter Web pobiera obrazy żądaniem HTTP, nie znacznikiem `img`, więc podlegają CORS; oraz logo przepuszczone przez redukcję palety (357 KB → 49 KB, przezroczystość zachowana).
+
+**Potwierdzone na prawdziwych danych:** przetworzenie zdjęć usuwa EXIF razem ze współrzędnymi GPS, avatar schodzi z 143 KB do 59 KB, zdjęcie motocykla z 594 KB do 164 KB.
+
+**Stan aplikacji na koniec dnia:** konto z profilem, motocyklem, oboma zdjęciami, zarejestrowanym urządzeniem i wydaną tożsamością BLE. `POST /meetings` nie było jeszcze wołane ani razu — to pierwszy krok wymagający dwóch telefonów.

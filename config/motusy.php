@@ -2,6 +2,12 @@
 
 return [
 
+    // Temporary request tracing, switched on from .env when a client misbehaves
+    // without leaving anything in the log. Off by default and meant to stay that way.
+    'diagnostics' => [
+        'enabled' => env('API_DIAGNOSTICS', false),
+    ],
+
     'auth' => [
         // Brute-force guard on register and login, per IP.
         'throttle' => [
