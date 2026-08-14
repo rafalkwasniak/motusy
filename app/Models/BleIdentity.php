@@ -40,4 +40,9 @@ class BleIdentity extends Model
                 ->orWhere('expires_at', '>', now());
         });
     }
+
+    public function isResolvable(): bool
+    {
+        return $this->active || ($this->expires_at !== null && $this->expires_at->isFuture());
+    }
 }

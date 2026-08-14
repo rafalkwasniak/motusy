@@ -20,6 +20,10 @@ class RecordMeetingsRequest extends FormRequest
             'detections.*.latitude' => ['required', 'numeric', 'between:-90,90'],
             'detections.*.longitude' => ['required', 'numeric', 'between:-180,180'],
             'detections.*.detected_at' => ['required', 'date'],
+
+            // Optional: phones report it when the platform exposes it, and it is only
+            // ever used to tune distance thresholds later.
+            'detections.*.rssi' => ['nullable', 'integer', 'between:-127,20'],
         ];
     }
 }

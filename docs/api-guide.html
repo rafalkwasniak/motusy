@@ -144,6 +144,7 @@
                 <li><a href="#ep-logout">Wylogowanie</a></li>
                 <li><a href="#ep-profile">Profil</a></li>
                 <li><a href="#ep-motorcycle">Motocykl</a></li>
+                <li><a href="#ep-incognito">Incognito</a></li>
                 <li><a href="#ep-uploads">Zdjęcia</a></li>
                 <li><a href="#ep-ble">Tożsamość BLE</a></li>
                 <li><a href="#ep-devices">Urządzenia</a></li>
@@ -368,6 +369,26 @@
       Nie musisz po zapisie wołać <code>/auth/me</code>, żeby odświeżyć ekran — masz świeże dane od razu.
     </div>
 
+    <div class="endpoint">
+      <h3 id="ep-incognito"><span class="method">POST</span> <span class="path">/profile/incognito</span> <span class="muted">— wymaga tokena</span></h3>
+      <p>Włącza i wyłącza tryb niewidzialny. Jedno pole, żadnych warunków wstępnych. Też zwraca pełne konto.</p>
+      <pre><code>{
+  "incognito": true
+}</code></pre>
+      <p class="muted">Osobny endpoint, bo <code>POST /profile</code> wymaga nicka i płci — przełącznik
+      w ustawieniach musiałby wtedy wysyłać cały formularz i nie zadziałałby u kogoś, kto nie skończył
+      onboardingu.</p>
+    </div>
+
+    <div class="note">
+      <strong>Incognito działa tak, jakbyś nie miał aplikacji.</strong> Nie jesteś wykrywany i sam nie
+      wykrywasz — <code>should_broadcast</code> i <code>should_scan</code> lecą na <code>false</code>, a
+      zgłoszenia spotkań z udziałem takiej osoby wracają ze statusem <code>incognito</code>.
+      Historia sprzed włączenia trybu zostaje nietknięta.
+      Jedyny zaplanowany wyjątek to awarie: gdy dojdą, będą przebijać ten tryb w obie strony, żeby
+      prywatność nie kosztowała nikogo pomocy na drodze.
+    </div>
+
 
     <h3 id="ep-uploads">Zdjęcia</h3>
 
@@ -425,14 +446,32 @@
 
     <div class="endpoint">
       <h3><span class="method">GET</span> <span class="path">/ble/identity</span> <span class="muted">— wymaga tokena</span></h3>
-      <p>Zwraca identyfikator, który telefon ma rozgłaszać przez BLE.</p>
+      <p>Zwraca komplet danych, których telefon potrzebuje do rozgłaszania i skanowania.</p>
       <pre><code>{
   "token": "aca75088d1a96c3dfe6a3df2a9a8182f",
+  "service_uuid": "F8B8DA1E-F688-4478-B617-91C9BA4B33C5",
+  "characteristic_uuid": "4438009D-8D2B-4C37-8FF5-E6270D88EB17",
   "refresh_after": "2026-08-14T19:06:52+00:00",
-  "should_broadcast": true
+  "should_broadcast": true,
+  "should_scan": true
 }</code></pre>
-      <p class="muted">Token ma 32 znaki szesnastkowe, czyli 128 bitów — tyle, ile mieści się w ramce
-      rozgłoszeniowej BLE.</p>
+      <p class="muted">Token ma 32 znaki szesnastkowe, czyli 128 bitów. Odczytywany jest przez połączenie,
+      a nie z ramki rozgłoszeniowej, więc jego długość nie jest niczym ograniczona od góry.</p>
+    </div>
+
+    <div class="note">
+      <strong>Dwa różne identyfikatory — nie pomyl ich.</strong> <code>service_uuid</code> jest
+      <em>jeden dla całej aplikacji</em>, stały i publiczny: leci w rozgłoszeniu i mówi tylko tyle, że
+      w pobliżu jest ktoś z Motusy. Nie zdradza kto. <code>token</code> jest <em>jeden na użytkownika</em>,
+      rotuje i siedzi w charakterystyce GATT — trzeba się połączyć, żeby go odczytać.
+      Tożsamość ujawnia się więc dopiero komuś, kto faktycznie był obok.
+    </div>
+
+    <div class="note">
+      <strong>Oba UUID-y zapisz lokalnie i miej zaszyte w kodzie jako awaryjne.</strong> Skanowanie musi
+      działać bez zasięgu, a telefon w trasie bywa bez sieci. Pobierz je przy pierwszym udanym
+      wywołaniu i używaj zapamiętanych. Zwracamy je z API po to, żeby dało się je zmienić bez
+      wydawania nowej wersji aplikacji — a nie po to, żeby pytać przed każdym startem skanowania.
     </div>
 
     <div class="note">
@@ -457,9 +496,11 @@
     </div>
 
     <div class="note">
-      <strong><code>should_broadcast</code> respektuj.</strong> Gdy użytkownik włączy tryb incognito, pole
-      jest <code>false</code> i telefon ma przestać rozgłaszać. To najszczelniejszy wariant incognito
-      i przy okazji oszczędza baterię.
+      <strong>Czytaj <code>should_broadcast</code> i <code>should_scan</code> z odpowiedzi, nie wyliczaj
+      ich z <code>incognito</code>.</strong> Dziś oba są po prostu zaprzeczeniem trybu incognito, ale gdy
+      dojdą awarie, użytkownik z aktywną awarią będzie musiał rozgłaszać mimo trybu niewidzialnego.
+      Jeśli aplikacja czyta gotowe flagi, zmienimy tę regułę na serwerze i nie wymusi to wydania nowej
+      wersji.
     </div>
 
     <h3 id="ep-devices">Urządzenia</h3>
@@ -489,16 +530,18 @@
     <h3 id="ep-meetings">Spotkania</h3>
 
     <div class="note">
-      <strong>Spotkanie liczy się dopiero, gdy zgłoszą je oba telefony.</strong> Jeżeli tylko Twój telefon
-      wykryje drugiego motocyklistę, a jego nie wykryje Ciebie, spotkanie nie powstaje — nie pojawi się
-      w historii i nie dostaniesz o nim powiadomienia. Z punktu widzenia użytkownika po prostu się nie
-      wydarzyło.
+      <strong>Jedno zgłoszenie wystarczy — spotkanie zapisuje się obu stronom.</strong> Jeśli wykryjesz
+      motocyklistę, a jego telefon nie wykryje Ciebie, spotkanie i tak powstaje i pojawia się w historii
+      obojga. Wcześniej wymagaliśmy zgłoszenia z obu telefonów; ta reguła upadła, bo iPhone nadający w tle
+      jest niewidoczny dla Androida, więc w parze iOS–Android wykrycie zawsze idzie tylko w jedną stronę
+      i żadne takie spotkanie nigdy by się nie potwierdziło.
     </div>
 
     <div class="endpoint">
       <h3><span class="method">POST</span> <span class="path">/meetings</span> <span class="muted">— wymaga tokena</span></h3>
       <p>Zgłasza motocyklistów wykrytych przez BLE. Przyjmuje <strong>tablicę</strong>, bo mijając grupę
-      wykryjesz kilku naraz i to ma być jedno żądanie, nie pięć.</p>
+      wykryjesz kilku naraz i to ma być jedno żądanie, nie pięć. Maksymalnie 20 na paczkę — przekroczenie
+      to <code>422</code> na całą paczkę, więc dziel lokalnie przed wysyłką.</p>
       <pre><code>{
   "detections": [
     {
@@ -506,19 +549,23 @@
       "ble_token": "aca75088d1a96c3dfe6a3df2a9a8182f",
       "latitude": 50.4201,
       "longitude": 18.9273,
-      "detected_at": "2026-08-13T18:42:15Z"
+      "detected_at": "2026-08-13T18:42:15Z",
+      "rssi": -67
     }
   ]
 }</code></pre>
       <p>Wysyłasz <strong>token BLE</strong>, nie identyfikator użytkownika — telefon go nie zna i nie musi.
       Rozpoznaniem zajmuje się API.</p>
       <p class="muted">Współrzędne to pozycja <em>Twojego</em> telefonu w chwili wykrycia, nie punkt pomiędzy
-      wami. Każda strona zapisuje własną.</p>
+      wami. Każde zgłoszenie zachowuje własną. <code>rssi</code> jest opcjonalne i służy wyłącznie do
+      strojenia progów odległości w przyszłości. <code>detected_at</code> wysyłaj w UTC ze strefą i stawiaj
+      w chwili <em>wykrycia</em>, nie wysyłki.</p>
     </div>
 
     <h3>Odpowiedź</h3>
 
-    <p>Każde zgłoszenie dostaje własny wynik — odrzucenie jednego nic nie mówi o pozostałych.</p>
+    <p>Każde zgłoszenie dostaje własny wynik, w tej samej kolejności — odrzucenie jednego nic nie mówi
+    o pozostałych.</p>
 
     <pre><code>{
   "success": true,
@@ -526,10 +573,14 @@
     "results": [
       {
         "event_id": "wygenerowany-przez-aplikacje",
-        "created": true,
-        "confirmed": false,
-        "reason": null,
-        "meeting": null
+        "status": "created",
+        "meeting": {
+          "id": 4821,
+          "detected_at": "2026-08-13T18:42:15+00:00",
+          "latitude": 50.4201,
+          "longitude": 18.9273,
+          "user": { "nickname": "Marek", "motorcycle": { "brand": "Yamaha" } }
+        }
       }
     ]
   }
@@ -537,46 +588,41 @@
 
     <div class="table-wrap">
     <table>
-      <tr><th>Pole</th><th>Znaczenie</th></tr>
-      <tr><td><code>created</code></td><td>zgłoszenie zostało zapisane</td></tr>
-      <tr><td><code>confirmed</code></td><td>drugi telefon też zgłosił — <strong>dopiero teraz jest spotkanie</strong></td></tr>
-      <tr><td><code>meeting</code></td><td>dane spotkanej osoby; wypełnione <strong>wyłącznie</strong> gdy <code>confirmed</code></td></tr>
-      <tr><td><code>reason</code></td><td>dlaczego nic nie powstało, gdy <code>created</code> jest <code>false</code></td></tr>
+      <tr><th><code>status</code></th><th>Znaczenie</th><th><code>meeting</code></th></tr>
+      <tr><td><code>created</code></td><td>nowe spotkanie</td><td>jest</td></tr>
+      <tr><td><code>cooldown</code></td><td>ta para ma już spotkanie w oknie karencji</td><td>jest</td></tr>
+      <tr><td><code>duplicate</code></td><td>to <code>event_id</code> już przyszło</td><td>jest</td></tr>
+      <tr><td><code>unknown_token</code></td><td>takiego tokena nie ma</td><td>brak</td></tr>
+      <tr><td><code>expired_token</code></td><td>token istniał, ale już się nie rozpoznaje</td><td>brak</td></tr>
+      <tr><td><code>self</code></td><td>to Twój własny token</td><td>brak</td></tr>
+      <tr><td><code>incognito</code></td><td>któraś ze stron ma tryb niewidzialny</td><td>brak</td></tr>
+      <tr><td><code>too_old</code></td><td>wykrycie starsze niż dopuszczalne opóźnienie (24 h)</td><td>brak</td></tr>
+      <tr><td><code>invalid_time</code></td><td>czas wykrycia z przyszłości poza tolerancją zegara</td><td>brak</td></tr>
     </table>
     </div>
 
     <div class="note">
-      <strong>Powiadomienie pokazuj tylko wtedy, gdy <code>confirmed</code> jest <code>true</code>.</strong>
-      Wtedy w <code>meeting.user</code> masz nick i motocykl, czyli wszystko, czego potrzebujesz na
-      „Spotkałeś Marka, Yamaha MT-07”. Przy <code>confirmed: false</code> nie ma czego pokazywać —
-      i nie ma o kim, bo API celowo nie zdradza wtedy tożsamości.
+      <strong>Każdy status z tej tabeli znaczy „możesz skasować z kolejki".</strong> Ponawiaj wyłącznie przy
+      błędzie sieci, <code>5xx</code> i <code>429</code> — tam nic nie zostało zapisane.
     </div>
 
     <div class="note">
-      <strong>Twoje zgłoszenie bywa tym pierwszym.</strong> Wtedy dostaniesz <code>confirmed: false</code>,
-      a spotkanie „dojrzeje”, gdy drugi telefon się odezwie. Zobaczysz je przy kolejnym pobraniu historii.
-      Docelowo poinformuje o tym powiadomienie push.
+      <strong>Limit: 30 żądań na minutę na konto.</strong> Po przekroczeniu dostaniesz <code>429</code>
+      z kodem <code>TOO_MANY_REQUESTS</code> i nagłówkiem <code>Retry-After</code> — użyj go zamiast zgadywać
+      odstęp. Przy normalnej jeździe nie da się w ten limit uderzyć; telefon wracający po dobie bez zasięgu
+      z dwustoma zaległymi wykryciami wyśle około dziesięciu żądań.
     </div>
 
-    <h3>Możliwe wartości <code>reason</code></h3>
-
-    <div class="table-wrap">
-    <table>
-      <tr><td><code>cooldown</code></td><td>tę osobę masz już zapisaną w okresie karencji</td></tr>
-      <tr><td><code>duplicate</code></td><td>to <code>event_id</code> już przyszło; wynik jest ten sam co poprzednio</td></tr>
-      <tr><td><code>unknown_token</code></td><td>token nieznany lub zbyt stary, by go rozpoznać</td></tr>
-      <tr><td><code>incognito</code></td><td>któraś ze stron ma włączone incognito</td></tr>
-      <tr><td><code>too_old</code></td><td>wykrycie starsze niż dopuszczalne opóźnienie</td></tr>
-      <tr><td><code>invalid_time</code></td><td>czas wykrycia z przyszłości</td></tr>
-      <tr><td><code>self</code></td><td>to Twój własny token</td></tr>
-    </table>
+    <div class="note">
+      <strong>Powiadomienie możesz pokazać od razu.</strong> Gdy <code>meeting</code> jest wypełnione, masz
+      w <code>meeting.user</code> nick i motocykl, czyli wszystko na „Spotkałeś Marka, Yamaha MT-07”.
     </div>
 
     <div class="note">
       <strong><code>event_id</code> generuj sam i zapamiętaj.</strong> Jeśli wyślesz żądanie i nie doczekasz
-      odpowiedzi, ponów je z tym samym <code>event_id</code> — nie powstanie drugie spotkanie, a odpowiedź
-      będzie taka jak za pierwszym razem. Bez tego utracona odpowiedź oznacza spotkanie, o którym
-      użytkownik nigdy się nie dowie.
+      odpowiedzi, ponów je z tym samym <code>event_id</code> — nie powstanie drugi wpis, a odpowiedź będzie
+      taka jak za pierwszym razem. Identyfikatory są liczone osobno dla każdego telefonu, więc to, że druga
+      strona nadała swojemu zgłoszeniu inny, niczego nie psuje.
     </div>
 
     <div class="note">
@@ -585,19 +631,31 @@
       żeby aplikacja mogła go zalewać.
     </div>
 
+    <div class="note">
+      <strong>Karencja: 6 godzin na parę, liczone od momentu spotkania.</strong> Mijasz tego samego
+      motocyklistę rano w drodze do pracy i dwie godziny później jadąc do urzędu — to jedno zdarzenie,
+      nie dwa. Wspólna trasa też zostaje jednym wpisem. Dopiero po tym oknie kolejne minięcie jest nowym
+      spotkaniem.
+    </div>
+
     <div class="endpoint">
       <h3><span class="method">GET</span> <span class="path">/meetings</span> <span class="muted">— wymaga tokena</span></h3>
       <p>Historia spotkań, od najnowszych. Stronicowana: <code>?page=1&amp;per_page=20</code>, maksymalnie 50.</p>
-      <p class="muted">Zawiera wyłącznie spotkania potwierdzone przez oba telefony. Pusta historia zwraca
-      <code>data: []</code>, nigdy braku klucza.</p>
+      <p class="muted">Pusta historia zwraca <code>data: []</code>, nigdy braku klucza.</p>
+    </div>
+
+    <div class="note">
+      <strong>Historia to nie suma Twoich zgłoszeń.</strong> Znajdą się w niej spotkania, których Twój
+      telefon nigdy nie zgłosił, bo zgłosiła je druga strona. Buduj widok z tego, co zwraca
+      <code>GET /meetings</code>, a nie z własnej kolejki wysyłkowej.
     </div>
 
     <div class="endpoint">
       <h3><span class="method">GET</span> <span class="path">/meetings/{id}</span> <span class="muted">— wymaga tokena</span></h3>
       <p>Szczegóły jednego spotkania — pod kliknięcie w powiadomienie albo w pozycję historii.</p>
-      <p class="muted">Czytelne wyłącznie dla właściciela wpisu. Cudze spotkanie zwraca <code>404</code>.</p>
+      <p class="muted">Czytelne dla obu uczestników i tylko dla nich. Cudze spotkanie zwraca <code>404</code>,
+      a nie <code>403</code>, żeby nie dało się sprawdzać, które identyfikatory istnieją.</p>
     </div>
-
     <h2 id="widocznosc">Widoczność danych</h2>
 
     <p>Użytkownik decyduje, które dane widzą inni. Flagi <code>*_visible</code> ustawiasz przy zapisie profilu.</p>

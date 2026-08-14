@@ -8,6 +8,7 @@ return [
     'conflict' => 'Żądanie jest sprzeczne z aktualnym stanem zasobu.',
     'device_registered' => 'Urządzenie zostało zarejestrowane.',
     'fetched' => 'Pobrano dane.',
+    'incognito_saved' => 'Tryb incognito został zapisany.',
     'invalid_credentials' => 'Nieprawidłowy adres e-mail lub hasło.',
     'logged_in' => 'Zalogowano.',
     'logged_out' => 'Wylogowano.',

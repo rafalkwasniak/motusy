@@ -132,6 +132,49 @@ class ProfileTest extends TestCase
             ->assertJsonStructure(['errors' => ['production_year']]);
     }
 
+    public function test_incognito_is_switched_on_and_off(): void
+    {
+        $user = User::factory()->create(['incognito' => false]);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/profile/incognito', ['incognito' => true])
+            ->assertStatus(200)
+            ->assertJsonPath('data.incognito', true);
+
+        $this->assertTrue($user->fresh()->incognito);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/profile/incognito', ['incognito' => false])
+            ->assertStatus(200)
+            ->assertJsonPath('data.incognito', false);
+
+        $this->assertFalse($user->fresh()->incognito);
+    }
+
+    /**
+     * The whole point of a separate endpoint: the switch has to work before anybody
+     * has filled in a nickname, which saving the profile would demand.
+     */
+    public function test_incognito_works_for_an_account_without_a_profile(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/profile/incognito', ['incognito' => true])
+            ->assertStatus(200)
+            ->assertJsonPath('data.incognito', true);
+    }
+
+    public function test_incognito_requires_the_flag(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/profile/incognito', [])
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'VALIDATION_ERROR');
+    }
+
     public function test_profile_endpoints_require_authentication(): void
     {
         $this->postJson('/api/v1/profile', self::VALID_PROFILE)
@@ -139,6 +182,9 @@ class ProfileTest extends TestCase
             ->assertJsonPath('code', 'UNAUTHENTICATED');
 
         $this->postJson('/api/v1/motorcycle', self::VALID_MOTORCYCLE)
+            ->assertStatus(401);
+
+        $this->postJson('/api/v1/profile/incognito', ['incognito' => true])
             ->assertStatus(401);
     }
 

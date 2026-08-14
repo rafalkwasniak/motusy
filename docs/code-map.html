@@ -150,6 +150,7 @@
                 <li><a href="#m-ble">BleIdentity</a></li>
                 <li><a href="#m-device">Device</a></li>
                 <li><a href="#m-meeting">Meeting</a></li>
+                <li><a href="#m-meeting-report">MeetingReport</a></li>
               </ul>
             </li>
             <li><a href="#kontrolery">Kontrolery</a></li>
@@ -203,7 +204,7 @@
    └─ auth:sanctum                    czy token jest ważny
        └─ RecordMeetingsRequest       czy dane mają sens
            └─ MeetingController@store cienki, deleguje
-               └─ MeetingService      reguły: karencja, incognito, potwierdzenie
+               └─ MeetingService      reguły: karencja, incognito, blokada pary
                    ├─ BleIdentityService  token → osoba
                    ├─ Meeting             zapis
                    └─ Meeting::card()     co zobaczy klient
@@ -260,6 +261,9 @@
       <p>Profil, motocykl i ich zdjęcia. Zapisy są typu „wstaw albo zaktualizuj", więc aplikacja wysyła
       cały formularz i nie musi wiedzieć, czy to pierwszy raz.</p>
       <dl class="methods">
+        <dt>setIncognito()</dt>
+        <dd>Przełącza tryb niewidzialny. Osobno od zapisu profilu, bo tamten wymaga nicka i płci —
+        przełącznik musi działać także u kogoś, kto nie skończył onboardingu.</dd>
         <dt>saveProfile(), saveMotorcycle()</dt>
         <dd>Zapis danych. Po zapisie odświeżają relację na modelu, żeby zwrócone konto było aktualne.</dd>
         <dt>storeAvatar(), storeMotorcyclePhoto()</dt>
@@ -293,20 +297,22 @@
       <h3 id="s-meeting">MeetingService</h3>
       <span class="path">app/Services/MeetingService.php</span>
       <p>Najgęstszy kawałek logiki w projekcie. Zgłoszenie przechodzi kolejno przez: duplikat, czas
-      z przyszłości, zbyt stare, rozpoznanie tokena, spotkanie z samym sobą, incognito, karencję. Dopiero
-      potem powstaje zapis.</p>
+      z przyszłości, zbyt stare, nieznany token, token wygasły, spotkanie z samym sobą, incognito,
+      karencję. Dopiero potem powstaje zapis — i od razu dla obu stron.</p>
       <dl class="methods">
         <dt>record()</dt>
-        <dd>Przetwarza całą paczkę wykryć i zwraca wynik dla każdego osobno — odrzucenie jednego nic nie
+        <dd>Przetwarza całą paczkę wykryć i zwraca status dla każdego osobno — odrzucenie jednego nic nie
         mówi o pozostałych.</dd>
-        <dt>pruneUnconfirmed()</dt>
-        <dd>Usuwa zgłoszenia, których druga strona nigdy nie sparowała. Są niewidoczne, więc chodzi
-        wyłącznie o to, żeby tabela nie puchła.</dd>
+        <dt>reportingPlatform()</dt>
+        <dd>Z jakiego telefonu przyszło zgłoszenie. Zapisywane przy każdym wpisie, żeby dało się sprawdzić
+        na prawdziwym ruchu założenie, na którym stoi cała przebudowa: że Android nie widzi iPhone&rsquo;a
+        nadającego w tle.</dd>
       </dl>
       <p class="muted">Prywatne <code>withinCooldown()</code> liczy karencję od <strong>czasu wykrycia</strong>,
       nie od chwili zapisu — inaczej paczka zaległych zgłoszeń wysłana po powrocie w zasięg dałaby tyle
-      spotkań, ile zgłoszeń. <code>confirmAgainstMirror()</code> szuka lustrzanego zapisu drugiej strony
-      i dopiero on czyni spotkanie widocznym.</p>
+      spotkań, ile zgłoszeń. <code>attach()</code> bierze blokadę na znormalizowanej parze: obie strony
+      zgłaszają niezależnie i często w tej samej sekundzie, a sprawdzenie i wstawienie to dwa kroki —
+      bez blokady oba żądania nie znajdują nic i oba tworzą wpis.</p>
     </div>
 
     <div class="unit">
@@ -380,15 +386,32 @@
     <div class="unit">
       <h3 id="m-meeting">Meeting</h3>
       <span class="path">app/Models/Meeting.php</span>
-      <p>Jeden wiersz na stronę spotkania, z własnym GPS-em i własnym czasem. Dwa telefony nigdy nie są
-      w tym samym punkcie w tej samej sekundzie, więc wspólny rekord byłby kłamstwem.</p>
+      <p>Jeden wiersz na spotkanie, wspólny dla obojga. Para jest znormalizowana — mniejszy identyfikator
+      zawsze pierwszy — dzięki czemu wyszukanie po parze to jeden warunek, a nie dwa.</p>
       <dl class="methods">
-        <dt>user(), metUser()</dt>
-        <dd>Kto wykrył i kogo wykrył.</dd>
+        <dt>userA(), userB(), otherParty()</dt>
+        <dd>Uczestnicy. <code>otherParty()</code> zwraca tego drugiego, więc pytający nie musi wiedzieć,
+        po której stronie wiersza wylądował.</dd>
+        <dt>pair()</dt>
+        <dd>Porządkuje dwa identyfikatory. To ta jedna funkcja sprawia, że para jest nieuporządkowana.</dd>
+        <dt>scopeForUser()</dt>
+        <dd>Spotkania, w których ktoś bierze udział — sprawdza obie kolumny.</dd>
         <dt>card()</dt>
-        <dd>Spotkanie widziane oczami właściciela wpisu. Woła <code>User::card()</code>, więc ukryte pola
-        drugiej osoby pozostają ukryte.</dd>
+        <dd>Spotkanie oczami pytającego. Woła <code>User::card()</code>, więc ukryte pola drugiej osoby
+        pozostają ukryte.</dd>
       </dl>
+      <p class="muted">Własny GPS i czas każdej ze stron przeniosły się do <code>MeetingReport</code> —
+      spotkanie jest wspólne, zgłoszenie nie.</p>
+    </div>
+
+    <div class="unit">
+      <h3 id="m-meeting-report">MeetingReport</h3>
+      <span class="path">app/Models/MeetingReport.php</span>
+      <p>Co faktycznie wysłał pojedynczy telefon: własny czas, własne współrzędne, siła sygnału i platforma.
+      Spotkanie jest wspólne, zgłoszenie należy do jednej strony.</p>
+      <p class="muted">Unikalność <code>(reporter_id, event_id)</code> daje idempotencję osobno dla każdego
+      zgłaszającego — ponowiona wysyłka nie zapisuje niczego drugi raz, a identyfikator wymyślony przez
+      drugi telefon nigdy nie blokuje pierwszego.</p>
     </div>
 
     <h2 id="kontrolery">Kontrolery</h2>
@@ -397,11 +420,11 @@
     <table>
       <tr><th>Klasa</th><th>Metody</th><th>Uwagi</th></tr>
       <tr><td>AuthController</td><td>register, login, logout, me</td><td>rejestracja i logowanie za limitem prób</td></tr>
-      <tr><td>ProfileController</td><td>update, uploadAvatar, deleteAvatar</td><td>upload wymaga istniejącego profilu, inaczej 409</td></tr>
+      <tr><td>ProfileController</td><td>update, incognito, uploadAvatar, deleteAvatar</td><td>upload wymaga istniejącego profilu, inaczej 409</td></tr>
       <tr><td>MotorcycleController</td><td>update, uploadPhoto, deletePhoto</td><td>jak wyżej, dla motocykla</td></tr>
-      <tr><td>BleIdentityController</td><td>show, rotate</td><td>zwraca też <code>should_broadcast</code></td></tr>
+      <tr><td>BleIdentityController</td><td>show, rotate</td><td>zwraca też UUID-y BLE oraz <code>should_broadcast</code> i <code>should_scan</code></td></tr>
       <tr><td>DeviceController</td><td>store</td><td>wstaw-albo-zaktualizuj po <code>device_id</code></td></tr>
-      <tr><td>MeetingController</td><td>store, index, show</td><td>historia pokazuje tylko potwierdzone</td></tr>
+      <tr><td>MeetingController</td><td>store, index, show</td><td>jedno zgłoszenie zapisuje spotkanie obu stronom</td></tr>
       <tr><td>DocsController</td><td>show</td><td>serwuje ten plik i przewodnik</td></tr>
     </table>
     </div>
@@ -420,6 +443,9 @@
       i wielkość paczki pochodzą z <code>config/motusy.php</code>. Zmiana limitu to zmiana konfiguracji,
       nie kodu — i od razu przenosi się do kontraktu OpenAPI, bo ten powstaje z tych właśnie reguł.
     </div>
+
+    <p><code>UpdateIncognitoRequest</code> ma jedno pole i żadnych warunków wstępnych — to cała różnica
+    między nim a <code>UpdateProfileRequest</code>, i jedyny powód, dla którego jest osobną klasą.</p>
 
     <p><code>RecordMeetingsRequest</code> odrzuca tylko problemy strukturalne. Karencja, nieznany token czy
     zbyt stare wykrycie wracają jako wynik z powodem, żeby jedno złe zgłoszenie nie topiło całej paczki.</p>
@@ -449,10 +475,12 @@
     <h2 id="komendy">Komendy</h2>
 
     <div class="unit">
-      <h3>meetings:prune</h3>
-      <span class="path">app/Console/Commands/PruneUnconfirmedMeetings.php</span>
-      <p>Sprząta niesparowane zgłoszenia. Harmonogram w <code>routes/console.php</code>, co godzinę.
-      Wymaga crona wołającego <code>schedule:run</code> — jest ustawiony dla tej domeny.</p>
+      <h3>ble:prune-identities</h3>
+      <span class="path">app/Console/Commands/PruneRetiredBleIdentities.php</span>
+      <p>Kasuje wycofane tokeny BLE, których żadne zaległe zgłoszenie już nie nazwie. Rotacja zostawia
+      wiersz za każdym razem, więc bez tego przybywa ich po jednym na użytkownika dziennie. Harmonogram
+      w <code>routes/console.php</code>, raz na dobę. Wymaga crona wołającego <code>schedule:run</code> —
+      jest ustawiony dla tej domeny.</p>
     </div>
 
     <h2 id="konfiguracja">Konfiguracja</h2>
@@ -460,7 +488,7 @@
     <div class="table-wrap">
     <table>
       <tr><th>Plik</th><th>Co trzyma</th></tr>
-      <tr><td><code>config/motusy.php</code></td><td>wszystkie strojalne stałe produktu: limity logowania, długości pól, rozmiary zdjęć, rotacja BLE, karencja spotkań</td></tr>
+      <tr><td><code>config/motusy.php</code></td><td>wszystkie strojalne stałe produktu: limity logowania, długości pól, rozmiary zdjęć, rotacja i UUID-y BLE, karencja spotkań</td></tr>
       <tr><td><code>config/services.php</code></td><td>webhook Discorda i okno wyciszania powtórek</td></tr>
       <tr><td><code>config/scramble.php</code></td><td>dokumentacja OpenAPI i jej dostępność</td></tr>
     </table>
@@ -482,19 +510,20 @@
       <tr><td><code>motorcycles</code></td><td>jeden motocykl na konto</td></tr>
       <tr><td><code>ble_identities</code></td><td>tokeny rozgłoszeniowe, jeden aktywny plus wycofane</td></tr>
       <tr><td><code>devices</code></td><td>urządzenia, token push, powiązanie z tokenem logowania</td></tr>
-      <tr><td><code>meetings</code></td><td>spotkania, jeden wiersz na stronę</td></tr>
+      <tr><td><code>meetings</code></td><td>spotkania, jeden wiersz na parę, identyfikatory znormalizowane</td></tr>
+      <tr><td><code>meeting_reports</code></td><td>co wysłał pojedynczy telefon: czas, pozycja, rssi, platforma</td></tr>
     </table>
     </div>
 
     <p class="muted">Klucze główne to <code>bigint</code>. Indeksy na <code>meetings</code> obsługują dwa
-    zapytania, które będą najczęstsze: sprawdzenie karencji dla pary użytkowników i listę historii.</p>
+    zapytania, które będą najczęstsze: sprawdzenie karencji dla pary użytkowników i listę historii. Historia sprawdza obie kolumny pary, bo spotkanie należy do dwojga.</p>
 
     <h2 id="testy">Testy</h2>
 
     <div class="table-wrap">
     <table>
       <tr><th>Plik</th><th>Testów</th><th>Czego pilnuje</th></tr>
-      <tr><td>MeetingTest</td><td>23</td><td>potwierdzanie, karencja, duplikaty, incognito, paczki</td></tr>
+      <tr><td>MeetingTest</td><td>29</td><td>zapis obu stronom, karencja, statusy, wyścig, limit żądań</td></tr>
       <tr><td>UploadTest</td><td>15</td><td>skalowanie, konwersja, podszywanie się pod obraz</td></tr>
       <tr><td>AuthTest</td><td>13</td><td>rejestracja, tokeny per urządzenie, limit prób</td></tr>
       <tr><td>BleIdentityTest</td><td>11</td><td>rotacja, okno karencji tokena, koszt rozpoznania</td></tr>

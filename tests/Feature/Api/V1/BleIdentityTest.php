@@ -20,7 +20,9 @@ class BleIdentityTest extends TestCase
         $response = $this->actingAs($user, 'sanctum')
             ->getJson('/api/v1/ble/identity')
             ->assertStatus(200)
-            ->assertJsonStructure(['data' => ['token', 'refresh_after', 'should_broadcast']]);
+            ->assertJsonStructure([
+                'data' => ['token', 'service_uuid', 'characteristic_uuid', 'refresh_after', 'should_broadcast', 'should_scan'],
+            ]);
 
         $token = $response->json('data.token');
 
@@ -101,14 +103,45 @@ class BleIdentityTest extends TestCase
         $this->assertNull(app(BleIdentityService::class)->resolve(str_repeat('a', 32)));
     }
 
-    public function test_incognito_user_is_told_not_to_broadcast(): void
+    public function test_incognito_user_is_told_neither_to_broadcast_nor_to_scan(): void
     {
         $user = User::factory()->create(['incognito' => true]);
 
         $this->actingAs($user, 'sanctum')
             ->getJson('/api/v1/ble/identity')
             ->assertStatus(200)
-            ->assertJsonPath('data.should_broadcast', false);
+            ->assertJsonPath('data.should_broadcast', false)
+            ->assertJsonPath('data.should_scan', false);
+    }
+
+    /**
+     * The same for everybody: the advertised UUID says a rider is nearby, never who.
+     */
+    public function test_ble_uuids_come_from_configuration_and_are_shared_by_all_users(): void
+    {
+        $first = User::factory()->create();
+        $second = User::factory()->create();
+
+        $response = $this->actingAs($first, 'sanctum')->getJson('/api/v1/ble/identity')
+            ->assertJsonPath('data.service_uuid', config('motusy.ble.service_uuid'))
+            ->assertJsonPath('data.characteristic_uuid', config('motusy.ble.characteristic_uuid'));
+
+        $this->actingAs($second, 'sanctum')->getJson('/api/v1/ble/identity')
+            ->assertJsonPath('data.service_uuid', $response->json('data.service_uuid'))
+            ->assertJsonPath('data.characteristic_uuid', $response->json('data.characteristic_uuid'));
+    }
+
+    /**
+     * A detection the app is still allowed to send must land on a token that can
+     * still be resolved. If this ever inverts, reports die silently between the two
+     * limits and neither side can tell why.
+     */
+    public function test_token_grace_period_outlasts_the_window_for_late_reports(): void
+    {
+        $this->assertGreaterThanOrEqual(
+            config('motusy.meetings.max_report_age_hours'),
+            config('motusy.ble.resolvable_after_rotation_hours'),
+        );
     }
 
     public function test_tokens_are_unique_across_users(): void

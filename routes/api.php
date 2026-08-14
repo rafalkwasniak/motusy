@@ -22,6 +22,7 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile/incognito', [ProfileController::class, 'incognito']);
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
     Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar']);
 
@@ -34,7 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/devices', [DeviceController::class, 'store']);
 
-    Route::post('/meetings', [MeetingController::class, 'store']);
+    Route::post('/meetings', [MeetingController::class, 'store'])->middleware('throttle:meetings');
     Route::get('/meetings', [MeetingController::class, 'index']);
     Route::get('/meetings/{meeting}', [MeetingController::class, 'show']);
 });

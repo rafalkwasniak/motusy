@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\Device;
 use App\Models\Meeting;
+use App\Models\MeetingReport;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class MeetingService
@@ -12,155 +15,173 @@ class MeetingService
     public function __construct(private readonly BleIdentityService $identities) {}
 
     /**
-     * @return array<int, array<string, mixed>> one result per detection, in order
+     * One result per detection, in the order they were sent.
+     *
+     * @return list<array{event_id: string, status: string, meeting: array|null}>
      */
-    public function record(User $user, array $detections): array
+    public function record(User $user, array $detections, ?string $platform = null): array
     {
-        return array_map(fn (array $detection) => $this->recordOne($user, $detection), $detections);
+        return array_map(
+            fn (array $detection) => $this->recordOne($user, $detection, $platform),
+            $detections,
+        );
     }
 
-    private function recordOne(User $user, array $detection): array
+    private function recordOne(User $user, array $detection, ?string $platform): array
     {
         $eventId = $detection['event_id'];
 
-        // A retry after a lost response must not create a second meeting, and must
-        // still hand back the card so the app can show the notification it missed.
-        $existing = $user->meetings()->where('event_id', $eventId)->first();
+        // A retry after a lost response must not record anything twice, and must still
+        // hand back the card so the app can show the notification it missed.
+        $previous = $user->meetingReports()->where('event_id', $eventId)->first();
 
-        if ($existing !== null) {
-            return $this->result($eventId, false, 'duplicate', $existing, $user);
+        if ($previous !== null) {
+            return $this->result($eventId, 'duplicate', $previous->meeting, $user);
         }
 
         $detectedAt = CarbonImmutable::parse($detection['detected_at']);
 
-        if ($detectedAt->isFuture()) {
-            return $this->result($eventId, false, 'invalid_time');
+        // Phone clocks drift, so a small amount of future is treated as now rather than
+        // thrown away.
+        if ($detectedAt->gt(now()->addMinutes(config('motusy.meetings.clock_tolerance_minutes')))) {
+            return $this->result($eventId, 'invalid_time');
         }
 
         if ($detectedAt->lt(now()->subHours(config('motusy.meetings.max_report_age_hours')))) {
-            return $this->result($eventId, false, 'too_old');
+            return $this->result($eventId, 'too_old');
         }
 
-        $metUser = $this->identities->resolve($detection['ble_token']);
+        $identity = $this->identities->find($detection['ble_token']);
 
-        if ($metUser === null) {
-            return $this->result($eventId, false, 'unknown_token');
+        if ($identity === null) {
+            return $this->result($eventId, 'unknown_token');
         }
+
+        if (! $identity->isResolvable()) {
+            return $this->result($eventId, 'expired_token');
+        }
+
+        $metUser = $identity->user;
 
         if ($metUser->id === $user->id) {
-            return $this->result($eventId, false, 'self');
+            return $this->result($eventId, 'self');
         }
 
-        // Incognito works both ways: such a user is neither detected nor detects.
+        // Invisible mode works both ways: such a rider is neither detected nor detects.
         if ($user->incognito || $metUser->incognito) {
-            return $this->result($eventId, false, 'incognito');
+            return $this->result($eventId, 'incognito');
         }
 
-        if ($this->withinCooldown($user, $metUser, $detectedAt)) {
-            return $this->result($eventId, false, 'cooldown');
-        }
-
-        $meeting = $this->create($user, $metUser, $detection, $detectedAt);
-
-        return $this->result($eventId, true, null, $meeting, $user);
+        return $this->attach($user, $metUser, $detection, $detectedAt, $platform);
     }
 
     /**
-     * Sweep away reports the other side never matched. They are invisible anyway, so
-     * this only keeps the table from filling up with rows that can no longer pair:
-     * once a detection is older than the confirmation window, nothing can confirm it.
+     * Both phones report the same encounter independently and often at the same moment
+     * — two queues draining as coverage returns. Checking for an existing meeting and
+     * inserting one are two steps, so without a lock both sides can look, both find
+     * nothing, and both insert. The pair is the narrowest thing worth locking: reports
+     * about unrelated riders never wait on each other.
      */
-    public function pruneUnconfirmed(): int
-    {
-        return Meeting::query()
-            ->where('confirmed', false)
-            ->where('detected_at', '<', now()->subMinutes(config('motusy.meetings.confirmation_window_minutes')))
-            ->delete();
-    }
+    private function attach(
+        User $user,
+        User $metUser,
+        array $detection,
+        CarbonImmutable $detectedAt,
+        ?string $platform,
+    ): array {
+        [$a, $b] = Meeting::pair($user->id, $metUser->id);
 
-    /**
-     * Compared against detected_at rather than the current time. Reports held offline
-     * arrive in a burst, and measuring from arrival would let every one of them
-     * through as if it were a separate encounter.
-     *
-     * The window reaches both ways because late reports can arrive out of order.
-     */
-    private function withinCooldown(User $user, User $metUser, CarbonImmutable $detectedAt): bool
-    {
-        $cooldown = config('motusy.meetings.cooldown_hours');
+        $lock = Cache::lock("meeting:{$a}:{$b}", 10);
 
-        return $user->meetings()
-            ->where('met_user_id', $metUser->id)
-            ->whereBetween('detected_at', [
-                $detectedAt->subHours($cooldown),
-                $detectedAt->addHours($cooldown),
-            ])
-            ->exists();
-    }
+        // Waiting beats failing: the other side is mid-insert and will be done in
+        // milliseconds, and giving up here would create the duplicate we are avoiding.
+        return $lock->block(5, function () use ($user, $metUser, $detection, $detectedAt, $platform, $a, $b) {
+            $existing = $this->withinCooldown($a, $b, $detectedAt);
 
-    private function create(User $user, User $metUser, array $detection, CarbonImmutable $detectedAt): Meeting
-    {
-        return DB::transaction(function () use ($user, $metUser, $detection, $detectedAt) {
-            $meeting = $user->meetings()->create([
-                'met_user_id' => $metUser->id,
-                'latitude' => $detection['latitude'],
-                'longitude' => $detection['longitude'],
-                'detected_at' => $detectedAt,
-                'event_id' => $detection['event_id'],
-            ]);
+            $status = $existing === null ? 'created' : 'cooldown';
 
-            $this->confirmAgainstMirror($meeting, $metUser, $detectedAt);
+            $meeting = DB::transaction(function () use ($existing, $user, $metUser, $detection, $detectedAt, $platform, $a, $b) {
+                $meeting = $existing ?? Meeting::create([
+                    'user_a_id' => $a,
+                    'user_b_id' => $b,
+                    'detected_at' => $detectedAt,
+                    'latitude' => $detection['latitude'],
+                    'longitude' => $detection['longitude'],
+                ]);
 
-            return $meeting->load('metUser.profile', 'metUser.motorcycle');
+                MeetingReport::create([
+                    'meeting_id' => $meeting->id,
+                    'reporter_id' => $user->id,
+                    'event_id' => $detection['event_id'],
+                    'detected_at' => $detectedAt,
+                    'latitude' => $detection['latitude'],
+                    'longitude' => $detection['longitude'],
+                    'rssi' => $detection['rssi'] ?? null,
+                    'platform' => $platform,
+                ]);
+
+                return $meeting;
+            });
+
+            $meeting->setRelation($meeting->user_a_id === $user->id ? 'userB' : 'userA', $metUser);
+
+            return $this->result($detection['event_id'], $status, $meeting, $user);
         });
     }
 
     /**
-     * A meeting counts only once both phones have reported it. Until then the row
-     * exists solely so the other side has something to pair with — it is hidden from
-     * the history and never returned to the client.
+     * Measured against detected_at rather than the current time. Reports held offline
+     * arrive in a burst, and measuring from arrival would let every one of them through
+     * as if it were a separate encounter.
+     *
+     * The window reaches both ways because late reports arrive out of order.
      */
-    private function confirmAgainstMirror(Meeting $meeting, User $metUser, CarbonImmutable $detectedAt): void
+    private function withinCooldown(int $a, int $b, CarbonImmutable $detectedAt): ?Meeting
     {
-        $window = config('motusy.meetings.confirmation_window_minutes');
+        $cooldown = config('motusy.meetings.cooldown_hours');
 
-        $mirror = $metUser->meetings()
-            ->where('met_user_id', $meeting->user_id)
+        return Meeting::query()
+            ->where('user_a_id', $a)
+            ->where('user_b_id', $b)
             ->whereBetween('detected_at', [
-                $detectedAt->subMinutes($window),
-                $detectedAt->addMinutes($window),
+                $detectedAt->subHours($cooldown),
+                $detectedAt->addHours($cooldown),
             ])
             ->first();
-
-        if ($mirror === null) {
-            return;
-        }
-
-        $mirror->update(['confirmed' => true]);
-        $meeting->update(['confirmed' => true]);
     }
 
     /**
-     * The card is handed back only for a confirmed meeting. That is what makes the
-     * notification honest — the app never announces somebody the history will not
-     * show. It also means a fabricated report reveals nothing: without the other
-     * phone independently reporting the same encounter, the token stays anonymous.
+     * Which phone this report came from, for checking the assumption the whole redesign
+     * rests on: that Android cannot see a backgrounded iPhone. Null when the app never
+     * registered a device.
+     */
+    public function reportingPlatform(User $user, ?int $accessTokenId): ?string
+    {
+        if ($accessTokenId === null) {
+            return null;
+        }
+
+        return Device::query()
+            ->where('user_id', $user->id)
+            ->where('personal_access_token_id', $accessTokenId)
+            ->value('platform');
+    }
+
+    /**
+     * Every status other than a network failure means the app can drop the detection
+     * from its queue. The card comes back whenever there is a meeting to point at, so
+     * the notification can name the rider instead of saying "somebody".
      */
     private function result(
         string $eventId,
-        bool $created,
-        ?string $reason = null,
+        string $status,
         ?Meeting $meeting = null,
         ?User $viewer = null,
     ): array {
-        $confirmed = (bool) $meeting?->confirmed;
-
         return [
             'event_id' => $eventId,
-            'created' => $created,
-            'confirmed' => $confirmed,
-            'reason' => $reason,
-            'meeting' => $confirmed && $viewer !== null ? $meeting->card($viewer) : null,
+            'status' => $status,
+            'meeting' => $meeting !== null && $viewer !== null ? $meeting->card($viewer) : null,
         ];
     }
 }

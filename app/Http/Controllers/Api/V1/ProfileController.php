@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Profile\UpdateIncognitoRequest;
 use App\Http\Requests\Api\V1\Profile\UpdateProfileRequest;
 use App\Http\Requests\Api\V1\Profile\UploadAvatarRequest;
 use App\Http\Responses\ApiResponse;
@@ -27,6 +28,21 @@ class ProfileController extends Controller
         $this->profiles->saveProfile($user, $request->validated());
 
         return ApiResponse::success(__('api.profile_saved'), $user->account());
+    }
+
+    /**
+     * Turn invisible mode on or off.
+     *
+     * Separate from saving the profile so the switch works for an account that has
+     * not finished onboarding yet.
+     */
+    public function incognito(UpdateIncognitoRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $this->profiles->setIncognito($user, $request->boolean('incognito'));
+
+        return ApiResponse::success(__('api.incognito_saved'), $user->account());
     }
 
     /**

@@ -35,6 +35,17 @@ class ProfileService
         return $motorcycle;
     }
 
+    /**
+     * Invisible mode works as if the app were not installed: the rider is neither
+     * detected nor detects. The one exception, once breakdowns exist, is that a
+     * breakdown reaches past it in both directions — privacy must not cost somebody
+     * help on the road.
+     */
+    public function setIncognito(User $user, bool $incognito): void
+    {
+        $user->update(['incognito' => $incognito]);
+    }
+
     public function storeAvatar(UserProfile $profile, UploadedFile $file): void
     {
         $this->replaceFile(

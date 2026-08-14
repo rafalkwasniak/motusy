@@ -105,7 +105,10 @@ class ApiResponse
             $e instanceof AuthenticationException => self::error('UNAUTHENTICATED', __('api.unauthenticated'), null, 401),
             $e instanceof AuthorizationException => self::error('FORBIDDEN', __('api.forbidden'), null, 403),
             $e instanceof ModelNotFoundException => self::error('NOT_FOUND', __('api.not_found'), null, 404),
-            $e instanceof HttpExceptionInterface => self::forStatus($e->getStatusCode()),
+            // Headers ride along: a 429 carries Retry-After, and rebuilding the body
+            // without them would leave the client guessing how long to wait.
+            $e instanceof HttpExceptionInterface => self::forStatus($e->getStatusCode())
+                ->withHeaders($e->getHeaders()),
             default => self::error('SERVER_ERROR', __('api.server_error'), null, 500),
         };
     }

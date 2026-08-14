@@ -44,3 +44,63 @@ Zbudowane: konto, profil, motocykl, zdjęcia, tożsamość BLE, urządzenia, spo
 **Otwarte, nierozstrzygnięte:** marka i model motocykla jako słownik czy wolny tekst; blokowanie i zgłaszanie użytkowników (brak w specyfikacji, przy aplikacji kojarzącej nieznajomych zwykle potrzebne szybciej, niż się zakłada); odzyskiwanie konta po usunięciu wraz z zachowaniem unikalnego indeksu na e-mailu; HEIC z iPhone'a.
 
 **Nie sprawdzone w praktyce:** nic z tego API nie było jeszcze wołane z FlutterFlow. Pierwsze zderzenie z prawdziwym klientem mobilnym jest przed nami.
+
+---
+
+## 2026-08-14 — sesja druga
+
+Testy BLE na dwóch telefonach po stronie FlutterFlow wywróciły jedno z założeń API. Trzy rundy korespondencji technicznej, zapisane w `docs/API_CHANGES_BLE.md` (notatka od FF), `API_CHANGES_BLE_RESPONSE.md`, `API_CHANGES_BLE_REPLY_2.md` i `API_CHANGES_BLE_RESPONSE_3.md`. Warto je czytać po kolei — decyzje mają tam uzasadnienia, których nie ma sensu przepisywać tutaj.
+
+### Co się zmieniło i dlaczego
+
+**Token przenosi się z ramki rozgłoszeniowej do GATT.** iOS w tle nie nadaje danych producenta ani danych serwisu, czyli pól, w których miał lecieć token. Zostaje stałe UUID serwisu — publiczne, wspólne dla całej aplikacji, mówiące wyłącznie „ktoś z Motusy jest w pobliżu". Tożsamość dociąga się połączeniem.
+
+Uboczny skutek jest korzystny i warto go pamiętać: **zdobycie tokena wymaga teraz fizycznej bliskości**, bo trzeba nawiązać połączenie. Poprzedni model pozwalał zbierać tokeny biernie, dowolnym skanerem z kilkudziesięciu metrów.
+
+Traci przy tym ważność uzasadnienie długości tokena z `CLAUDE.md` §6e — 31-bajtowa ramka przestała być ograniczeniem. Wartość zostaje, powód poprawiony.
+
+**Obustronne potwierdzenie spotkań pada.** To była decyzja Rafała z pierwszej sesji i broniła się dobrze, dopóki nie zderzyła się z tym, że **Android nie widzi iPhone'a nadającego w tle**. Dla każdej pary iOS–Android istnieje tylko jeden kierunek wykrycia, więc żadne takie spotkanie nigdy by się nie potwierdziło. Nie część — wszystkie.
+
+Cena: znika ochrona opisana w §6f, czyli „rozpoznanie tokena nie ujawnia tożsamości bez zgody drugiej strony". Płacimy ją świadomie, przy dwóch okolicznościach łagodzących: bliskość fizyczna wymagana do zdobycia tokena oraz to, że sfabrykowane spotkanie **jest widoczne dla ofiary** w jej historii, więc nadużycie przestaje być ciche. Konsekwencją jest limit zapytań na zapisie spotkań i przesunięcie blokowania oraz zgłaszania użytkownika na wcześniejszy etap.
+
+Macierz wykrywania, na której to wszystko stoi, jest na dziś **wnioskiem z dokumentacji Apple, nie pomiarem** — FF przyznał to wprost, zapytany. Stąd kolumna z platformą zgłaszającego w `meeting_reports`: po pierwszym miesiącu ruchu jedno zapytanie zweryfikuje założenie na prawdziwych danych.
+
+**Karencja spotkań zostaje sześciogodzinna.** Zaproponowałem zmianę znaczenia parametru na „przerwę kończącą spotkanie" i wycofałem ją po tym, jak Rafał opisał zwykły dzień pracy: mijasz tego samego motocyklistę rano i dwie godziny później w drodze do urzędu, i to nie są dwa zdarzenia. Blokada liczona od momentu spotkania obsługuje jednocześnie wspólną jazdę i powtórne minięcie tego samego dnia; wariant z przerwą tylko pierwszy przypadek.
+
+**Czas trwania kontaktu wypada z planu.** Przekonał mnie argument, którego nie postawiłem sam: skoro aplikacja zwija powtarzające się wykrycia lokalnie przed wysyłką, serwer z założenia nigdy nie zobaczy pełnego strumienia. Liczony z tego czas byłby wskaźnikiem bez pokrycia w danych.
+
+**Wyścig przy równoczesnym zgłoszeniu obu stron** — realny błąd w moim projekcie, wychwycony przez FF. Sprawdzenie „czy para ma już spotkanie" i wstawienie wiersza to dwa kroki, a po zmianie oba telefony zgłaszają niezależnie i często w zbliżonym czasie. Zamykamy blokadą na znormalizowanej parze. `SELECT ... FOR UPDATE` odpada, bo gdy dla pary nie ma jeszcze żadnego wiersza, nie ma czego blokować.
+
+### Incognito
+
+Potwierdzone przez Rafała, zgodnie ze specyfikacją §45: tryb działa tak, **jakby aplikacji nie było** — nie widzisz i nie jesteś widziany.
+
+Wyjątek, dopisany ponad specyfikację po stronie przychodzącej: **awarie przebijają incognito w obie strony** (§71 opisuje tylko kierunek wychodzący). Uzasadnienie: tryb prywatności nie może kosztować nikogo pomocy na drodze. Do zbudowania w Etapie 6.
+
+To jest powód, dla którego `should_broadcast` i `should_scan` **liczy serwer i zwraca gotowe**. Gdy dojdą awarie, użytkownik z aktywną awarią będzie musiał rozgłaszać mimo trybu — przy fladze wyliczanej w aplikacji ta zmiana wymagałaby wydania nowej wersji do sklepów.
+
+### Rzeczy, które wyszły w praniu
+
+**Testy chodziły po produkcyjnej bazie.** Wyszło przypadkiem, przy pierwszym uruchomieniu suity po nowej migracji: test zgłosił brak tabeli `meeting_reports` na połączeniu `mysql`, mimo że `phpunit.xml` od początku wskazuje SQLite w pamięci. Mechanizm jest ten sam, który rok temu wysłał wiadomość na Discorda — **scache'owany config unieważnia wpisy `<env>`** — ale skutek nieporównywalnie gorszy: `RefreshDatabase` zaczyna od `migrate:fresh`, więc każde `php artisan test` kasowało wszystkie tabele produkcyjne. Nie zauważyliśmy tego przez dwie sesje wyłącznie dlatego, że baza była pusta, a schemat po skasowaniu odtwarzał się identyczny.
+
+Załatane u źródła zamiast obchodzenia: `phpunit.xml` ustawia `APP_CONFIG_CACHE` na nieistniejący plik, więc framework w testach czyta konfigurację z plików i wszystkie `<env>` znów obowiązują. Pierwsza próba — wymuszanie połączenia w `TestCase::refreshApplication()` — została odrzucona, bo walczyła z objawem i rozsypała bazę w pamięci. Skutek uboczny poprawki: suita przyspieszyła z 4,4 s do 1,6 s, bo przestała gadać z MariaDB.
+
+Dołożony `TestDatabaseIsIsolatedTest`, żeby to nie mogło wrócić po cichu.
+
+**`Retry-After` ginął w kopercie.** Obiecaliśmy FF nagłówek przy 429, a własny handler wyjątków budował odpowiedź od zera i gubił nagłówki oryginalnego wyjątku. Wyszło dopiero w teście limitu. `ApiResponse::fromException()` przepuszcza teraz nagłówki każdego `HttpException`.
+
+**Scramble publikował komentarze wewnętrzne.** Opis pola w OpenAPI bierze się z komentarza nad kluczem tablicy — w publicznym kontrakcie wylądowała notatka o funkcji, której jeszcze nie ma, i uzasadnienie decyzji architektonicznej. Uzasadnienia przeniesione do docbloka metody prywatnej, przy polach zostały opisy pisane do klienta.
+
+### Stan na następny raz
+
+Zrobione w tej sesji: Etap 4a (UUID-y BLE, `POST /profile/incognito`, `should_scan`) i cały Etap 4b — przebudowa spotkań. Dwie tabele zamiast jednej, jednostronne zgłoszenie widoczne dla obu stron, dedup i blokada na znormalizowanej parze, płaskie `status`, limit 30/min per konto, `expired_token` oddzielony od `unknown_token`, natychmiastowe unieważnienie przy ręcznej rotacji, tolerancja zegara, `rssi` i platforma w zgłoszeniach, `ble:prune-identities` zamiast `meetings:prune`. 129 testów zielonych.
+
+**Baza przeszła przez `migrate:fresh`** — była pusta, więc bez przenoszenia danych. To ostatni moment, kiedy taki ruch był darmowy.
+
+**Do zweryfikowania w terenie, nie w kodzie:** macierz wykrywania. FF przyznał, że to wniosek z dokumentacji Apple, a nie ich pomiar. Kolumna `platform` w `meeting_reports` jest właśnie po to — po pierwszym miesiącu ruchu jedno zapytanie pokaże, ile spotkań iOS–Android zgłosił wyłącznie iPhone.
+
+**Dług, który urósł:** blokowanie i zgłaszanie użytkownika. Przy jednostronnym zapisie obcy może wejść komuś do historii, a ofiara nie ma czym zareagować. Do zrobienia przed pierwszym realnym ruchem, nie „kiedyś".
+
+**Nadal nie sprawdzone:** czy cron faktycznie woła `schedule:run` — teraz zależy od tego `ble:prune-identities`. Oraz to samo co poprzednio: nic z tego nie było jeszcze wołane z FlutterFlow.
+
+**Etap 5 jest następny.** Obie decyzje sprzed poprzedniej sesji nadal czekają.

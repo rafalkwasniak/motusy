@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -42,9 +43,18 @@ class User extends Authenticatable
         return $this->hasMany(Device::class);
     }
 
-    public function meetings(): HasMany
+    /**
+     * A meeting belongs to two people and the pair is stored unordered, so this is a
+     * query rather than a relation — there is no single foreign key to hang it on.
+     */
+    public function meetings(): Builder
     {
-        return $this->hasMany(Meeting::class);
+        return Meeting::query()->forUser($this);
+    }
+
+    public function meetingReports(): HasMany
+    {
+        return $this->hasMany(MeetingReport::class, 'reporter_id');
     }
 
     /**

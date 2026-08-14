@@ -2,6 +2,6 @@
 
 use Illuminate\Support\Facades\Schedule;
 
-// Detections nobody matched are invisible to users, so this only keeps the table
-// from growing with rows that can never pair.
-Schedule::command('meetings:prune')->hourly();
+// Rotation leaves a retired row behind every time. Nobody reports a meeting from a
+// month ago, so past that point they are only taking up space.
+Schedule::command('ble:prune-identities')->daily();
