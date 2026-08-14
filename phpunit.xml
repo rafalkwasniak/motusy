@@ -19,6 +19,12 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Points the framework at a config cache that does not exist, so it loads
+             configuration from the files instead. Without this the production cache
+             wins and every <env> below is silently ignored — which once sent a test run
+             to the real alert channel, and would aim RefreshDatabase (migrate:fresh) at
+             the live database. -->
+        <env name="APP_CONFIG_CACHE" value="bootstrap/cache/config.testing.php"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>

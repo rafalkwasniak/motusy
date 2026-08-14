@@ -20,6 +20,7 @@
 /public/storage
 /public_html
 /awstats
+/logs
 /storage/*.key
 /storage/pail
 /vendor
