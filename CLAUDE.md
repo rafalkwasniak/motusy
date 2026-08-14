@@ -240,6 +240,8 @@ Dysk `public` (`storage/app/public`, symlink `public/storage`), adresy absolutne
 
 **W bazie trzymamy ścieżkę względną, klientowi zwracamy pełny adres** — zmiana domeny albo dysku nie wymaga wtedy poprawiania danych. Konwersję robi `User::fileUrl()`.
 
+**Katalog `/storage/` zwraca `Access-Control-Allow-Origin: *`** — wpis w `public/.htaccess`, bo pliki serwuje serwer WWW i żądanie nigdy nie dociera do PHP. Powód: Flutter Web pobiera obrazy żądaniem HTTP zamiast zwykłym `<img>`, więc podlegają CORS i bez nagłówka przeglądarka je blokuje. Gwiazdka jest tu bezpieczna, bo te pliki i tak odpowiadają każdemu, kto zna adres, i nie niosą sesji ani tokena — **nigdy nie łączyć jej z `Access-Control-Allow-Credentials`**. Nagłówek jest zawężony do `/storage/` przez `SetEnvIf`; `/api/*` ma własny CORS z `config/cors.php` (domyślka Laravela, `supports_credentials` na `false`).
+
 Bezpieczeństwo, bo te pliki lądują pod webrootem:
 
 - nazwa pliku jest generowana (UUID), rozszerzenie bierze się z rozpoznanego typu obrazu, **nigdy z nazwy przesłanego pliku**,

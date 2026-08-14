@@ -149,6 +149,7 @@
                 <li><a href="#ep-ble">Tożsamość BLE</a></li>
                 <li><a href="#ep-devices">Urządzenia</a></li>
                 <li><a href="#ep-meetings">Spotkania</a></li>
+                <li><a href="#ep-obrazki">Obrazki</a></li>
               </ul>
             </li>
             <li><a href="#widocznosc">Widoczność danych</a></li>
@@ -656,6 +657,20 @@
       <p class="muted">Czytelne dla obu uczestników i tylko dla nich. Cudze spotkanie zwraca <code>404</code>,
       a nie <code>403</code>, żeby nie dało się sprawdzać, które identyfikatory istnieją.</p>
     </div>
+    <h3 id="ep-obrazki">Obrazki</h3>
+
+    <div class="note">
+      <strong>Adresy zdjęć są pełne i publiczne.</strong> <code>data.avatar</code> i
+      <code>data.motorcycle.photo</code> zwracają gotowy adres — nie doklejaj do niego niczego i nie
+      buduj go sam. Pliki nie wymagają tokena.
+    </div>
+
+    <div class="note">
+      <strong>Katalog <code>/storage/</code> zwraca <code>Access-Control-Allow-Origin: *</code>.</strong>
+      Dzięki temu zdjęcia działają w podglądzie webowym, gdzie Flutter pobiera je żądaniem HTTP i podlegają
+      one regułom CORS. Samo <code>/api/</code> ma ten nagłówek niezależnie, z konfiguracji Laravela.
+    </div>
+
     <h2 id="widocznosc">Widoczność danych</h2>
 
     <p>Użytkownik decyduje, które dane widzą inni. Flagi <code>*_visible</code> ustawiasz przy zapisie profilu.</p>

@@ -23,3 +23,20 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Uploaded images are served straight off disk, so this cannot live in a Laravel
+# middleware — the request never reaches PHP.
+#
+# Flutter Web fetches images over HTTP rather than letting the browser render an
+# <img> tag, which puts them under CORS. Without the header the browser blocks
+# every avatar and motorcycle photo in the web preview.
+#
+# Wildcard is safe here and only here: these files carry no session, need no
+# token, and answer to anybody who knows the URL. The header grants nothing that
+# a direct request would not. It must never be paired with
+# Access-Control-Allow-Credentials — that combination is what makes a wildcard
+# dangerous, and the spec rejects it outright.
+<IfModule mod_headers.c>
+    SetEnvIf Request_URI "^/storage/" MOTUSY_PUBLIC_ASSET=1
+    Header set Access-Control-Allow-Origin "*" env=MOTUSY_PUBLIC_ASSET
+</IfModule>
