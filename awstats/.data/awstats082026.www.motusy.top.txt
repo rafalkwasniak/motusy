@@ -1,0 +1,1430 @@
+AWSTATS DATA FILE 8.0 (build 20240604)
+# If you remove this file, all statistics for date 202608 will be lost/reset.
+# Last config file used to build this data file was /home/host473413/domains/motusy.top/awstats/.data/awstats.www.motusy.top.conf.
+
+# Position (offset in bytes) in this file for beginning of each section for
+# direct I/O access. If you made changes somewhere in this file, you should
+# also remove completely the MAP section (AWStats will rewrite it at next
+# update).
+BEGIN_MAP 30
+POS_GENERAL 2175                
+POS_TIME 2859                
+POS_VISITOR 20585               
+POS_DAY 41119               
+POS_DOMAIN 3729                
+POS_LOGIN 4324                
+POS_ROBOT 4479                
+POS_WORMS 5385                
+POS_EMAILSENDER 5516                
+POS_EMAILRECEIVER 5659                
+POS_SESSION 41654               
+POS_FILESIZE 42593               
+POS_REQUESTTIME 42743               
+POS_SIDER 41851               
+POS_FILETYPES 5794                
+POS_DOWNLOADS 6015                
+POS_OS 6090                
+POS_BROWSER 6509                
+POS_SCREENSIZE 8385                
+POS_UNKNOWNREFERER 8459                
+POS_UNKNOWNREFERERBROWSER 8950                
+POS_ORIGIN 9207                
+POS_SEREFERRALS 9346                
+POS_PAGEREFS 9519                
+POS_SEARCHWORDS 9827                
+POS_KEYWORDS 9979                
+POS_MISC 2521                
+POS_ERRORS 10038               
+POS_CLUSTER 4180                
+POS_SIDER_404 16050               
+POS_SIDER_400 20276               
+POS_SIDER_403 10239               
+END_MAP
+
+# LastLine    = Date of last record processed - Last record line number in last log - Last record offset in last log - Last record signature value
+# FirstTime   = Date of first visit for history file
+# LastTime    = Date of last visit for history file
+# LastUpdate  = Date of last update - Nb of parsed records - Nb of parsed old records - Nb of parsed new records - Nb of parsed corrupted - Nb of parsed dropped
+# TotalVisits = Number of visits
+# TotalUnique = Number of unique visitors
+# MonthHostsKnown   = Number of hosts known
+# MonthHostsUnKnown = Number of hosts unknown
+BEGIN_GENERAL 8
+LastLine 20260831002933 108 22251 13412630263556
+FirstTime 20260813174932
+LastTime 20260831002933
+LastUpdate 20260831005746 108 0 108 0 0
+TotalVisits 718                 
+TotalUnique 523                 
+MonthHostsKnown 0                   
+MonthHostsUnknown 523                 
+END_GENERAL
+
+# Misc ID - Pages - Hits - Bandwidth
+BEGIN_MISC 10
+RealPlayerSupport 0 0 0
+QuickTimeSupport 0 0 0
+PDFSupport 0 0 0
+AddToFavourites 0 211 0
+DirectorSupport 0 0 0
+JavaEnabled 0 0 0
+WindowsMediaPlayerSupport 0 0 0
+JavascriptDisabled 0 0 0
+FlashSupport 0 0 0
+TotalMisc 0 0 0
+END_MISC
+
+# Hour - Pages - Hits - Bandwidth - Not viewed Pages - Not viewed Hits - Not viewed Bandwidth
+BEGIN_TIME 24
+0 26 26 435962 133 147 330076
+1 16 16 276777 127 133 226900
+2 14 14 238927 111 115 217486
+3 46 46 800721 164 168 259561
+4 22 22 355568 116 129 230622
+5 50 50 1059094 167 177 379214
+6 11 11 183720 130 142 267626
+7 45 50 1114300 154 169 325028
+8 23 23 448798 138 147 249326
+9 37 37 654764 137 187 286035
+10 59 59 997483 172 221 492069
+11 21 21 354614 121 132 222289
+12 44 44 814248 544 577 998606
+13 25 25 379197 119 126 277682
+14 23 23 387811 137 163 369685
+15 49 49 840023 153 159 284341
+16 22 22 523839 126 142 268619
+17 67 68 1977460 198 241 749571
+18 38 39 1776918 176 230 2654542
+19 50 53 1225106 206 276 769038
+20 32 32 423591 232 261 1469909
+21 34 36 634959 188 198 1344585
+22 55 96 1314621 159 163 918119
+23 36 36 607524 141 149 224810
+END_TIME
+
+# Domain - Pages - Hits - Bandwidth
+# The 10 first Pages must be first (order not required for others)
+BEGIN_DOMAIN 26
+us 421 421 6926781
+cn 89 94 1944522
+sg 53 53 858920
+pl 46 94 3931705
+fr 36 36 521510
+de 36 36 616096
+hk 27 27 472644
+jp 25 25 434578
+br 24 24 420408
+kr 17 17 298084
+qa 2 2 29134
+nl 11 11 146713
+se 4 4 17392
+ar 1 1 15823
+gb 7 7 116954
+lt 1 1 14567
+md 1 1 15854
+it 1 1 14567
+id 8 8 140056
+ca 3 3 46275
+be 1 1 17434
+in 3 3 46626
+bg 2 2 21981
+kz 14 14 245008
+au 6 6 305109
+th 6 6 207284
+END_DOMAIN
+
+# Cluster ID - Pages - Hits - Bandwidth
+BEGIN_CLUSTER 0
+END_CLUSTER
+
+# Login - Pages - Hits - Bandwidth - Last visit
+# The 10 first Pages must be first (order not required for others)
+BEGIN_LOGIN 0
+END_LOGIN
+
+# Robot ID - Hits - Bandwidth - Last visit - Hits on robots.txt
+# The 10 first Hits must be first (order not required for others)
+BEGIN_ROBOT 20
+curl 175 6134335 20260816051252 1
+robot 21 941 20260830042518 21
+python 21 132789 20260824025531 6
+Go\-http\-client/ 18 262515 20260822162007 0
+unknown 16 4682 20260829005348 16
+bot[\s_+:,\.\;\/\\-] 15 106144 20260822145953 10
+checker 7 75753 20260814213011 0
+[\s_+:,\.\;\/\\-]bot 6 19406 20260821123912 0
+CheckMarkNetwork/ 4 19389 20260814054119 2
+^mozilla\/5\.0$ 3 47469 20260825020404 0
+core 1 1195 20260816132031 0
+scrapy 3 39472 20260815004456 0
+Googlebot\-Video/ 1 17492 20260820002122 0
+bingbot/ 3 14661 20260815193842 2
+crawl 2 16281 20260814055759 1
+ips\-agent 2 17843 20260819043625 1
+DomainCrawler/ 1 17612 20260829121302 0
+(firefox/)([0-9]\.|[0-1][0]\.) 3 39436 20260826110431 0
+no_user_agent 1 71562 20260814055129 0
+facebookexternalhit/ 1 47 20260819223218 1
+END_ROBOT
+
+# Worm ID - Hits - Bandwidth - Last visit
+# The 5 first Hits must be first (order not required for others)
+BEGIN_WORMS 0
+END_WORMS
+
+# EMail - Hits - Bandwidth - Last visit
+# The 20 first Hits must be first (order not required for others)
+BEGIN_EMAILSENDER 0
+END_EMAILSENDER
+
+# EMail - Hits - Bandwidth - Last visit
+# The 20 first hits must be first (order not required for others)
+BEGIN_EMAILRECEIVER 0
+END_EMAILRECEIVER
+
+# Files type - Hits - Bandwidth - Bandwidth without compression - Bandwidth after compression
+BEGIN_FILETYPES 9
+gif 1 43 0 0
+json 2 7452 0 0
+Unknown 29 14646 0 0
+js 38 587985 0 0
+html 9 83676 0 0
+webp 2 228104 0 0
+css 5 74166 0 0
+php 805 14306389 0 0
+png 7 2523564 0 0
+END_FILETYPES
+
+# Downloads - Hits - Bandwidth
+BEGIN_DOWNLOADS 1
+/__probe_public.txt 2 0 14
+END_DOWNLOADS
+
+# OS ID - Hits
+BEGIN_OS ID - Hits - Pages 25
+linuxubuntu 3 3
+android12 6 6
+androidfroyo 1 1
+winlong 1 1
+win7 9 4
+winxp 1 1
+Unknown 28 27
+macosx 1 1
+linuxcentos 1 1
+ios_iphone 505 505
+macosx6 2 2
+androidpie 1 1
+macos12 1 1
+android 3 3
+macosx15 111 64
+androidlollipop 1 1
+linux 84 84
+macos11 1 1
+win10 120 120
+winnt 1 1
+androidoreo 5 5
+linuxdebian 1 1
+android10 6 6
+androidhoneycomb 1 1
+macosx14 4 4
+END_OS
+
+# Browser ID - Hits - Pages
+BEGIN_BROWSER 93
+safari13.0.4 6 6
+safari17.5 1 1
+chrome151.0.7922.34 3 3
+chrome145.0.0.0 6 6
+safari13.0.5 1 1
+chrome128.0.0.0 1 1
+chrome149.0.0.0 1 1
+chrome117.0.5938.132 8 8
+chrome131.0.0.0 17 17
+chrome134.0.0.0 25 25
+edge12 15 15
+chrome76.0.3809.132 3 3
+safari15.4 2 2
+safari16.5 1 1
+firefox113.0 1 1
+chrome134.0.6998.35 4 4
+chrome89.0.4389.90 1 1
+firefox129.0 1 1
+safari16.6 1 1
+chrome56.0.2924.87 1 1
+chrome139.0.0.0 2 2
+safari26.5.2 83 36
+firefox80.0 1 1
+firefox120.0 4 4
+chrome102.0.4997.0 1 1
+chrome120.0.0.0 9 9
+chrome58.0.3029.110 1 1
+chrome91.0.4472.114 1 1
+chrome136.0.0.0 1 1
+chrome125.0.0.0 1 1
+chrome142.0.0.0 13 13
+safari16.0 1 1
+chrome148.0.0.0 1 1
+firefox123.0 1 1
+safari18.5 3 3
+chrome125.0.6422.60 1 1
+chrome127.0.6533.17 1 1
+chrome91.0.4472.124 1 1
+itunes 1 1
+safari15.6.1 1 1
+firefox38.0 1 1
+chrome130.0.0.0 7 7
+firefox121.0 1 1
+netscape5.0 2 2
+chrome123.0.0.0 1 1
+firefox109.0 1 1
+chrome151.0.0.0 5 5
+chrome106.0.0.0 1 1
+firefox77.0 1 1
+chrome121.0.0.0 1 1
+chrome101.0.4951.54 1 1
+firefox124.0 1 1
+chrome132.0.0.0 3 3
+chrome108.0.0.0 1 1
+chrome99.0.4844.51 1 1
+chrome74.0.3729.157 1 1
+safari26.0 22 22
+firefox142.0 3 3
+chrome91.0.4472.120 1 1
+chrome37.0.2049.0 1 1
+firefox131.0 2 2
+safari13.0.3 471 471
+chrome145.0.7632.6 2 2
+chrome124.0 1 1
+chrome135.0.0.0 1 1
+mozilla 17 17
+chrome137.0.0.0 2 2
+chrome153.0.0.0 1 1
+Unknown 8 7
+chrome101.0.4951.61 2 2
+chrome151.0.7922.137 6 6
+chrome119.0.0.0 6 6
+chrome150.0.0.0 7 7
+safari5.0.5 1 1
+android 2 2
+chrome94.0.4606.61 14 14
+chrome120.0.6099.199 1 1
+chrome141.0.0.0 1 1
+chrome146.0.0.0 26 26
+safari 4 4
+chrome111.0.0.0 2 2
+firefox33.0 4 4
+chrome49.0.2623.112 9 4
+chrome124.0.0.0 6 6
+firefox36.0 1 1
+chrome101.0.4951.41 1 1
+chrome126.0.0.0 2 2
+chrome80.0.3987.132 4 4
+chrome92.0.4515.107 1 1
+chrome114.0.0.0 6 6
+safari14.0 1 1
+chrome131.0.6778.85 2 2
+opera66.2.3445.62346 1 1
+END_BROWSER
+
+# Screen size - Hits
+BEGIN_SCREENSIZE 0
+END_SCREENSIZE
+
+# Unknown referer OS - Last visit date
+BEGIN_UNKNOWNREFERER 7
+axios/0.19.2 20260815202016
+MushDomainCensus/1.0_(_https://dns-research.the.com/;_w@the.com) 20260814153741
+Mozilla/5.0_(compatible;_ForestEngine/1.0;__https://forestengine.net/) 20260828215002
+Dart/3.10_(dart:io) 20260814184932
+Mozilla/5.0_Firefox/33.0 20260815192456
+RootEvidence/1.0 20260825111153
+Mozilla/5.0_(compatible;_Let's_Encrypt_validation_server;__https://www.letsencrypt.org) 20260813174955
+END_UNKNOWNREFERER
+
+# Unknown referer Browser - Last visit date
+BEGIN_UNKNOWNREFERERBROWSER 4
+Dart/3.10_(dart:io) 20260814184932
+MushDomainCensus/1.0_(_https://dns-research.the.com/;_w@the.com) 20260814153741
+axios/0.19.2 20260815202016
+RootEvidence/1.0 20260825111153
+END_UNKNOWNREFERERBROWSER
+
+# Origin - Pages - Hits 
+BEGIN_ORIGIN 6
+From0 328 335
+From1 1 1
+From2 2 2
+From3 6 11
+From4 508 549
+From5 0 0
+END_ORIGIN
+
+# Search engine referers ID - Pages - Hits
+BEGIN_SEREFERRALS 2
+www_google_com 1 1
+baidu 1 1
+END_SEREFERRALS
+
+# External page referers - Pages - Hits
+# The 10 first Pages must be first (order not required for others)
+BEGIN_PAGEREFS 3
+http://mail.motusy.top/.well-known/acme-challenge/oReKDxcJbdhTSMoxQf9aznrCLDUuxxXDOitfwubbHno 5 5
+http://185.110.51.220 1 1
+https://tm-prod.dreamflow.cloud 0 5
+END_PAGEREFS
+
+# Search keyphrases - Number of search
+# The 10 first number of search must be first (order not required for others)
+BEGIN_SEARCHWORDS 0
+END_SEARCHWORDS
+
+# Search keywords - Number of search
+# The 10 first number of search must be first (order not required for others)
+BEGIN_KEYWORDS 0
+END_KEYWORDS
+
+# Errors - Hits - Bandwidth
+BEGIN_ERRORS 10
+405 2 99
+403 319 494131
+201 16 8996
+422 15 4578
+503 2 2260
+301 1965 2102212
+404 1618 3926491
+401 82 8590
+204 2 0
+500 4 8687
+END_ERRORS
+
+# URL with 403 errors - Hits - Last URL referrer
+BEGIN_SIDER_403 258
+/supabase/.env 1 -
+/.env.ci 1 -
+/aws/iam/temporary-credentials 1 -
+/.travis.yml 1 -
+/dist/manifest.json 1 -
+/config/env.js 1 -
+/config/jenkins.conf 1 -
+/.vercel/.env 1 -
+/apps/api/.env 1 -
+/.claude/settings.json 1 -
+/.drone.yml 1 -
+/internal-api/iam/credentials 1 -
+/@fs/home/ubuntu/.aws/credentials 1 -
+/www/.env 1 -
+/login 1 -
+/backend/.env.production 1 -
+/api/download 1 -
+/.env.local 1 -
+/config/.env.php 1 -
+/src/.env 1 -
+/aws-exports.js 1 -
+/api/preview 2 -
+/.env~ 1 -
+/azure-pipelines.yml 1 -
+/@fs/app/.env 1 -
+/.env.test 1 -
+/api/file 1 -
+/.env.docker 1 -
+/.circleci/config.yml 1 -
+/private/.env.production 1 -
+/.well-known/credentials.json 1 -
+/.gcloud/credentials 1 -
+/s3/public/credentials 1 -
+/secrets/aws.json 1 -
+/old/.env 1 -
+/frontend/.env 1 -
+/.env.save 1 -
+/static../.aws/credentials 1 -
+/.git/HEAD 1 -
+/.continue/config.json 1 -
+/backend/aws.json 1 -
+/docker/.env 1 -
+/application/.env 1 -
+/@fs/../.env 1 -
+/.env.backup 1 -
+/public/env.js 1 -
+/.hermes/.env 1 -
+/sendgrid/.env.php 1 -
+/@fs/root/.aws/credentials 1 -
+/push_config.json 1 -
+/static../.env 1 -
+/graphql/console 1 https://motusy.top
+/app/api/.env 1 -
+/api/.env 1 -
+/@fs/proc/1/environ 1 -
+/internal/aws/credentials 1 -
+/config/.env 1 -
+/.env.prod.bak 1 -
+/aws/credentials.json 1 -
+/.env.json 1 -
+/.cursor/mcp.json 1 -
+/.env.staging 1 -
+/app_dev.php/_profiler/.env 1 -
+/claude_desktop_config.json 1 -
+/aws/iam/temp-creds.json 1 -
+/private/.env 1 -
+/Jenkinsfile 1 -
+/api/v1/fetch 2 -
+/.env.php.bak 1 -
+/twilio/.env.php 1 -
+/.ssh/id_ecdsa 1 -
+/wp-content/debug.log 1 -
+/private/aws_credentials.json 1 -
+/api/webhook 2 -
+/var/www/html/.env 1 -
+/.github/workflows/deploy.yml 1 -
+/hidden/.aws/credentials 1 -
+/services/.env 1 -
+/docs/api.json 1 -
+/.env.production.local 1 -
+/runtime.js 1 -
+/.env.yaml 1 -
+/.docker/.env 1 -
+/.netlify/.env 1 -
+/login/.. 1 -
+/admin/.env 1 -
+/s3-credentials.json 1 -
+/.env.php 1 -
+/admin 1 -
+/api/fetch 2 -
+/@fs/proc/self/environ 2 -
+/core/.env 1 -
+/storage/logs/laravel.log 1 -
+/backend/.env.local 1 -
+/production/.env 1 -
+/app/.env.local 1 -
+/aws/ecs/task-credentials.json 1 -
+/preview 1 -
+/.env.prod 1 -
+/api/image 1 -
+/image 1 -
+/api/.aws/credentials 1 -
+/.env.yml 1 -
+/_next/static/../.env 1 -
+/apps/.env 1 -
+/.env.bak 1 -
+/app_dev.php 1 -
+/.github/workflows/build.yml 1 -
+/.github/.env 1 -
+/.env.sentry-build-plugin 1 -
+/job/.env 1 -
+/development/.env 1 -
+/app-config.json 1 -
+/jenkins/secrets/master.key 1 -
+/conf/.env 1 -
+/.aws/ecs-task-credentials 1 -
+/build/manifest.json 1 -
+/static../proc/self/environ 1 -
+/config/jenkins.xml 1 -
+/ 23 -
+/google-services.json 1 -
+/backend/api/.env 1 -
+/debug/pprof/cmdline 1 -
+/root/.aws/credentials 1 -
+/anthropic.json 1 -
+/.git-credentials 1 -
+/app/.env.production 1 -
+/@fs/root/.aws/config 1 -
+/jenkins/credentials.xml 1 -
+/admin/config 1 -
+/@fs/etc/passwd 1 -
+/aws-config.js 1 -
+/api/config 1 -
+/aws/.env.production 1 -
+/.aws/metadata/iam/security-credentials 1 https://motusy.top/.aws/metadata/iam/security-credentials/
+/sitemap.xml 1 -
+/aws/s3/credentials.bak 1 -
+/.ssh/id_dsa 1 -
+/secrets.env 1 -
+/webhook 1 -
+/@fs/home/ec2-user/.aws/credentials 1 -
+/robots.txt 8 -
+/app/.env 1 -
+/.env.development.local 1 -
+/aws/.env 1 -
+/staging/.env 1 -
+/client/.env 1 -
+/.vercel/.env.development.local 1 -
+/aws/s3/credentials.yml 1 -
+/settings.js 1 -
+/vendor/aws/credentials 1 -
+/.env.example 1 -
+/@fs/proc/self/cwd/.aws/credentials 1 -
+/firebase-adminsdk.json 1 -
+/html/.env 1 -
+/assets/env.js 1 -
+/.env.sample 1 -
+/.env.production 1 -
+/v2/.env 1 -
+/back/.env 1 -
+/aws/metadata/iam/security-credentials 2 https://motusy.top/aws/metadata/iam/security-credentials/
+/_nuxt/../.env 1 -
+/.mcp.json 1 -
+/.openclaw/.env 1 -
+/v1/graphql 1 https://motusy.top
+/openai.json 1 -
+/laravel/.env 1 -
+/config/.env.local 1 -
+/.vite/manifest.json 1 -
+/static/.. 1 -
+/..%252F..%252F..%252F..%252F..%252Fproc/self/environ 1 -
+/web/.env 1 -
+/@vite/env 1 -
+/secure/.. 1 -
+/jenkins/.env 1 -
+/management/env 1 -
+/internal/.env.production 1 -
+/actuator/env 1 -
+/proxy 5 -
+/env-config.js 1 -
+/ci/.env 1 -
+/home/ubuntu/.aws/credentials 1 -
+/home/gitlab-runner/.aws/credentials 1 -
+/sendgrid.env 1 -
+/env 1 -
+/.env.orig 1 -
+/dev/.env 1 -
+/api/v1/credentials 1 -
+/k8s/eks/credentials 1 -
+/server/.env 1 -
+/app_dev.php/_profiler 1 -
+/.env.anthropic 1 -
+/debug.log 1 -
+/.env.js 1 -
+/aws-credentials.json 1 -
+/.env 3 -
+/s3-credentials.bak 1 -
+/.github/workflows/publish.yml 1 -
+/.github/workflows/docker.yml 1 -
+/.anthropic/config.json 1 -
+/.env.production.bak 1 -
+/root/.aws/config 1 -
+/var/www/.env 1 -
+/home/ec2-user/.aws/credentials 1 -
+/backup/.env 1 -
+/.env.swp 1 -
+/backend/.aws/credentials 1 -
+/config.js 1 -
+/..%252F..%252F..%252F..%252F..%252Froot/.aws/credentials 1 -
+/.env.old 1 -
+/files../etc/passwd 1 -
+/download 1 -
+/.env.dev 1 -
+/.codex/config.toml 1 -
+/internal/.env 1 -
+/ecs/task-credentials 1 -
+/firebase-service-account.json 1 -
+/.supabase/.env 1 -
+/api/proxy 1 -
+/media../.env 1 -
+/.env.html 1 -
+/frontend/.env.production 1 -
+/config/aws.json 1 -
+/.env.local.php 1 -
+/@fs/.env 1 -
+/@fs/proc/self/cwd/.env 1 -
+/config/gcp-credentials.json 1 -
+/media../etc/passwd 1 -
+/config.env 1 -
+/files../.env 1 -
+/read 2 -
+/.claude.json 1 -
+/config/.env.production 1 -
+/.git/config 3 -
+/public/.env 1 -
+/frontend/.env.local 1 -
+/v1/.env 1 -
+/backend/.env 1 -
+/.. 1 -
+/fetch 18 -
+/data/aws/credentials 1 -
+/crm/.env 1 -
+/.jenkins/config.xml 1 -
+/.env.development 1 -
+/.env.openai 1 -
+/aws_creds.js 1 -
+/_profiler/latest 1 -
+/_next/../.env 1 -
+/docs/api 1 -
+/debug/default/view 1 -
+/api/graphql 1 https://motusy.top
+/aws/ecs/task-credentials 1 -
+/google-service-account.json 1 -
+/@fs/root/.env 1 -
+/prod/.env 1 -
+/firebase-credentials.json 1 -
+/.github/workflows/ci.yml 1 -
+/.vercel/.env.production.local 1 -
+END_SIDER_403
+
+# URL with 404 errors - Hits - Last URL referrer
+BEGIN_SIDER_404 163
+//cms/wp-includes/wlwmanifest.xml 2 -
+/read 1 -
+//blog/wp-includes/wlwmanifest.xml 2 -
+/gcp-service-account.json 1 -
+/composer.json 1 -
+/staff 1 -
+/wp-admin/install.php 1267 -
+/aws/iam/credentials.json 1 -
+//2020/wp-includes/wlwmanifest.xml 2 -
+//f7fdffb2-a091-11f1-aa62-b51041f83b11 1 -
+//wp1/wp-includes/wlwmanifest.xml 2 -
+/fetch 9 -
+/storage/logs/laravel.log 1 -
+/.gitlab-ci.yml 1 -
+/@fs/proc/self/environ 1 -
+/.ssh/known_hosts 1 -
+/env.json 1 -
+/.. 1 -
+/user/umi.min.js 1 https://www.baidu.com/
+/env.js 1 -
+/docs/worklog.md 1 -
+/api/v1/aws/credentials 1 -
+/public/.aws/credentials 1 -
+/actuator/logfile 1 -
+/api/user 1 -
+/runtime-config.js 1 -
+/cmd_sco 3 -
+/home/node/.aws/credentials 1 -
+/image 1 -
+/credentials.json 1 -
+/api/image 1 -
+/credentials.js 1 -
+/home/runner/.aws/credentials 1 -
+/storage/logo-source.png 1 -
+/.config/anthropic/credentials/default.json 1 -
+/api/v1 1 -
+/preview 1 -
+/docs/FOUNDATION.md 1 -
+/bitbucket-pipelines.yml 1 -
+//2021/wp-includes/wlwmanifest.xml 2 -
+//xmlrpc.php 2 -
+/.gcloud/credentials.json 1 -
+//wordpress/wp-includes/wlwmanifest.xml 2 -
+/pi.php 1 -
+/api/env 1 -
+/screenshot 2 -
+/atorage.app.logo.png 1 -
+/.aws/credentials.old 1 -
+/api/v1/nie-istnieje 1 -
+/api/v1/env 1 -
+//2019/wp-includes/wlwmanifest.xml 2 -
+/aws/iam/ecs-task-credentials.json 1 -
+//wp/wp-includes/wlwmanifest.xml 2 -
+/jenkins/config.xml.bak 1 -
+//index.php 1 -
+/redirect 2 -
+/api/aws/credentials 1 -
+/plugins/editors/tinymce/tinymce.xml 1 -
+//test/wp-includes/wlwmanifest.xml 2 -
+/__probe_root.txt 1 -
+/wp-includes/css/buttons.css 1 -
+/download 2 -
+/ecs/task-credentials.json 1 -
+/favicon.png 11 -
+/__probe_public.txt 1 -
+/vendor/.aws/credentials 1 -
+/Dockerfile 1 -
+/storage/avatars/2b3949cd-3fc3-4dd3-95f7-00ee36afaacc.png 1 -
+/_profiler/phpinfo.php 1 -
+/phpinfo.php 1 -
+/serviceAccountKey.json 1 -
+/app/.aws/credentials 1 -
+/actuator 1 -
+/tos 1 -
+/environment.js 1 -
+/api/proxy 1 -
+/.aws/ecs-task-credentials.json 1 -
+/.aws/config 1 -
+/sellers.json 21 -
+/atorage/app/logo.png 1 -
+/.github/workflows/test.yml 1 -
+/tmp/.aws/credentials 1 -
+/.aws_creds.json 1 -
+//wp-cron.php 1 -
+//site/wp-includes/wlwmanifest.xml 2 -
+/wp-login.php 25 -
+/firebase-config.json 1 -
+/app/Models/User.php 1 -
+/aws_credentials.txt 1 -
+/aws/s3/credentials.json 1 -
+/docs/nie-ma.html 1 -
+//web/wp-includes/wlwmanifest.xml 2 -
+/.github/secrets.env 1 -
+/.ssh/config 1 -
+//wp-includes/js/wp-emoji-release.min.js 1 -
+/config/anthropic.json 1 -
+/static../etc/passwd 1 -
+/jenkins/config.xml 1 -
+/config.json.js 1 -
+/app_dev.php/_profiler/phpinfo 1 -
+/aws/credentials 1 -
+/@fs/root/.aws/credentials 1 -
+/.aws/credentials 2 -
+/cloudbuild.yaml 1 -
+/_profiler/open 1 -
+/ads.txt 22 -
+/pms 2 -
+/_profiler/phpinfo 1 -
+/google-credentials.json 1 -
+/.openai/config.json 1 -
+/secrets/gcp.json 1 -
+/configuration.js 1 -
+/home/circleci/.aws/credentials 1 -
+/@fs/app/.aws/credentials 1 -
+/docs/motusy-api.md 2 -
+/@fs/proc/1/environ 1 -
+/proc/self/environ 1 -
+/proxy 3 -
+//feed/ 1 -
+/apple-touch-icon-precomposed.png 12 -
+/gcp-credentials.json 1 -
+/INSTALL.txt 1 -
+/app-ads.txt 21 -
+/@fs/home/node/.aws/credentials 1 -
+/..%252F..%252F..%252F..%252F..%252F.env 1 -
+/ 21 -
+/graphql 1 https://motusy.top
+//wp-includes/ID3/license.txt 2 -
+/dist/.vite/manifest.json 1 -
+/s3/.aws/credentials 1 -
+/id_rsa 1 -
+/@fs/etc/passwd 1 -
+/credentials 1 -
+/api/.. 1 -
+/application.env 1 -
+/internal-api/aws/credentials 1 -
+/config/openai.json 1 -
+/api/download 1 -
+/webhook 1 -
+/.aws/credentials.bak 1 -
+/aws.json 1 -
+/CLAUDE.md 1 -
+/about 1 -
+/config/credentials.json 1 -
+/secrets.json 1 -
+/apple-touch-icon.png 13 -
+/llms.txt 4 -
+//shop/wp-includes/wlwmanifest.xml 2 -
+/latest/meta-data/iam/security-credentials 1 https://motusy.top/latest/meta-data/iam/security-credentials/
+/atorage/app.logo.png 1 -
+/__debug__ 1 https://motusy.top/__debug__/
+/sitemap.xml 3 -
+/__env.js 1 -
+/service-account.json 1 -
+/.github/workflows/release.yml 1 -
+/.github/workflows/main.yml 1 -
+/jenkins/Jenkinsfile 1 -
+/readme.html 1 -
+/robots.txt 15 -
+/_next/../.aws/credentials 1 -
+/@fs/home/ec2-user/.aws/credentials 1 -
+/application_default_credentials.json 1 -
+/administrator/manifests/files/joomla.xml 1 -
+END_SIDER_404
+
+# URL with 400 errors - Hits - Last URL referrer
+BEGIN_SIDER_400 0
+END_SIDER_400
+
+# Host - Pages - Hits - Bandwidth - Last visit date - [Start date of last visit] - [Last page of last visit]
+# [Start date of last visit] and [Last page of last visit] are saved only if session is not finished
+# The 10 first Hits must be first (order not required for others)
+BEGIN_VISITOR 523
+87.101.42.57 22 70 3451791 20260823193334
+18.206.126.104 14 14 8823 20260814212515
+118.31.112.143 9 9 158148 20260830210340
+162.216.148.10 8 8 356300 20260823095759
+47.113.205.75 7 7 123044 20260829231157
+51.159.210.177 6 6 87402 20260819093217
+151.115.97.77 6 6 87402 20260815093431
+62.210.198.165 6 6 87402 20260813203743
+185.110.51.38 6 6 104662 20260828010500
+51.159.108.222 6 6 87402 20260813193450
+152.163.187.207 2 2 18687 20260814185109
+43.164.0.21 1 1 17492 20260824060347
+18.207.162.238 1 1 17492 20260825110029
+51.159.108.216 3 3 43701 20260813193041
+43.130.26.3 1 1 17492 20260822100844
+18.225.54.199 1 1 386 20260813174933
+23.23.134.166 1 1 17492 20260814193923
+34.225.164.177 1 1 17492 20260824023950
+170.106.11.6 2 2 34984 20260827170759
+170.106.107.87 1 1 17492 20260823221044
+43.153.76.247 3 3 52476 20260826025159
+43.162.103.213 2 2 34984 20260827115730
+3.1.202.141 1 1 14567 20260814063550
+43.164.133.138 2 2 34984 20260826031211
+43.159.144.16 2 2 34984 20260826205954
+43.153.54.138 2 2 35104 20260829214920
+43.135.140.225 1 1 17492 20260825100514
+43.164.196.244 1 1 17492 20260825120558
+170.106.113.235 1 1 17492 20260819170710
+78.30.106.130 1 1 15943 20260829150106
+52.37.67.84 2 2 29134 20260813194444
+205.169.39.3 1 1 15854 20260814021823
+43.164.196.47 1 1 17492 20260819170259
+43.166.253.94 2 2 34984 20260820100922
+44.214.8.143 1 1 17455 20260815153327
+9.142.9.191 1 1 17455 20260815034157
+49.51.178.184 1 1 14567 20260824192432
+23.178.112.210 1 1 397 20260813174932
+43.131.26.226 1 1 17492 20260818221654
+43.153.107.22 2 2 35104 20260831002148 20260831002148 /
+150.109.230.210 3 3 52596 20260830071618
+43.134.78.217 1 1 17492 20260818030736
+170.106.110.146 1 1 17492 20260815091316
+34.12.7.176 1 1 17492 20260815122938
+200.45.130.42 1 1 15823 20260814182545
+137.184.124.248 1 1 17492 20260825083737
+152.136.23.159 1 1 17612 20260830112548
+43.166.242.189 2 2 34984 20260826050707
+146.190.113.13 1 1 4491 20260817172344
+43.130.150.80 1 1 17492 20260822050719
+34.97.79.51 1 1 14567 20260814212839
+204.101.161.15 2 2 31708 20260819002734
+43.166.1.243 1 1 17612 20260830120722
+43.159.152.187 3 3 52476 20260823051437
+43.162.103.165 2 2 34984 20260825190035
+104.207.36.168 1 1 4452 20260813175146
+43.130.40.120 1 1 17612 20260829050810
+43.156.79.172 2 2 34984 20260828031604
+139.155.126.16 1 1 17492 20260819185355
+34.116.215.157 1 1 14567 20260814031328
+129.226.174.80 2 2 34984 20260819140644
+43.153.49.151 1 1 17492 20260822191242
+45.92.87.200 1 1 17492 20260827084711
+43.164.190.124 1 1 17492 20260827125714
+54.88.94.133 2 2 30801 20260814124747
+43.159.149.216 1 1 17492 20260825150735
+43.130.12.43 1 1 17612 20260829120413
+49.51.183.84 2 2 34984 20260821150642
+172.252.234.68 1 1 14567 20260827200855
+162.14.114.97 1 1 17492 20260822112202
+44.222.181.208 1 1 17455 20260814231434
+82.156.88.97 1 1 17612 20260829135547
+43.153.135.208 1 1 17492 20260816120647
+170.106.35.153 2 2 35104 20260830031731
+35.166.202.47 1 1 386 20260813174955
+43.153.10.13 3 3 52476 20260822120355
+43.153.74.75 1 1 17492 20260823050812
+43.166.136.24 1 1 17492 20260822002207
+43.155.188.157 1 1 17492 20260816100854
+3.81.120.255 1 1 17492 20260816104819
+34.217.177.100 2 2 29134 20260814045221
+45.92.84.204 1 1 17492 20260814224558
+38.70.224.220 1 1 17492 20260814225210
+184.73.29.106 1 1 17492 20260820105854
+1.14.181.132 1 1 17492 20260815231831
+34.24.158.32 1 1 15786 20260814081949
+49.51.132.100 1 1 17612 20260830221156
+43.166.240.231 1 1 17492 20260827081433
+95.40.118.8 1 1 17492 20260814060036
+43.156.37.91 1 1 17612 20260830163639
+43.161.233.190 3 3 52596 20260830101149
+45.92.87.205 1 1 17612 20260829012235
+170.106.163.48 1 1 17612 20260830132143
+119.91.20.139 1 1 17612 20260830164230
+193.42.56.225 1 1 17492 20260815082835
+35.95.125.101 1 1 386 20260813174933
+43.157.170.126 2 2 35104 20260829171546
+43.160.227.253 1 1 17492 20260816002429
+43.163.86.65 1 1 17492 20260822030916
+119.28.177.175 1 1 17492 20260828031244
+43.130.9.111 2 2 34984 20260826100818
+82.156.116.86 1 1 17492 20260824101525
+216.251.143.109 1 1 14567 20260822202239
+100.24.15.236 1 1 14567 20260814105729
+43.153.10.83 1 1 17492 20260819091632
+43.157.168.43 1 1 17492 20260818071035
+43.162.114.69 1 1 17492 20260819181648
+43.153.87.54 1 1 17492 20260816140420
+43.130.91.95 1 1 17492 20260826062620
+103.4.250.137 1 1 15823 20260813195934
+43.159.148.221 1 1 17612 20260830040748
+43.130.31.17 1 1 17492 20260820031227
+98.93.115.101 1 1 14567 20260813212448
+159.223.130.96 1 1 17492 20260823095115
+43.157.179.227 1 1 17492 20260817090502
+49.51.73.183 1 1 17492 20260815172251
+123.207.65.62 2 2 34984 20260826102858
+170.106.152.218 1 1 17492 20260816101240
+130.94.65.130 1 1 17455 20260814085731
+43.153.85.46 2 2 34984 20260828120339
+106.54.62.156 1 1 17612 20260830055432
+43.165.195.234 2 2 34984 20260817150640
+185.238.75.151 1 1 70402 20260825181622
+149.57.180.46 1 1 14567 20260820221939
+43.156.232.154 1 1 17492 20260827071221
+162.216.148.1 2 2 89075 20260815190514
+54.87.144.129 1 1 71620 20260814165816
+43.135.182.95 2 2 35104 20260829140251
+49.51.166.228 3 3 52476 20260819050633
+43.134.68.29 2 2 34984 20260828150354
+162.216.148.0 2 2 89075 20260815184130
+45.92.87.149 1 1 17492 20260817004410
+104.164.173.169 2 2 31646 20260813222426
+43.130.3.122 2 2 34984 20260823181345
+49.51.196.42 1 1 17492 20260819221800
+129.211.172.249 1 1 17492 20260821142038
+43.164.192.151 1 1 17492 20260821054854
+43.153.96.79 2 2 35104 20260830050812
+43.157.156.190 3 3 52476 20260817120212
+43.153.7.191 1 1 17492 20260815162753
+43.130.57.76 1 1 17492 20260822170646
+43.166.134.114 2 2 34984 20260819150354
+43.130.67.33 1 1 17492 20260820235317
+43.159.139.164 1 1 17492 20260814163129
+43.106.54.189 1 1 17455 20260820061013
+18.222.28.120 1 1 15823 20260814080750
+43.131.36.84 1 1 17492 20260818031353
+34.1.37.119 2 2 29134 20260829005348
+103.4.250.53 2 2 8978 20260813222452
+205.169.39.58 2 2 31708 20260817054209
+43.157.180.116 1 1 17612 20260830031202
+171.13.14.76 1 1 14567 20260816120728
+43.155.140.157 2 2 35224 20260829150258
+54.80.143.112 1 1 14567 20260814105729
+43.130.14.245 2 2 34984 20260821101221
+43.167.241.46 1 1 17492 20260827071613
+18.188.237.8 1 1 386 20260813174940
+54.162.141.5 2 2 34910 20260813231817
+43.155.27.244 2 2 34984 20260827021127
+37.19.221.150 1 1 14567 20260820024345
+43.130.131.18 1 1 17492 20260827221121
+162.14.109.170 2 2 34984 20260825020923
+170.106.143.6 1 1 17492 20260827070110
+45.92.86.141 1 1 17492 20260824003413
+101.32.15.141 2 2 34984 20260828071105
+3.95.202.40 3 3 49551 20260816215704
+193.47.62.168 2 2 21981 20260816210253
+43.157.22.109 2 2 34984 20260820101039
+162.62.231.139 1 1 17492 20260824150346
+170.106.163.84 2 2 34984 20260820231128
+43.130.3.120 1 1 17492 20260814120627
+205.169.39.21 1 1 15854 20260816021557
+18.219.251.44 1 1 386 20260813174954
+43.163.206.70 2 2 34984 20260823093434
+149.57.180.60 1 1 14567 20260823221200
+43.165.197.116 1 1 17492 20260823030746
+159.203.119.74 1 1 17492 20260815033836
+43.167.245.18 3 3 52476 20260822231950
+205.169.39.26 1 1 15854 20260814105014
+172.178.10.177 1 1 15823 20260815085703
+106.75.146.22 1 6 207435 20260816075540
+178.18.249.21 2 2 34910 20260813182958
+43.166.244.251 1 1 17492 20260827031248
+171.22.217.26 2 2 8979 20260813195946
+103.196.9.226 1 1 15823 20260813222413
+43.166.255.102 1 1 17492 20260816033215
+36.99.136.132 1 1 17455 20260826135454
+60.166.83.188 2 2 29134 20260819071259
+43.135.148.92 3 3 52476 20260828101258
+124.221.140.98 1 1 17492 20260818205334
+3.221.114.16 1 1 17492 20260814191632
+43.166.250.187 1 1 17492 20260816160244
+43.165.170.119 1 1 17492 20260816150629
+171.95.209.80 1 1 71620 20260818084304
+52.91.236.4 2 2 30801 20260823181607
+18.215.166.9 2 2 30801 20260814092137
+43.136.86.241 1 1 17492 20260819022342
+43.159.128.247 1 1 17492 20260818070557
+139.59.7.203 1 1 17492 20260815093132
+192.177.167.60 1 1 14567 20260830134231
+175.27.136.83 2 2 34984 20260821033627
+43.98.180.135 1 1 4691 20260819160306
+170.106.179.68 1 1 17492 20260822102411
+43.166.132.142 1 1 17492 20260826101327
+104.164.158.191 2 2 18687 20260814131850
+170.106.11.141 1 1 17612 20260829230838
+70.39.80.30 1 1 17492 20260824051743
+1.12.70.96 1 1 17492 20260827023641
+43.166.246.180 1 1 17492 20260816114439
+34.123.170.104 1 1 14567 20260816051533
+44.203.235.126 2 2 30801 20260815183247
+122.51.236.174 4 4 69968 20260827075730
+43.135.142.37 2 2 34984 20260826170827
+43.153.12.58 1 1 17612 20260828221740
+124.156.226.179 2 2 35104 20260830172955
+82.156.34.74 3 3 52476 20260823234353
+43.159.143.190 1 1 17492 20260826221701
+43.157.53.115 1 1 17612 20260829031400
+49.49.231.43 1 1 14567 20260825074043
+43.157.158.178 2 2 35104 20260830050335
+43.159.132.207 1 1 17492 20260824011511
+43.157.82.252 2 2 34984 20260826071417
+43.130.67.6 1 1 17492 20260824030757
+49.51.243.95 1 1 17492 20260823101238
+134.122.120.166 1 1 17492 20260817044754
+194.124.239.206 1 1 14567 20260819072015
+43.165.167.69 2 2 34984 20260822170332
+43.166.142.76 1 1 17492 20260817050342
+178.175.148.155 1 1 15854 20260819172416
+43.157.38.131 4 4 70208 20260830100952
+43.162.109.249 4 4 70088 20260830080707
+170.246.52.154 1 1 14567 20260814005722
+164.90.200.18 1 1 4487 20260815155041
+43.160.219.206 1 1 17492 20260825170347
+43.161.224.78 1 1 17612 20260829085838
+43.159.140.236 4 4 69968 20260828120723
+43.166.244.192 2 2 34984 20260827101006
+43.133.14.237 1 1 17492 20260820071050
+43.166.239.145 1 1 17492 20260815140357
+162.62.132.25 2 2 34984 20260825050342
+43.153.62.161 2 2 34984 20260825221801
+54.46.121.237 1 1 17492 20260814041957
+206.189.97.180 1 1 17492 20260819090502
+142.132.174.233 1 1 16234 20260814005430
+43.165.65.117 1 1 17492 20260815035454
+100.57.4.227 1 1 14567 20260826114540
+43.157.52.37 1 1 17492 20260825050755
+159.89.235.199 1 1 4610 20260829040338
+43.153.96.233 1 1 17492 20260824101234
+170.106.193.108 2 2 34984 20260819172750
+170.106.187.106 1 1 17492 20260816170254
+43.165.125.66 3 3 52596 20260828165756
+43.135.133.194 1 1 17492 20260816120322
+54.38.56.124 1 1 70402 20260825163821
+43.164.197.117 1 1 17492 20260825150236
+43.135.144.126 1 1 17492 20260826071108
+119.28.89.249 1 1 17492 20260818120603
+43.163.112.239 1 1 17612 20260829131439
+43.153.102.138 1 1 17492 20260823170836
+3.91.196.33 2 2 30801 20260818180247
+129.226.195.146 2 2 34984 20260823131345
+45.92.87.10 1 1 17492 20260828010315
+43.133.69.37 1 1 17492 20260826145108
+45.92.87.17 1 1 17492 20260813224732
+3.80.92.8 1 1 17492 20260827110819
+43.152.72.244 3 3 52476 20260824170757
+119.45.7.86 1 1 17612 20260829192007
+43.134.23.177 1 1 17492 20260817070545
+173.211.16.48 1 1 17492 20260823210640
+45.92.84.51 1 1 17492 20260827004340
+49.51.39.209 3 3 52596 20260830170712
+8.229.129.155 1 1 15823 20260814235534
+43.140.247.223 2 2 35104 20260829032049
+47.254.47.156 1 1 17492 20260814221600
+43.130.102.7 1 1 17492 20260823170347
+49.51.243.156 2 2 34984 20260814120259
+43.140.37.167 4 4 70088 20260828220619
+170.106.167.214 1 1 17492 20260824120720
+3.234.230.43 2 2 30801 20260814105138
+43.159.35.188 2 2 34984 20260815050911
+94.139.58.55 1 1 14567 20260816145543
+43.164.190.28 1 1 17492 20260819030629
+43.131.45.213 2 2 34984 20260818140610
+43.130.16.212 1 1 17612 20260829071437
+43.157.170.13 1 1 17492 20260826192246
+43.130.60.195 1 1 17492 20260822141850
+54.234.93.181 1 1 17492 20260822111701
+175.178.110.121 2 2 34984 20260827133654
+157.245.71.106 1 1 3606 20260813175009
+101.33.81.73 3 3 52476 20260826154311
+71.6.238.186 4 4 64044 20260825111153
+34.205.23.228 3 3 49551 20260817231752
+43.166.130.123 2 2 34984 20260825102953
+43.155.129.131 2 2 35104 20260830120424
+43.135.172.89 1 1 17492 20260816232054
+107.172.124.63 1 1 14567 20260814225157
+43.166.136.202 2 2 35104 20260828161148
+205.169.39.22 1 1 15854 20260821041551
+136.66.149.246 1 1 15823 20260814231516
+43.165.127.225 1 1 17492 20260820170435
+43.130.228.73 3 3 52476 20260826073122
+43.130.47.33 1 1 17492 20260824070659
+43.130.110.130 2 2 35104 20260830025629
+43.134.54.246 2 2 34984 20260819132534
+43.159.145.153 1 1 17492 20260825031139
+45.41.128.193 1 1 14567 20260827210623
+207.175.189.13 1 1 17434 20260821123910
+43.161.217.205 3 3 52476 20260820050311
+170.106.192.3 1 1 17492 20260826105815
+43.134.91.35 1 1 17492 20260823150624
+43.166.237.57 1 1 17492 20260825202116
+27.130.40.124 1 1 14567 20260825074146
+43.165.167.72 1 1 17492 20260821071127
+34.162.125.237 1 1 17492 20260822202659
+49.51.233.46 1 1 17492 20260826170424
+202.173.11.248 1 1 17492 20260821052122
+43.157.150.69 1 1 17492 20260814123922
+43.153.67.21 1 1 17492 20260821050838
+43.159.136.201 2 2 34984 20260828050757
+43.165.198.144 1 1 17492 20260825152427
+43.153.48.240 1 1 17612 20260830150816
+23.178.112.104 1 1 397 20260813174954
+124.156.179.141 2 2 34984 20260827221524
+43.161.234.148 1 1 17492 20260819100933
+45.92.86.166 1 1 17492 20260815231704
+124.221.163.189 1 1 17492 20260825072750
+43.167.239.66 1 1 17492 20260827120316
+43.157.62.101 1 1 17492 20260820220918
+171.13.14.84 1 1 14567 20260816120709
+49.51.203.164 2 2 34984 20260822070654
+5.161.41.188 1 1 17434 20260814153741
+23.178.112.107 1 1 397 20260813174939
+46.228.199.158 1 1 16234 20260825220656
+104.197.69.115 5 5 72835 20260829102505
+54.85.112.36 1 1 14567 20260821160641
+103.196.9.143 1 1 14567 20260816144647
+43.130.72.40 1 1 17492 20260817170341
+43.128.149.102 2 2 34984 20260821050424
+171.13.14.40 1 1 14567 20260818234455
+54.160.82.9 1 1 17492 20260821104109
+49.51.38.193 1 1 17612 20260830170451
+43.153.15.51 2 2 34984 20260821100805
+139.99.237.180 5 5 287617 20260814055313
+43.166.128.86 2 2 35104 20260830150411
+44.252.130.235 1 1 14567 20260814053939
+43.135.115.233 2 2 34984 20260816030700
+8.208.71.132 3 3 52836 20260831002933 20260831002933 /
+168.222.97.207 1 1 17492 20260815021949
+13.48.126.196 1 1 386 20260813174954
+129.226.193.111 2 2 34984 20260821120844
+170.106.35.137 3 3 52596 20260830071300
+43.166.238.12 2 2 34984 20260816221133
+52.23.199.9 1 1 17612 20260829110853
+45.56.135.234 1 1 17492 20260826133806
+43.166.251.233 2 2 34984 20260827165246
+44.255.44.251 2 2 29134 20260813200003
+106.75.132.181 1 1 70402 20260816075544
+39.96.14.142 5 5 87700 20260830061318
+106.52.49.148 1 1 17492 20260817175728
+43.159.145.149 1 1 17492 20260815150628
+45.92.216.19 1 1 14567 20260814072924
+45.92.84.8 1 1 17492 20260826084941
+43.173.1.57 1 1 17492 20260820150657
+1.15.52.154 1 1 17492 20260828111128
+188.166.105.185 1 1 16234 20260828215002
+43.153.123.4 1 1 17492 20260825060423
+14.194.11.238 2 2 29134 20260825215530
+43.165.186.188 1 1 17492 20260828034208
+43.134.163.229 3 3 52596 20260828235221
+185.195.233.133 1 1 16234 20260813214721
+43.167.157.80 2 2 35104 20260830231404
+8.228.249.245 1 1 15823 20260817035845
+43.134.62.67 1 1 17492 20260817163041
+43.130.71.237 2 2 34984 20260825071322
+43.131.32.36 2 2 34984 20260821070547
+34.122.147.229 5 5 72835 20260826062511
+34.1.156.172 1 1 14567 20260829002255
+45.92.86.22 1 1 17492 20260822005318
+49.51.178.45 2 2 35104 20260828220004
+34.72.176.129 3 3 43701 20260817040439
+101.33.80.42 1 1 17492 20260819050306
+159.203.170.7 1 1 17492 20260827111457
+23.27.145.115 1 1 14567 20260817222047
+43.154.140.188 3 3 52476 20260825021250
+170.106.73.216 1 1 17492 20260814221054
+175.27.171.245 1 1 17492 20260825182209
+49.235.136.28 1 1 17492 20260826154846
+205.169.39.23 1 1 15854 20260821195459
+106.75.175.42 1 1 70402 20260816075638
+43.164.194.198 1 1 17492 20260827150344
+43.159.128.155 1 1 17492 20260827160607
+45.92.84.190 1 1 17492 20260822084500
+43.130.174.37 1 1 17492 20260815230453
+171.22.217.42 1 1 4491 20260813195929
+16.171.14.60 1 1 386 20260813174933
+35.87.234.255 2 2 34910 20260813193230
+49.51.233.95 2 2 34984 20260824051456
+104.164.126.229 2 2 8981 20260813222449
+43.153.19.83 2 2 35104 20260828170730
+43.135.185.59 1 1 17492 20260817071133
+152.39.242.199 1 1 14567 20260816150746
+43.130.74.193 1 1 17492 20260820095617
+43.134.94.96 2 2 34984 20260824192947
+52.77.246.42 2 2 772 20260813174955
+171.13.14.14 1 1 14567 20260818234428
+3.236.14.61 2 2 30801 20260813182435
+43.133.66.51 1 1 17612 20260829071035
+43.130.154.56 1 1 17612 20260829180418
+192.144.148.122 4 4 70088 20260828165111
+3.236.180.135 1 1 17455 20260815151352
+43.130.32.245 1 1 17492 20260814155304
+100.62.81.20 1 1 14567 20260821061425
+170.106.197.109 2 2 34984 20260818140537
+3.90.92.12 2 2 34984 20260814195336
+43.166.226.186 2 2 35104 20260829031803
+35.166.70.251 1 1 386 20260813174940
+3.87.146.4 2 2 30801 20260814110308
+45.92.84.249 1 1 17492 20260825004745
+170.106.165.76 1 1 17492 20260818090944
+45.92.86.165 1 1 17492 20260826004114
+43.134.236.36 1 1 17612 20260829101205
+175.27.163.171 3 3 52476 20260828003524
+34.118.99.96 2 2 29134 20260814191654
+161.115.234.120 1 1 14567 20260825201746
+43.157.50.58 1 1 17492 20260823120646
+104.37.46.159 1 1 1195 20260814132245
+43.157.148.38 2 2 35104 20260830221501
+162.62.213.165 1 1 17492 20260817031148
+49.51.253.83 2 2 35104 20260829170431
+202.51.87.132 1 1 14567 20260819160237
+43.157.181.189 1 1 17612 20260829100836
+13.216.241.85 1 1 14567 20260814073124
+13.213.57.30 1 1 386 20260813174940
+43.159.135.203 1 1 17612 20260829220942
+54.221.49.150 1 1 17492 20260819111626
+34.169.206.244 1 1 15823 20260814232341
+43.165.4.2 1 1 17492 20260828085053
+82.140.177.69 1 1 14567 20260816232158
+43.135.138.128 1 1 17492 20260825010856
+205.169.39.54 1 1 15854 20260814091219
+35.175.136.19 2 2 30801 20260814160643
+106.75.174.58 1 1 70402 20260816074429
+43.159.36.180 1 1 17492 20260820045811
+165.232.129.94 1 1 17612 20260829130024
+43.130.102.223 1 1 17492 20260816050322
+43.161.251.162 1 1 17492 20260825111937
+139.155.134.17 2 2 34984 20260822163129
+171.22.217.198 2 2 31646 20260813195944
+43.159.149.56 2 2 34984 20260828050535
+98.82.153.179 1 1 17492 20260817105436
+34.127.85.216 1 1 15823 20260815000216
+51.158.248.241 6 6 87402 20260815103500
+106.52.216.13 1 1 17492 20260825125900
+170.106.15.3 1 1 17492 20260827232519
+49.51.50.147 3 3 52476 20260823001450
+34.1.161.210 1 1 14567 20260828104106
+49.232.104.223 2 2 34984 20260826212016
+185.150.0.57 1 1 15854 20260815072656
+43.135.211.148 2 2 34984 20260819101247
+43.134.93.164 1 1 17492 20260824143843
+35.87.148.228 2 2 29134 20260813200220
+165.232.118.190 1 1 17492 20260816034748
+49.51.141.76 1 1 17612 20260829042322
+32.195.204.50 1 1 16234 20260813181227
+157.173.126.53 3 3 39362 20260826173809
+170.106.72.93 1 1 17492 20260828080659
+3.239.106.8 1 1 17492 20260818045648
+43.135.144.81 1 1 17492 20260826150334
+170.106.165.186 3 3 52476 20260824092654
+151.115.90.254 6 6 87402 20260814193227
+212.107.2.108 1 1 14567 20260816142522
+100.31.117.205 2 2 32059 20260820002123
+49.51.33.159 2 2 34984 20260827170336
+49.51.252.146 1 1 17492 20260819071037
+31.121.111.19 1 1 14567 20260814141354
+3.91.48.66 2 2 30801 20260814134343
+43.159.34.167 3 3 52476 20260826221204
+152.163.44.140 1 1 17492 20260820200458
+35.214.85.242 1 1 17492 20260813200348
+43.130.139.177 1 1 17492 20260821131532
+147.182.247.91 1 1 17492 20260817105714
+166.88.63.11 1 1 14567 20260826132557
+146.56.199.139 1 1 17492 20260818043307
+43.130.37.243 2 2 34984 20260827032302
+157.173.126.44 3 3 39362 20260825132034
+192.154.207.118 1 1 17492 20260817044737
+143.198.157.215 2 2 21981 20260813180453
+150.109.119.38 1 1 17612 20260828170501
+157.97.126.162 1 1 14567 20260829131352
+43.135.133.241 1 1 17492 20260821140409
+170.106.109.250 1 1 14567 20260814140621
+43.165.198.5 1 1 17492 20260817120731
+124.156.204.51 1 1 17612 20260830122855
+51.159.108.218 6 6 87402 20260813184119
+43.153.58.28 2 2 35104 20260829050341
+124.156.206.145 2 2 34984 20260820180655
+43.133.60.94 1 1 17492 20260822150807
+43.164.3.23 1 1 17492 20260819011134
+43.133.139.6 1 1 17612 20260829150701
+43.157.153.236 2 2 34984 20260827050629
+43.166.226.57 2 2 34984 20260823041043
+49.51.195.195 3 3 52476 20260820011249
+43.130.141.193 1 1 17492 20260816031310
+107.22.74.160 2 2 34910 20260814151325
+43.130.53.252 1 1 17492 20260824102852
+43.166.247.155 1 1 17492 20260816164635
+129.211.229.121 1 1 17492 20260828060157
+172.236.122.62 2 2 29134 20260813190538
+103.24.235.16 1 1 17492 20260817210750
+43.166.128.187 2 2 35104 20260829120802
+44.213.134.8 1 1 14567 20260826233904
+170.106.161.78 3 3 52476 20260828150819
+43.98.199.244 1 1 17455 20260819180629
+43.167.236.228 1 1 17492 20260825065342
+124.220.42.101 2 2 34984 20260823183519
+43.157.20.63 1 1 17492 20260825101300
+43.165.198.224 1 1 17492 20260823221630
+49.49.221.148 2 2 143166 20260815202016
+136.64.197.85 1 1 17492 20260814040645
+13.53.245.147 1 1 386 20260813174939
+43.166.131.228 2 2 35104 20260830085640
+54.81.138.163 1 1 17492 20260814133638
+43.134.38.171 1 1 17492 20260819120721
+END_VISITOR
+
+# Date - Pages - Hits - Bandwidth - Visits
+BEGIN_DAY 19
+20260813 93 134 1473247 46
+20260814 109 116 4492520 74
+20260815 62 62 1350037 47
+20260816 54 59 1303441 50
+20260817 43 43 725435 41
+20260818 31 31 586347 30
+20260819 47 47 773835 41
+20260820 33 33 568424 32
+20260821 33 33 565127 33
+20260822 31 31 533477 31
+20260823 34 34 638786 32
+20260824 28 28 483926 28
+20260825 48 48 910515 42
+20260826 39 39 657337 37
+20260827 38 38 658846 38
+20260828 42 42 728706 37
+20260829 43 43 727420 42
+20260830 35 35 613375 35
+20260831 2 2 35224 2
+END_DAY
+
+# Session range - Number of visits
+BEGIN_SESSION 6
+15mn-30mn 2
+30s-2mn 14
+30mn-1h 1
+0s-30s 694
+2mn-5mn 3
+1h+ 2
+END_SESSION
+
+# URL - Pages - Bandwidth - Entry - Exit
+# The 10 first Pages must be first (order not required for others)
+BEGIN_SIDER 17
+/ 803 14292081 702 699
+/docs/api-guide.html 6 54363 0 0
+/.well-known/acme-challenge/JVy-AYbiELh03EwUKsdROLaIX3mEsmO-trUlmKzV41M 5 1941 5 5
+/.well-known/acme-challenge/WIvk0NAF6HllkncUidak6RdU1jX9_SkGRFYIzIOcRTQ 5 1941 4 5
+/api/v1/auth/me 5 3120 0 0
+/.well-known/acme-challenge/oReKDxcJbdhTSMoxQf9aznrCLDUuxxXDOitfwubbHno 5 1941 5 4
+/docs/code-map.html 3 29313 1 1
+/docs/api.json 2 7452 0 0
+/api/v1/profile 2 1179 0 0
+/api/v1/auth/login 2 1398 1 0
+/api/v1/ble/identity 1 545 0 1
+/api/v1/motorcycle/photo 1 739 0 0
+/api/v1/motorcycle 1 626 0 0
+/api/v1/devices 1 516 0 0
+/hostido-phpmyadmin/ 1 4780 0 0
+/api/v1/profile/avatar 1 700 0 0
+/hostido-phpmyadmin/js/messages.php 1 9528 0 1
+END_SIDER
+
+# Payload Range - Payload Frequency
+BEGIN_FILESIZE 7
+100-500 202
+1K-2K 2358
+500-1K 118
+0-44 143
+44-100 112
+5K+ 994
+2K-5K 1523
+END_FILESIZE
+
+# Request Time Range - Request Time Frequency
+BEGIN_REQUESTTIME 0
+END_REQUESTTIME
