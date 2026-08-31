@@ -1,33 +1,23 @@
 import tailwindcss from '@tailwindcss/vite';
 import laravel from 'laravel-vite-plugin';
-import { bunny } from 'laravel-vite-plugin/fonts';
-import { defineConfig, lazyPlugins } from 'vite-plus';
+import { defineConfig } from 'vite';
 
+// Celowo zwykłe Vite, nie nakładka `vite-plus`: jej runtime startuje własną
+// pulę wątków tokio, a na tym hostingu limit wątków na konto jest tak niski,
+// że build wywala się paniką Rusta jeszcze przed wczytaniem konfiguracji.
 export default defineConfig({
-    plugins: lazyPlugins(() => [
+    plugins: [
         laravel({
-            input: [
-                'resources/css/app.css',
-                'resources/js/app.js',
-                'resources/js/passkeys.js',
-            ],
+            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/passkeys.js'],
             refresh: true,
-            fonts: [
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
-                }),
-            ],
         }),
         tailwindcss(),
-    ]),
+    ],
     server: {
         cors: true,
         watch: {
             ignored: [
-                '**/.agents/**',
                 '**/.claude/**',
-                '**/.cursor/**',
-                '**/.junie/**',
                 '**/storage/framework/views/**',
                 '**/vendor/**',
             ],

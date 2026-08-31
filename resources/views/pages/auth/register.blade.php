@@ -7,16 +7,17 @@
 
         <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
             @csrf
-            <!-- Name -->
+            <!-- Nick -->
             <flux:input
-                name="name"
-                :label="__('Name')"
-                :value="old('name')"
+                name="nickname"
+                :label="__('Nickname')"
+                :value="old('nickname')"
                 type="text"
                 required
                 autofocus
-                autocomplete="name"
-                :placeholder="__('Full name')"
+                autocomplete="nickname"
+                :placeholder="__('np. rafal')"
+                :description="__('Tak będziesz podpisany w portalu. Imię i nazwisko uzupełnisz później w profilu — i tylko dla siebie.')"
             />
 
             <!-- Email Address -->

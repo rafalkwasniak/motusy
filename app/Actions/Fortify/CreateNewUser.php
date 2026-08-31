@@ -20,14 +20,21 @@ class CreateNewUser implements CreatesNewUsers
     public function create(array $input): User
     {
         Validator::make($input, [
-            ...$this->profileRules(),
+            ...$this->registrationRules(),
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return User::create([
-            'name' => $input['name'],
+        $user = User::create([
+            'nickname' => $input['nickname'],
             'email' => $input['email'],
             'password' => $input['password'],
         ]);
+
+        // Token konta powstaje razem z kontem i jest widoczny w panelu
+        // od pierwszego zalogowania. Nadawany poza `create()`, bo celowo
+        // nie jest polem masowo przypisywalnym.
+        $user->regenerateApiToken();
+
+        return $user;
     }
 }

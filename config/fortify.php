@@ -164,14 +164,21 @@ return [
         Features::registration(),
         Features::resetPasswords(),
         Features::emailVerification(),
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
-            // 'window' => 0
-        ]),
-        Features::passkeys([
-            'confirmPassword' => true,
-        ]),
+        // 2FA wyłączone na życzenie Rafała — portal ma mieć zwykłe logowanie.
+        // Kolumny `two_factor_*` zostają w tabeli users, więc włączenie
+        // z powrotem to odkomentowanie tych linii i przywrócenie ekranu
+        // (jest w historii gita, commit z 31 sierpnia 2026).
+        // Features::twoFactorAuthentication([
+        //     'confirm' => true,
+        //     'confirmPassword' => true,
+        // ]),
+        // Passkeys wyłączone na życzenie Rafała — mało intuicyjne dla
+        // użytkownika, zostaje zwykłe logowanie e-mailem i hasłem.
+        // Odkomentowanie wystarczy, żeby wróciły: widoki są obłożone
+        // warunkiem Features::canManagePasskeys().
+        // Features::passkeys([
+        //     'confirmPassword' => true,
+        // ]),
     ],
 
 ];

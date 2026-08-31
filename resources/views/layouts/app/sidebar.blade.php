@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
@@ -13,24 +13,22 @@
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('Platform')" class="grid">
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
+                        {{ __('Panel') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="chart-bar" :href="route('rides.index')" :current="request()->routeIs('rides.*')" wire:navigate>
+                        {{ __('Przejazdy') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="cpu-chip" :href="route('devices.index')" :current="request()->routeIs('devices.*')" wire:navigate>
+                        {{ __('Moje urządzenia') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
             <flux:spacer />
 
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
-
-            <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
+            <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->displayName()" />
         </flux:sidebar>
 
         <!-- Mobile User Menu -->
@@ -50,17 +48,27 @@
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
                                 <flux:avatar
-                                    :name="auth()->user()->name"
+                                    :name="auth()->user()->displayName()"
                                     :initials="auth()->user()->initials()"
                                 />
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
-                                    <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
+                                    <flux:heading class="truncate">{{ auth()->user()->displayName() }}</flux:heading>
                                     <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
                                 </div>
                             </div>
                         </div>
                     </flux:menu.radio.group>
+
+                    <flux:menu.separator />
+
+                    <div class="px-2 py-1.5">
+                        <flux:radio.group x-data variant="segmented" size="sm" x-model="$flux.appearance">
+                            <flux:radio value="light" icon="sun" :aria-label="__('Light')" :title="__('Light')" />
+                            <flux:radio value="dark" icon="moon" :aria-label="__('Dark')" :title="__('Dark')" />
+                            <flux:radio value="system" icon="computer-desktop" :aria-label="__('System')" :title="__('System')" />
+                        </flux:radio.group>
+                    </div>
 
                     <flux:menu.separator />
 

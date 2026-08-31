@@ -3,8 +3,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vp build",
-        "dev": "vp dev"
+        "build": "RAYON_NUM_THREADS=1 TOKIO_WORKER_THREADS=1 vite build",
+        "dev": "RAYON_NUM_THREADS=1 TOKIO_WORKER_THREADS=1 vite dev"
     },
     "dependencies": {
         "@laravel/passkeys": "^0.2.0",
