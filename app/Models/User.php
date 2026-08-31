@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Support\AccountToken;
-
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;

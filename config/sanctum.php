@@ -18,12 +18,18 @@ return [
     |
     */
 
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-        Sanctum::currentApplicationUrlWithPort(),
-        // Sanctum::currentRequestHost(),
-    ))),
+    // `env()` zamienia "true"/"false" na wartość logiczną, a tu potrzebna
+    // jest lista hostów rozdzielona przecinkami. Gdy zmienna jest ustawiona
+    // na coś, co nie jest tekstem, wracamy do wartości domyślnych zamiast
+    // podawać `explode()` czegoś, czego nie umie przetworzyć.
+    'stateful' => explode(',', is_string($domains = env('SANCTUM_STATEFUL_DOMAINS'))
+        ? $domains
+        : sprintf(
+            '%s%s',
+            'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
+            Sanctum::currentApplicationUrlWithPort(),
+            // Sanctum::currentRequestHost(),
+        )),
 
     /*
     |--------------------------------------------------------------------------

@@ -161,12 +161,35 @@ Kontrakt telemetrii zamknął większość pytań: znamy kształt przesyłki, en
 
 ## 6. Stan na 31 sierpnia 2026
 
-Repozytorium wyczyszczone, historia gita założona od nowa. Postawiony starter kit Livewire na Laravelu 13.29.0 z Fortify (rejestracja, weryfikacja e-mail, 2FA, passkeys) i Sanctum dla API. Baza przebudowana od zera — sześć migracji szkieletowych, zero tabel produktowych.
+Repozytorium wyczyszczone, historia gita założona od nowa i nadpisana na GitHubie. Ostatni commit: `035f125`.
 
-Zweryfikowane na żywo przed podmianą szkieletu: `/` 200, `/up` 200, `/login` 200, `/api/user` 401 JSON.
+### Co stoi
 
-Stoi strona główna, komplet ekranów logowania po polsku, e-maile z logo i polską treścią (SMTP na `info@motusy.top`), oraz panel: pulpit z rekordami i pięcioma ostatnimi przejazdami, pełna historia z filtrem po urządzeniu i miękkim kasowaniem, wykaz urządzeń z nadawaniem nazw. Tabele `devices` i `rides` są zgodne z kontraktem telemetrii.
+**Strona główna** — ciemny nagłówek z dużym logo, pięć mierzonych parametrów, wektorowy rysunek urządzenia z opisami, sekcja o alarmie i o koncie, dwa zaproszenia do rejestracji.
 
-**API jeszcze nie istnieje.** Nie ma `POST /api/v1/rides` ani `GET /api/v1/ping`, więc do bazy nie ma czym wpisać przejazdów inaczej niż ręcznie. Panel obsługuje stany puste i to jest na razie jego normalny widok.
+**Konto** — rejestracja (nick, e-mail, hasło), logowanie, weryfikacja adresu, reset hasła. Jedna strona ustawień: nick, imię i nazwisko, e-mail, zmiana hasła, usunięcie konta. Cały interfejs i e-maile po polsku. Poczta wychodzi przez SMTP `info@motusy.top` — połączenie i logowanie sprawdzone na żywo.
 
-Front nie jest zbudowany — `public/build` nie istnieje, więc każda strona renderowana przez Blade zwraca 500 (`ViteManifestNotFoundException`). **Wystarczy `npm run build` z gołego terminala** (patrz pułapki w sekcji 3). Testy tego nie dotyczą: `Tests\TestCase::setUp()` wywołuje `withoutVite()`, więc suite (45 testów) przechodzi bez builda.
+**Panel** — pulpit z pięcioma rekordami konta i pięcioma ostatnimi przejazdami; historia przejazdów po dziesięć na stronę, z filtrem po urządzeniu, kolumną urządzenia i miękkim kasowaniem; wykaz urządzeń z nadawaniem nazw i stale widocznym tokenem konta.
+
+**Baza** — `devices` i `rides` zgodne z kontraktem telemetrii, `users` z kolumnami `nickname` i `api_token`.
+
+**Testy: 48**, przechodzą bez zbudowanego frontu (`withoutVite()` w `Tests\TestCase`).
+
+Front jest zbudowany (`public/build`), strona odpowiada 200.
+
+### Czego nie ma
+
+**API nie istnieje.** Brak `POST /api/v1/rides` i `GET /api/v1/ping`, więc przejazdy nie mają jak trafić do bazy z urządzenia. To jest **następny krok** i nie wymaga builda — sam PHP.
+
+Do napisania razem z endpointami:
+
+- uwierzytelnianie po `Authorization: Bearer <token konta>`, z normalizacją przez `AccountToken::normalize()` (wybacza małe litery i brak myślników),
+- dopisywanie nieznanego urządzenia do konta właściciela tokena przy pierwszej udanej wysyłce, bez osobnego parowania (kontrakt §2),
+- `accepted_through` jako ostatni numer **bez przerwy w ciągu**, a nie największy zapisany (kontrakt §3) — potwierdzenie numeru, którego nie ma w bazie, kasuje przejazd z urządzenia bezpowrotnie,
+- odświeżanie `devices.fw`, `devices.calibrated` i `devices.last_seen_at` przy każdej przesyłce,
+- ograniczenie liczby żądań: token ma dwanaście znaków, a endpoint jest publiczny,
+- walidacja kształtu ostro, zakresów luźno — odrzucona przesyłka wraca z urządzenia w kółko (kontrakt §7).
+
+### Dane podstawione
+
+Na koncie `rafal@kwasniak.org` leży **atrapa**: urządzenie `a1b2c3d4e5f6` (identyfikator z przykładu w kontrakcie) i dwadzieścia przejazdów. Numery 1–15 są bez GPS-a, 16–20 z prędkością i datą. Wstawione wyłącznie po to, żeby dało się obejrzeć panel — **do skasowania, zanim pojawią się prawdziwe dane**.

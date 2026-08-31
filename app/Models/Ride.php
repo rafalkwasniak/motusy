@@ -48,6 +48,7 @@ class Ride extends Model
 {
     /** @use HasFactory<RideFactory> */
     use HasFactory;
+
     use SoftDeletes;
 
     protected function casts(): array
