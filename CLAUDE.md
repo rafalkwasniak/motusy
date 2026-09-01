@@ -191,4 +191,9 @@ Sprawdzone na produkcji według czterech punktów z §8. Urządzenie użyte do p
 
 ### Dane
 
-Baza jest **pusta** — atrapa (urządzenie `a1b2c3d4e5f6` i dwadzieścia przejazdów) została skasowana twardo 1 września 2026, przed konfiguracją prawdziwego pudełka. Panel pokazuje stany puste i to jest teraz jego normalny widok, dopóki urządzenie nie wyśle pierwszej przesyłki.
+**W bazie są prawdziwe dane.** Urządzenie `70041ddc6bc8` (Rafała, fw `0.1.0-dev`) dopisało się samo i przysłało pierwsze przejazdy 1 września 2026. Atrapy nie ma — została skasowana twardo przed konfiguracją pudełka.
+
+Dwie rzeczy do zapamiętania przy oglądaniu tych danych:
+
+- `recorded_at` jest puste, bo GPS-a jeszcze nie ma — historia sortuje się po `seq`, daty nie widać. Wskoczy sama, gdy firmware zacznie ją przysyłać.
+- Pierwsze przejazdy mają przyspieszenie i hamowanie równe 1,98 g przy przechyle 54°, czyli wartości wyglądające na testy na biurku, a nie na jazdę.
