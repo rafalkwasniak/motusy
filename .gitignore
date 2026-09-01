@@ -22,3 +22,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Katalogi generowane przez hosting, nie przez projekt:
+# statystyki AWStats i archiwa rotowanych logów dostępu.
+/awstats
+/logs
