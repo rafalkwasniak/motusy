@@ -151,7 +151,7 @@ Repozytorium: `git@github.com-motusy:rafalkwasniak/motusy.git`, deploy key `~/.s
 
 Kontrakt telemetrii zamknął większość pytań: znamy kształt przesyłki, endpointy (`POST /api/v1/rides`, `GET /api/v1/ping`), semantykę `accepted_through`, schemat tabeli `rides` i reguły walidacji. Otwarte zostaje to:
 
-1. **`/api/v1/rides` czy `/api/v1/motobox/rides`.** Rafał chce ścieżek nazwanych rodzajem urządzenia, kontrakt mówi `/api/v1/rides`. Firmware ma tę ścieżkę zaszytą, więc zmiana kosztuje wydanie nowej wersji do urządzeń w terenie. Możliwe wyjścia: zostawić `/rides` i różnicować rodzaje w danych, albo wystawić obie ścieżki na ten sam kontroler. Do decyzji **zanim** pierwsze urządzenie trafi do kogoś poza Rafałem.
+1. ~~`/api/v1/rides` czy `/api/v1/motobox/rides`~~ — **rozstrzygnięte 1 września 2026:** zostaje `/api/v1/rides` z kontraktu. Rodzaj urządzenia rozpoznajemy po danych (`devices.type`), nie po adresie; firmware ma tę ścieżkę zaszytą, więc zmiana kosztowałaby wydanie nowej wersji do pudełek w terenie.
 2. **Jeden token na konto, nie na urządzenie.** Kontrakt §2 wybiera token konta. Konsekwencja: kto zdejmie pudełko z motocykla i wyciągnie z niego pamięć, dostaje poświadczenie **wszystkich** urządzeń w koncie, a unieważnienie tokena zatrzymuje je wszystkie naraz. Osobny token dla każdego urządzenia rozwiązałby jedno i drugie i **nie wymaga zmiany firmware'u** — urządzenie i tak wysyła zwykły `Authorization: Bearer`. Do rozważenia, gdy pudełek będzie więcej niż jedno.
 3. **Co z alarmem.** Wykrycie ruchu po wyłączeniu motocykla to zdarzenie, o którym właściciel chciałby wiedzieć od razu — ale urządzenie w garażu bez WiFi nie ma jak powiadomić, a specyfikacja nie przewiduje GSM. Kontrakt telemetrii alarmu nie obejmuje. Do rozstrzygnięcia, czy alarm w ogóle wchodzi do portalu.
 4. **Wykresy w panelu.** Kontrakt określa tylko, że historia sortuje się po `seq` malejąco i że kasowanie jest miękkie. Układ ekranów stoi; otwarte zostaje, czy i jak pokazywać przebieg w czasie — dziś portal ma same liczby.
@@ -177,19 +177,18 @@ Repozytorium wyczyszczone, historia gita założona od nowa i nadpisana na GitHu
 
 Front jest zbudowany (`public/build`), strona odpowiada 200.
 
-### Czego nie ma
+### API telemetrii
 
-**API nie istnieje.** Brak `POST /api/v1/rides` i `GET /api/v1/ping`, więc przejazdy nie mają jak trafić do bazy z urządzenia. To jest **następny krok** i nie wymaga builda — sam PHP.
+Działa, zgodnie z kontraktem: `GET /api/v1/ping` i `POST /api/v1/rides`. Uwierzytelnianie tokenem konta (middleware `account.token`), ogranicznik `throttle:telemetria` — sześćdziesiąt żądań na minutę na adres IP, **przed** sprawdzeniem tokena, żeby obejmował też nieudane próby.
 
-Do napisania razem z endpointami:
+Trzy rozstrzygnięcia ponad szkic z kontraktu §7, wszystkie obłożone testami:
 
-- uwierzytelnianie po `Authorization: Bearer <token konta>`, z normalizacją przez `AccountToken::normalize()` (wybacza małe litery i brak myślników),
-- dopisywanie nieznanego urządzenia do konta właściciela tokena przy pierwszej udanej wysyłce, bez osobnego parowania (kontrakt §2),
-- `accepted_through` jako ostatni numer **bez przerwy w ciągu**, a nie największy zapisany (kontrakt §3) — potwierdzenie numeru, którego nie ma w bazie, kasuje przejazd z urządzenia bezpowrotnie,
-- odświeżanie `devices.fw`, `devices.calibrated` i `devices.last_seen_at` przy każdej przesyłce,
-- ograniczenie liczby żądań: token ma dwanaście znaków, a endpoint jest publiczny,
-- walidacja kształtu ostro, zakresów luźno — odrzucona przesyłka wraca z urządzenia w kółko (kontrakt §7).
+- **Przejazd skasowany w panelu nie wraca, ale liczy się jako przyjęty.** Bez tego `updateOrCreate` nie widziałby miękko skasowanego wiersza, uderzył w indeks unikalny i oddał 500, po którym urządzenie ponawia w nieskończoność.
+- **Cudze urządzenie dostaje 403.** `device_id` jest publiczny (§2), więc sam z siebie niczego nie dowodzi — bez kontroli właściciela ktoś ze swoim tokenem wszedłby w cudzą numerację.
+- **`accepted_through` to ostatni numer bez przerwy w ciągu** (§3), a nie `max(seq)` ze szkicu, i **wlicza skasowane**. Inaczej dziura po skasowanym przejeździe obniżałaby potwierdzenie na zawsze, a urządzenie dosyłałoby go bez końca.
 
-### Dane podstawione
+Sprawdzone na produkcji według czterech punktów z §8. Urządzenie użyte do prób zostało skasowane twardo.
 
-Na koncie `rafal@kwasniak.org` leży **atrapa**: urządzenie `a1b2c3d4e5f6` (identyfikator z przykładu w kontrakcie) i dwadzieścia przejazdów. Numery 1–15 są bez GPS-a, 16–20 z prędkością i datą. Wstawione wyłącznie po to, żeby dało się obejrzeć panel — **do skasowania, zanim pojawią się prawdziwe dane**.
+### Dane
+
+Baza jest **pusta** — atrapa (urządzenie `a1b2c3d4e5f6` i dwadzieścia przejazdów) została skasowana twardo 1 września 2026, przed konfiguracją prawdziwego pudełka. Panel pokazuje stany puste i to jest teraz jego normalny widok, dopóki urządzenie nie wyśle pierwszej przesyłki.
