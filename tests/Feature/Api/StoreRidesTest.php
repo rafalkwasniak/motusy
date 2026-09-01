@@ -7,6 +7,7 @@ use App\Models\Ride;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class StoreRidesTest extends TestCase
@@ -85,21 +86,60 @@ class StoreRidesTest extends TestCase
     }
 
     /**
-     * 3. Przesyłka zaczynająca się od numeru wyższego niż stan bazy
-     *    **nie podnosi** potwierdzenia — inaczej urządzenie skasowałoby
-     *    przejazdy, których nigdy nie dostaliśmy.
+     * 3. Dziura **wewnątrz przesyłki** zatrzymuje przetwarzanie: potwierdzamy
+     *    tylko to, co faktycznie zapisaliśmy, bo potwierdzenie numeru,
+     *    którego nie mamy, kasuje przejazd z urządzenia bezpowrotnie.
      */
-    public function test_a_gap_does_not_raise_the_confirmation(): void
+    public function test_a_gap_inside_the_batch_stops_processing(): void
     {
         $user = User::factory()->create();
 
-        $this->wyslij($user, [$this->przejazd(1)]);
-
-        $this->wyslij($user, [$this->przejazd(5), $this->przejazd(6)])
+        $this->wyslij($user, [$this->przejazd(1), $this->przejazd(2), $this->przejazd(5)])
             ->assertOk()
-            ->assertExactJson(['accepted_through' => 1]);
+            ->assertExactJson(['accepted_through' => 2]);
 
-        $this->assertSame(1, Ride::count());
+        $this->assertSame([1, 2], Ride::orderBy('seq')->pluck('seq')->all());
+    }
+
+    /**
+     * Ciągłości nie wymagamy natomiast wobec historii w bazie.
+     *
+     * Licznik `seq` rośnie przez całe życie urządzenia i nie jest zerowany,
+     * a pudełko wysyła zaległości od najstarszej. Przy pustej bazie —
+     * po wyczyszczeniu albo przy pudełku przepiętym na nowe konto — pierwsza
+     * przesyłka zaczyna się od numeru, który akurat ma. Wymaganie ciągu
+     * od jedynki zakleszczało urządzenie na zawsze.
+     */
+    public function test_a_batch_starting_above_our_history_is_accepted(): void
+    {
+        $user = User::factory()->create();
+
+        $paczka = [];
+        foreach (range(15, 24) as $seq) {
+            $paczka[] = $this->przejazd($seq);
+        }
+
+        $this->wyslij($user, $paczka)
+            ->assertOk()
+            ->assertExactJson(['accepted_through' => 24]);
+
+        $this->assertSame(range(15, 24), Ride::orderBy('seq')->pluck('seq')->all());
+    }
+
+    /**
+     * Kolejne przesyłki doklejają się do tego, co już mamy.
+     */
+    public function test_the_next_batch_continues_from_the_previous_one(): void
+    {
+        $user = User::factory()->create();
+
+        $this->wyslij($user, [$this->przejazd(15), $this->przejazd(16)])
+            ->assertExactJson(['accepted_through' => 16]);
+
+        $this->wyslij($user, [$this->przejazd(17), $this->przejazd(18)])
+            ->assertExactJson(['accepted_through' => 18]);
+
+        $this->assertSame([15, 16, 17, 18], Ride::orderBy('seq')->pluck('seq')->all());
     }
 
     /**
@@ -264,6 +304,24 @@ class StoreRidesTest extends TestCase
 
         $this->postJson('/api/v1/rides', [], ['Authorization' => 'Bearer XFRS-34ST-YTS8'])
             ->assertDontSee('accepted_through');
+    }
+
+    /**
+     * Przechył całkowity pokazujemy bez końcówki „,0'' — od wersji
+     * firmware'u z całkowitymi stopniami taki właśnie przychodzi.
+     */
+    public function test_whole_degrees_are_displayed_without_a_decimal(): void
+    {
+        $user = User::factory()->create();
+
+        $this->wyslij($user, [[...$this->przejazd(1), 'lean_left_deg' => 42.0, 'lean_right_deg' => 38.4]]);
+
+        Livewire::actingAs($user)
+            ->test('pages::rides.index')
+            ->assertSee('42°')
+            ->assertDontSee('42,0°')
+            // Starsze wpisy z ułamkiem zostają czytelne.
+            ->assertSee('38,4°');
     }
 
     public function test_rides_are_saved_for_the_token_owner(): void

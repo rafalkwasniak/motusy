@@ -69,20 +69,32 @@ class RideController extends Controller
      */
     private function zapiszPrzejazdy(User $user, string $deviceId, array $data): int
     {
-        $accepted = $this->ostatniBezPrzerwy($deviceId);
+        $accepted = $this->najwyzszyZapisany($deviceId);
+        $poprzedni = null;
 
         foreach ($this->posortowane($data['rides']) as $ride) {
             $seq = (int) $ride['seq'];
 
-            // Dziura w numeracji: dalej nie idziemy, bo potwierdzenie numeru,
-            // którego nie mamy, kasuje przejazd z urządzenia bezpowrotnie.
-            if ($seq > $accepted + 1) {
+            // Dziura **wewnątrz przesyłki**: dalej nie idziemy, bo
+            // potwierdzenie numeru, którego nie zapisaliśmy, kasuje przejazd
+            // z urządzenia bezpowrotnie (kontrakt §3).
+            //
+            // Ciągłości nie wymagamy natomiast wobec historii w bazie.
+            // Licznik `seq` rośnie przez całe życie urządzenia i nie jest
+            // zerowany, a pudełko wysyła zaległości od najstarszej, po dziesięć
+            // naraz — więc najniższy numer w przesyłce to najstarszy przejazd,
+            // jaki jeszcze ma. Wszystko poniżej albo już potwierdziliśmy, albo
+            // nigdy do nas nie trafi. Wymaganie ciągu od jedynki zakleszczało
+            // urządzenie: po wyczyszczeniu bazy serwer czekał na numer 1,
+            // którego pudełko nie ma i nigdy nie przyśle.
+            if ($poprzedni !== null && $seq !== $poprzedni + 1) {
                 break;
             }
 
             $this->zapiszPrzejazd($user, $deviceId, $seq, $ride, $data);
 
             $accepted = max($accepted, $seq);
+            $poprzedni = $seq;
         }
 
         return $accepted;
@@ -138,40 +150,15 @@ class RideController extends Controller
     }
 
     /**
-     * Ostatni numer, przed którym nie ma przerwy w ciągu (kontrakt §3).
+     * Najwyższy numer, jaki mamy dla tego urządzenia — punkt wyjścia
+     * potwierdzenia i zarazem odpowiedź na pustą przesyłkę (kontrakt §3).
      *
-     * Skasowane miękko wiersze liczą się jako obecne — inaczej dziura po
-     * skasowanym przejeździe obniżałaby potwierdzenie na zawsze i urządzenie
-     * dosyłałoby go w nieskończoność.
-     *
-     * Zwykle ciąg jest pełny, więc wystarczy porównać liczbę wierszy
-     * z największym numerem; szukanie dziury odpala się tylko wtedy,
-     * gdy coś poszło nie tak.
+     * Skasowane miękko wiersze liczą się jako obecne. Kasowanie jest miękkie
+     * właśnie po to, żeby przejazd nie wracał przy kolejnej wysyłce (§1) —
+     * gdyby obniżało potwierdzenie, urządzenie dosyłałoby go bez końca.
      */
-    private function ostatniBezPrzerwy(string $deviceId): int
+    private function najwyzszyZapisany(string $deviceId): int
     {
-        $zapytanie = fn () => Ride::withTrashed()->where('device_id', $deviceId);
-
-        $najwyzszy = (int) $zapytanie()->max('seq');
-
-        if ($najwyzszy === 0) {
-            return 0;
-        }
-
-        if ($zapytanie()->count() === $najwyzszy) {
-            return $najwyzszy;
-        }
-
-        $oczekiwany = 1;
-
-        foreach ($zapytanie()->orderBy('seq')->pluck('seq') as $seq) {
-            if ((int) $seq !== $oczekiwany) {
-                break;
-            }
-
-            $oczekiwany++;
-        }
-
-        return $oczekiwany - 1;
+        return (int) Ride::withTrashed()->where('device_id', $deviceId)->max('seq');
     }
 }

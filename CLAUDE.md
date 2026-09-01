@@ -185,7 +185,7 @@ Trzy rozstrzygnięcia ponad szkic z kontraktu §7, wszystkie obłożone testami:
 
 - **Przejazd skasowany w panelu nie wraca, ale liczy się jako przyjęty.** Bez tego `updateOrCreate` nie widziałby miękko skasowanego wiersza, uderzył w indeks unikalny i oddał 500, po którym urządzenie ponawia w nieskończoność.
 - **Cudze urządzenie dostaje 403.** `device_id` jest publiczny (§2), więc sam z siebie niczego nie dowodzi — bez kontroli właściciela ktoś ze swoim tokenem wszedłby w cudzą numerację.
-- **`accepted_through` to ostatni numer bez przerwy w ciągu** (§3), a nie `max(seq)` ze szkicu, i **wlicza skasowane**. Inaczej dziura po skasowanym przejeździe obniżałaby potwierdzenie na zawsze, a urządzenie dosyłałoby go bez końca.
+- **Ciągłość sprawdzamy wewnątrz przesyłki, nie wobec historii w bazie.** Pierwsza wersja wymagała ciągu od jedynki i **zakleszczała urządzenie**: licznik `seq` rośnie przez całe życie pudełka i nie jest zerowany, więc po wyczyszczeniu bazy serwer czekał na numer 1, którego pudełko już nie ma. Punktem wyjścia potwierdzenia jest najwyższy zapisany numer (ze skasowanymi miękko włącznie), a dziura **w środku przesyłki** nadal zatrzymuje przetwarzanie — potwierdzenie numeru, którego nie zapisaliśmy, kasuje przejazd z urządzenia bezpowrotnie (§3).
 
 Sprawdzone na produkcji według czterech punktów z §8. Urządzenie użyte do prób zostało skasowane twardo.
 

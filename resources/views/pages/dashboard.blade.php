@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Ride;
+use App\Support\Pomiar;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -66,25 +67,22 @@ new #[Title('Panel')] class extends Component {
         <div class="grid gap-px border border-zinc-200 bg-zinc-200 sm:grid-cols-2 lg:grid-cols-5 dark:border-neutral-700 dark:bg-neutral-700">
             @php
                 $tiles = [
-                    ['Przechył w lewo', $this->records->lean_left_deg, '°', 1],
-                    ['Przechył w prawo', $this->records->lean_right_deg, '°', 1],
-                    ['Przyspieszenie', $this->records->accel_g, 'g', 2],
-                    ['Hamowanie', $this->records->brake_g, 'g', 2],
-                    ['Prędkość maksymalna', $this->records->speed_kmh, 'km/h', 0],
+                    ['Przechył w lewo', Pomiar::stopnie($this->records->lean_left_deg)],
+                    ['Przechył w prawo', Pomiar::stopnie($this->records->lean_right_deg)],
+                    ['Przyspieszenie', Pomiar::przeciazenie($this->records->accel_g)],
+                    ['Hamowanie', Pomiar::przeciazenie($this->records->brake_g)],
+                    ['Prędkość maksymalna', Pomiar::predkosc($this->records->speed_kmh)],
                 ];
             @endphp
 
-            @foreach ($tiles as [$label, $value, $unit, $decimals])
+            @foreach ($tiles as [$label, $value])
                 <div class="bg-white p-5 dark:bg-neutral-900">
                     <div class="font-mono text-[11px] tracking-wider text-zinc-500 uppercase">{{ __($label) }}</div>
 
-                    <div class="mt-2 font-mono text-2xl font-bold tabular-nums">
-                        @if ($value === null)
-                            <span class="text-zinc-400" title="{{ __('Urządzenie nie zmierzyło prędkości') }}">———</span>
-                        @else
-                            {{ number_format((float) $value, $decimals, ',', ' ') }}<span class="ml-1 text-sm font-normal text-zinc-500">{{ $unit }}</span>
-                        @endif
-                    </div>
+                    <div @class([
+                        'mt-2 font-mono text-2xl font-bold tabular-nums',
+                        'text-zinc-400' => $value === Pomiar::BRAK,
+                    ])>{{ $value }}</div>
                 </div>
             @endforeach
         </div>
@@ -118,17 +116,11 @@ new #[Title('Panel')] class extends Component {
                             </div>
 
                             <div class="flex flex-wrap gap-x-5 gap-y-1 font-mono text-sm tabular-nums">
-                                <span>{{ number_format($ride->lean_left_deg, 1, ',', ' ') }}°&nbsp;<span class="text-zinc-400">L</span></span>
-                                <span>{{ number_format($ride->lean_right_deg, 1, ',', ' ') }}°&nbsp;<span class="text-zinc-400">P</span></span>
-                                <span>{{ number_format($ride->accel_g, 2, ',', ' ') }}&nbsp;<span class="text-zinc-400">g</span></span>
-                                <span>{{ number_format($ride->brake_g, 2, ',', ' ') }}&nbsp;<span class="text-zinc-400">g ham.</span></span>
-                                <span>
-                                    @if ($ride->hasSpeed())
-                                        {{ number_format($ride->speed_kmh, 0, ',', ' ') }}&nbsp;<span class="text-zinc-400">km/h</span>
-                                    @else
-                                        <span class="text-zinc-400">———</span>
-                                    @endif
-                                </span>
+                                <span>{{ Pomiar::stopnie($ride->lean_left_deg) }}&nbsp;<span class="text-zinc-400">L</span></span>
+                                <span>{{ Pomiar::stopnie($ride->lean_right_deg) }}&nbsp;<span class="text-zinc-400">P</span></span>
+                                <span>{{ Pomiar::przeciazenie($ride->accel_g) }}</span>
+                                <span>{{ Pomiar::przeciazenie($ride->brake_g) }}&nbsp;<span class="text-zinc-400">ham.</span></span>
+                                <span @class(['text-zinc-400' => ! $ride->hasSpeed()])>{{ Pomiar::predkosc($ride->speed_kmh) }}</span>
                             </div>
                         </div>
                     @endforeach

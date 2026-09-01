@@ -69,8 +69,8 @@
         <line x1="110" y1="122" x2="258" y2="122" stroke="currentColor" stroke-width="1" opacity=".3" />
 
         @foreach ([
-            ['LEWO', '42.0°'],
-            ['PRAWO', '38.4°'],
+            ['LEWO', '42°'],
+            ['PRAWO', '38°'],
             ['PRZYSP.', '0.75 g'],
             ['HAM.', '0.82 g'],
             ['MAX SPEED', '187 km/h'],

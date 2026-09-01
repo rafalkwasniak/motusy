@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Ride;
+use App\Support\Pomiar;
 use Flux\Flux;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -128,16 +129,16 @@ new #[Title('Przejazdy')] class extends Component {
                                 @endif
                             </td>
 
-                            <td class="px-4 py-3 text-right font-mono tabular-nums">{{ number_format($ride->lean_left_deg, 1, ',', ' ') }}°</td>
-                            <td class="px-4 py-3 text-right font-mono tabular-nums">{{ number_format($ride->lean_right_deg, 1, ',', ' ') }}°</td>
-                            <td class="px-4 py-3 text-right font-mono tabular-nums">{{ number_format($ride->accel_g, 2, ',', ' ') }} g</td>
-                            <td class="px-4 py-3 text-right font-mono tabular-nums">{{ number_format($ride->brake_g, 2, ',', ' ') }} g</td>
+                            <td class="px-4 py-3 text-right font-mono tabular-nums">{{ Pomiar::stopnie($ride->lean_left_deg) }}</td>
+                            <td class="px-4 py-3 text-right font-mono tabular-nums">{{ Pomiar::stopnie($ride->lean_right_deg) }}</td>
+                            <td class="px-4 py-3 text-right font-mono tabular-nums">{{ Pomiar::przeciazenie($ride->accel_g) }}</td>
+                            <td class="px-4 py-3 text-right font-mono tabular-nums">{{ Pomiar::przeciazenie($ride->brake_g) }}</td>
 
                             <td class="px-4 py-3 text-right font-mono tabular-nums">
                                 @if ($ride->hasSpeed())
-                                    {{ number_format($ride->speed_kmh, 0, ',', ' ') }} km/h
+                                    {{ Pomiar::predkosc($ride->speed_kmh) }}
                                 @else
-                                    <span class="text-zinc-400" title="{{ __('Urządzenie nie zmierzyło prędkości') }}">———</span>
+                                    <span class="text-zinc-400" title="{{ __('Urządzenie nie zmierzyło prędkości') }}">{{ Pomiar::BRAK }}</span>
                                 @endif
                             </td>
 

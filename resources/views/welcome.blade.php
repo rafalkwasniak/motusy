@@ -52,28 +52,49 @@
 
                     {{-- Ekran urządzenia --}}
                     <div class="lg:justify-self-end">
+                        @php
+                            use App\Support\Pomiar;
+
+                            // Prawdziwy ostatni przejazd, a gdy jeszcze żadnego
+                            // nie ma — przykład, wyraźnie oznaczony jako przykład.
+                            $wiersze = $ostatniaJazda === null
+                                ? [
+                                    ['Przechył w lewo', '42°'],
+                                    ['Przechył w prawo', '38°'],
+                                    ['Przyspieszenie', '0,75 g'],
+                                    ['Hamowanie', '0,82 g'],
+                                    ['Prędkość maksymalna', '187 km/h'],
+                                ]
+                                : [
+                                    ['Przechył w lewo', Pomiar::stopnie($ostatniaJazda->lean_left_deg)],
+                                    ['Przechył w prawo', Pomiar::stopnie($ostatniaJazda->lean_right_deg)],
+                                    ['Przyspieszenie', Pomiar::przeciazenie($ostatniaJazda->accel_g)],
+                                    ['Hamowanie', Pomiar::przeciazenie($ostatniaJazda->brake_g)],
+                                    ['Prędkość maksymalna', Pomiar::predkosc($ostatniaJazda->speed_kmh)],
+                                ];
+                        @endphp
+
                         <div class="w-full max-w-sm border border-white/15 bg-black/25 p-6">
-                            <div class="flex items-center justify-between border-b border-white/10 pb-3 font-mono text-[11px] tracking-[0.18em] uppercase">
+                            <div class="flex items-center justify-between gap-4 border-b border-white/10 pb-3 font-mono text-[11px] tracking-[0.18em] uppercase">
                                 <span class="text-white/50">{{ __('Ostatnia jazda') }}</span>
-                                <span class="flex items-center gap-2 text-brand-400">
-                                    <span class="inline-block size-1.5 bg-brand-500"></span>
-                                    {{ __('rejestracja') }}
-                                </span>
+
+                                @if ($ostatniaJazda === null)
+                                    {{-- Bez oznaczenia wyglądałoby to na prawdziwy odczyt. --}}
+                                    <span class="text-white/30">{{ __('przykład') }}</span>
+                                @elseif ($ostatniaJazda->recordedAt())
+                                    <span class="text-white/30">{{ $ostatniaJazda->recordedAt()->translatedFormat('j M Y') }}</span>
+                                @endif
                             </div>
 
                             <dl class="divide-y divide-white/10">
-                                @foreach ([
-                                    ['Przechył w lewo', '42.0', '°'],
-                                    ['Przechył w prawo', '38.4', '°'],
-                                    ['Przyspieszenie', '0.75', 'g'],
-                                    ['Hamowanie', '0.82', 'g'],
-                                    ['Prędkość maksymalna', '187', 'km/h'],
-                                ] as $row)
+                                @foreach ($wiersze as [$etykieta, $wartosc])
                                     <div class="flex items-baseline justify-between gap-4 py-3">
-                                        <dt class="font-mono text-[11px] tracking-wider text-white/45 uppercase">{{ __($row[0]) }}</dt>
-                                        <dd class="font-mono text-2xl font-bold text-white tabular-nums">
-                                            {{ $row[1] }}<span class="ml-1 text-sm font-normal text-white/50">{{ $row[2] }}</span>
-                                        </dd>
+                                        <dt class="font-mono text-[11px] tracking-wider text-white/45 uppercase">{{ __($etykieta) }}</dt>
+                                        <dd @class([
+                                            'font-mono text-2xl font-bold tabular-nums',
+                                            'text-white' => $wartosc !== Pomiar::BRAK,
+                                            'text-white/40' => $wartosc === Pomiar::BRAK,
+                                        ])>{{ $wartosc }}</dd>
                                     </div>
                                 @endforeach
                             </dl>
