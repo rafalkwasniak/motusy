@@ -222,7 +222,7 @@
                         </h2>
 
                         <p class="mt-5 leading-relaxed text-zinc-600 dark:text-zinc-400">
-                            {{ __('Trzy minuty po zgaszeniu silnika pudełko uzbraja się samo. Od tej chwili reaguje na poruszenie motocykla — najpierw krótkim sygnałem, a przy dalszym ruchu coraz głośniej.') }}
+                            {{ __('Dwie minuty po zgaszeniu silnika pudełko uzbraja się samo. Od tej chwili reaguje na poruszenie motocykla — najpierw krótkim sygnałem, a przy dalszym ruchu coraz głośniej.') }}
                         </p>
                         <p class="mt-4 leading-relaxed text-zinc-600 dark:text-zinc-400">
                             {{ __('Rozbrojenie też jest automatyczne: wystarczy przekręcić kluczyk. Nie ma pilota, kodu ani aplikacji, o której trzeba pamiętać.') }}
@@ -231,7 +231,7 @@
 
                     <ul class="grid gap-px border border-zinc-300 bg-zinc-300 dark:border-neutral-700 dark:bg-neutral-700">
                         @foreach ([
-                            ['3 minuty', 'Tyle masz na zdjęcie kasku i odejście, zanim alarm zacznie pracować.'],
+                            ['2 minuty', 'Tyle masz na zdjęcie kasku i odejście, zanim alarm zacznie pracować.'],
                             ['Ruch, nie drgania', 'Pojedyncze szarpnięcie od wiatru czy przejeżdżającej ciężarówki nie budzi syreny.'],
                             ['Trzy stopnie głośności', 'Sygnał rośnie z każdą próbą — od krótkiego pisku po dźwięk ciągły.'],
                         ] as $item)
