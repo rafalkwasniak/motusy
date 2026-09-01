@@ -19,6 +19,12 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Jak na produkcji. Bez tego suite zależy od tego, czyje .env leży
+             obok: lokalnie APP_DEBUG=false, a CI kopiuje .env.example, gdzie
+             jest true — i odpowiedzi błędne dostają ślad stosu, którego
+             produkcja nigdy nie odda. Diagnostyka testów na tym nie traci,
+             bo Laravel i tak dopisuje treść wyjątku do komunikatu asercji. -->
+        <env name="APP_DEBUG" value="false"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>

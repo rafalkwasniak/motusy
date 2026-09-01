@@ -73,10 +73,14 @@ class RateLimitTest extends TestCase
 
     /**
      * Urządzenie nie ma parsera JSON i szuka w odpowiedzi dosłownie ciągu
-     * `accepted_through`; przy 429 nie może go zobaczyć, bo uznałoby
-     * odrzucone żądanie za potwierdzenie.
+     * potwierdzenia; przy 429 nie może go zobaczyć, bo uznałoby odrzucone
+     * żądanie za przyjęte.
+     *
+     * Nazwa tej metody celowo nie zawiera szukanego ciągu: przy włączonym
+     * debugu Laravel dokłada do odpowiedzi ślad stosu z nazwami metod,
+     * więc test z taką nazwą wykrywałby sam siebie.
      */
-    public function test_the_throttled_response_never_mentions_accepted_through(): void
+    public function test_the_throttled_response_stays_minimal(): void
     {
         $user = User::factory()->create();
 
