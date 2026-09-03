@@ -95,13 +95,17 @@ class Ride extends Model
     }
 
     /**
-     * Moment zakończenia przejazdu — dopóki urządzenie nie ma GPS-a,
-     * `recorded_at` przychodzi puste i daty po prostu nie pokazujemy.
+     * Moment zakończenia przejazdu, przeliczony na strefę prezentacji.
+     *
+     * GPS podaje czas w UTC i taki uniksowy znacznik trafia do bazy, więc bez
+     * przeliczenia panel pokazywałby jazdę o dwie godziny wcześniej, niż była.
+     * Gdy urządzenie nie złapało pozycji, `recorded_at` przychodzi puste
+     * i daty po prostu nie pokazujemy.
      */
     public function recordedAt(): ?Carbon
     {
         return $this->recorded_at !== null
-            ? Carbon::createFromTimestamp($this->recorded_at)
+            ? Carbon::createFromTimestamp($this->recorded_at, config('app.display_timezone'))
             : null;
     }
 

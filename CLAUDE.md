@@ -36,7 +36,8 @@ Rafał podał `/api/v1/motobox` jako przykład ścieżki nazwanej rodzajem urzą
 | Zakres portalu | **API + panel webowy** w jednym projekcie Laravel |
 | Stos frontu | Livewire (starter kit Laravela) — interaktywność pisana w PHP, bez budowania SPA |
 | Punkt wyjścia kodu | **Totalna wycinka.** Zero kodu ze starego projektu, łącznie z kopertą odpowiedzi, tłumaczeniami i raporterem Discord — wszystko do napisania od nowa, jeśli będzie potrzebne |
-| Prędkość maksymalna | Urządzenie **jeszcze jej nie podaje** — `speed_kmh` przychodzi puste. GPS i MAX SPEED mają być gotowe, zanim narzędzie trafi do ludzi, więc schemat, API i ekrany obsługują to od początku: brak pomiaru pokazujemy jako `———`, nigdy jako `0` |
+| Prędkość maksymalna | Od 3 września 2026 urządzenie **podaje ją z GPS-a**, razem z czasem przejazdu. Obsługa braku pomiaru zostaje i nie jest już tylko zapasem na przyszłość: przejazdy sprzed modułu GPS mają `speed_kmh` i `recorded_at` puste, więc `———` zamiast `0` obowiązuje dalej |
+| Czas przejazdu | GPS podaje UTC i taki uniksowy znacznik trafia do bazy. Na strefę lokalną przeliczamy **dopiero przy wyświetlaniu**, przez `app.display_timezone` (`APP_DISPLAY_TIMEZONE`, domyślnie `Europe/Warsaw`), w jednym miejscu — `Ride::recordedAt()`. `app.timezone` zostaje na UTC: jego zmiana kazałaby Eloquentowi dopisywać do bazy czasy lokalne obok istniejących UTC |
 | Tożsamość użytkownika | **Nick** (`users.nickname`, unikalny) to jedyna nazwa pokazywana w portalu i kiedyś na froncie. Imię i nazwisko (`users.name`) są prywatne, nieobowiązkowe i uzupełniane w profilu — rejestracja o nie nie pyta |
 | Hasło | **8 znaków, wielka litera, cyfra** (`Password::min(8)->mixedCase()->numbers()`), jednakowo we wszystkich środowiskach. Starter kit wymagał na produkcji 12 znaków ze znakiem specjalnym i sprawdzeniem wycieków, a poza produkcją nic — przez co testy sprawdzały inną regułę niż ta obowiązująca ludzi |
 | Token konta | **Krótki, jawny, stale widoczny w panelu.** Postać `XFRS-34ST-YTS8` (3×4 znaki), alfabet bez 0, O, 1, I i L. Trzymany w `users.api_token` **otwartym tekstem** — świadomie, bo ma być do odczytania przy każdej rekonfiguracji WiFi; skrót w stylu Sanctuma pozwoliłby pokazać go tylko raz. Powstaje przy rejestracji, wymienialny przyciskiem. Przy sprawdzaniu normalizujemy wielkość liter i brak myślników |
@@ -133,6 +134,12 @@ Kroje są **self-hostowane w `public/fonts`** z własnymi `@font-face` w `resour
 
 Rysunek urządzenia (`<x-moto-box-drawing />`) jest **wektorowy, pisany ręcznie**, nie przerobioną fotografią: biała kartka, czarne obrysy, odnośniki z opisami. Filtr krawędziowy na zdjęciu produktowym daje brudną plamę, bo obudowa jest gładka i szara na białym tle. Kolory bierze z `currentColor`, więc chodzi za motywem.
 
+**Ikony pomiarów** (`<x-pomiar-ikona typ="lewo|prawo|przyspieszenie|hamowanie|predkosc" />`) są rysowane tak samo, w tej samej konwencji: cienka linia odniesienia pod grubym obrysem, proste zakończenia, geometria w tablicy ścieżek na górze pliku. Gotowe zestawy odpadły z dwóch powodów: ani Heroicons (318 sztuk w vendorze Fluxa), ani Lucide (`php artisan flux:icon`) nie mają kąta przechyłu ani hamowania, a ich zaokrąglony rysunek kłóci się z ostrym językiem strony.
+
+Dwie zasady użycia, obie ustalone przez Rafała: **ikona stoi przed wartością**, nie przed etykietą, i ma wysokość liczby, przy której stoi. Poniżej 20 px linia odniesienia znika w antyaliasingu i zostaje sam położony słupek — dlatego w nagłówku tabeli przejazdów (11 px wersalików) ikon nie ma.
+
+Rozmiar podajemy **atrybutem SVG**, nie klasą Tailwinda. Dzięki temu nowa ikona wchodzi na stronę bez przebudowy frontu, której i tak nie wolno odpalać — warunek jest jeden: użyć wyłącznie klas obecnych już w `public/build/assets/*.css`.
+
 ---
 
 ## 4. Gałęzie i wdrożenie
@@ -159,21 +166,23 @@ Kontrakt telemetrii zamknął większość pytań: znamy kształt przesyłki, en
 
 ---
 
-## 6. Stan na 31 sierpnia 2026
+## 6. Stan na 3 września 2026
 
-Repozytorium wyczyszczone, historia gita założona od nowa i nadpisana na GitHubie. Ostatni commit: `035f125`.
+Historia gita założona od nowa 31 sierpnia 2026 i nadpisana na GitHubie (`push --force`).
 
 ### Co stoi
 
-**Strona główna** — ciemny nagłówek z dużym logo, pięć mierzonych parametrów, wektorowy rysunek urządzenia z opisami, sekcja o alarmie i o koncie, dwa zaproszenia do rejestracji.
+**Strona główna** — ciemny nagłówek z dużym logo, panel ostatniej jazdy, pięć mierzonych parametrów, wektorowy rysunek urządzenia z opisami, sekcja o alarmie i o koncie, dwa zaproszenia do rejestracji.
 
 **Konto** — rejestracja (nick, e-mail, hasło), logowanie, weryfikacja adresu, reset hasła. Jedna strona ustawień: nick, imię i nazwisko, e-mail, zmiana hasła, usunięcie konta. Cały interfejs i e-maile po polsku. Poczta wychodzi przez SMTP `info@motusy.top` — połączenie i logowanie sprawdzone na żywo.
 
-**Panel** — pulpit z pięcioma rekordami konta i pięcioma ostatnimi przejazdami; historia przejazdów po dziesięć na stronę, z filtrem po urządzeniu, kolumną urządzenia i miękkim kasowaniem; wykaz urządzeń z nadawaniem nazw i stale widocznym tokenem konta.
+**Panel** — pulpit z pięcioma rekordami konta i pięcioma ostatnimi przejazdami; historia przejazdów po dziesięć na stronę, z filtrem po urządzeniu i miękkim kasowaniem; wykaz urządzeń z nadawaniem nazw i stale widocznym tokenem konta.
+
+Pulpit i historia pokazują przejazdy **tą samą tabelą** — `<x-rides-table>`. Kasowanie włącza się flagą `deletable`, bo pulpit tylko podgląda: modal potwierdzenia i metoda `confirmDelete()` siedzą w komponencie historii.
 
 **Baza** — `devices` i `rides` zgodne z kontraktem telemetrii, `users` z kolumnami `nickname` i `api_token`.
 
-**Testy: 48**, przechodzą bez zbudowanego frontu (`withoutVite()` w `Tests\TestCase`).
+**Testy: 103**, przechodzą bez zbudowanego frontu (`withoutVite()` w `Tests\TestCase`).
 
 Front jest zbudowany (`public/build`), strona odpowiada 200.
 
@@ -193,7 +202,10 @@ Sprawdzone na produkcji według czterech punktów z §8. Urządzenie użyte do p
 
 **W bazie są prawdziwe dane.** Urządzenie `70041ddc6bc8` (Rafała, fw `0.1.0-dev`) dopisało się samo i przysłało pierwsze przejazdy 1 września 2026. Atrapy nie ma — została skasowana twardo przed konfiguracją pudełka.
 
-Dwie rzeczy do zapamiętania przy oglądaniu tych danych:
+3 września 2026 doszedł GPS: przejazd `seq 42` jako pierwszy przyniósł komplet, z czasem i prędkością.
 
-- `recorded_at` jest puste, bo GPS-a jeszcze nie ma — historia sortuje się po `seq`, daty nie widać. Wskoczy sama, gdy firmware zacznie ją przysyłać.
+Trzy rzeczy do zapamiętania przy oglądaniu tych danych:
+
+- **Dane są w dwóch pokoleniach.** Przejazdy do `seq 41` mają `recorded_at` i `speed_kmh` puste, bo powstały przed GPS-em — na ekranach nie mają daty i pokazują `———` zamiast prędkości. Dlatego historia sortuje się po `seq`, a nie po dacie: dla większości wierszy daty po prostu nie ma.
+- **Czas z GPS-a przychodzi w UTC.** Pierwsza przesyłka wyglądała na spóźnioną o dwie godziny, bo portal wyświetlał znacznik bez przeliczenia. Poprawka siedzi w `Ride::recordedAt()`, sama baza dalej trzyma UTC.
 - Pierwsze przejazdy mają przyspieszenie i hamowanie równe 1,98 g przy przechyle 54°, czyli wartości wyglądające na testy na biurku, a nie na jazdę.

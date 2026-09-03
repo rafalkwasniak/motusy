@@ -69,6 +69,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Strefa czasowa prezentacji
+    |--------------------------------------------------------------------------
+    |
+    | Baza i cała logika stoją na UTC — urządzenie przysyła `recorded_at`
+    | jako uniksowy znacznik z GPS-a, więc czas zapisany jest bezwzględny.
+    | Portal ma go jednak pokazywać po naszemu, dlatego przeliczenie robimy
+    | dopiero na wyjściu, tą strefą. Zmiana `app.timezone` nie wchodzi w grę:
+    | Eloquent zacząłby zapisywać do bazy czasy lokalne obok istniejących UTC.
+    |
+    */
+
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'Europe/Warsaw'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

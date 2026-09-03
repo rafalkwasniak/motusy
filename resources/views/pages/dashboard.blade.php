@@ -36,6 +36,8 @@ new #[Title('Panel')] class extends Component {
     {
         return Auth::user()
             ->rides()
+            // Tabela pokazuje nazwę urządzenia — bez tego jedno zapytanie na wiersz.
+            ->with('device')
             ->orderByDesc('seq')
             ->orderByDesc('id')
             ->limit(5)
@@ -67,22 +69,28 @@ new #[Title('Panel')] class extends Component {
         <div class="grid gap-px border border-zinc-200 bg-zinc-200 sm:grid-cols-2 lg:grid-cols-5 dark:border-neutral-700 dark:bg-neutral-700">
             @php
                 $tiles = [
-                    ['Przechył w lewo', Pomiar::stopnie($this->records->lean_left_deg)],
-                    ['Przechył w prawo', Pomiar::stopnie($this->records->lean_right_deg)],
-                    ['Przyspieszenie', Pomiar::przeciazenie($this->records->accel_g)],
-                    ['Hamowanie', Pomiar::przeciazenie($this->records->brake_g)],
-                    ['Prędkość maksymalna', Pomiar::predkosc($this->records->speed_kmh)],
+                    ['lewo', 'Przechył w lewo', Pomiar::stopnie($this->records->lean_left_deg)],
+                    ['prawo', 'Przechył w prawo', Pomiar::stopnie($this->records->lean_right_deg)],
+                    ['przyspieszenie', 'Przyspieszenie', Pomiar::przeciazenie($this->records->accel_g)],
+                    ['hamowanie', 'Hamowanie', Pomiar::przeciazenie($this->records->brake_g)],
+                    ['predkosc', 'Prędkość maksymalna', Pomiar::predkosc($this->records->speed_kmh)],
                 ];
             @endphp
 
-            @foreach ($tiles as [$label, $value])
+            @foreach ($tiles as [$typ, $label, $value])
                 <div class="bg-white p-5 dark:bg-neutral-900">
                     <div class="font-mono text-[11px] tracking-wider text-zinc-500 uppercase">{{ __($label) }}</div>
 
-                    <div @class([
-                        'mt-2 font-mono text-2xl font-bold tabular-nums',
-                        'text-zinc-400' => $value === Pomiar::BRAK,
-                    ])>{{ $value }}</div>
+                    {{-- Ikona stoi przed liczbą i ma jej wysokość, więc rząd
+                         kafli trzyma jedną linię niezależnie od długości podpisu. --}}
+                    <div class="mt-2 flex items-center gap-2">
+                        <x-pomiar-ikona :typ="$typ" :rozmiar="24" class="shrink-0 text-zinc-400 dark:text-zinc-500" />
+
+                        <span @class([
+                            'font-mono text-2xl font-bold tabular-nums',
+                            'text-zinc-400' => $value === Pomiar::BRAK,
+                        ])>{{ $value }}</span>
+                    </div>
                 </div>
             @endforeach
         </div>
@@ -104,27 +112,7 @@ new #[Title('Panel')] class extends Component {
             @if ($this->latestRides->isEmpty())
                 <x-rides-empty-state />
             @else
-                <div class="divide-y divide-zinc-200 border-y border-zinc-200 dark:divide-neutral-700 dark:border-neutral-700">
-                    @foreach ($this->latestRides as $ride)
-                        <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 py-4" wire:key="latest-{{ $ride->id }}">
-                            <div>
-                                <span class="font-mono text-sm text-zinc-500">#{{ $ride->seq }}</span>
-                                <span class="ml-3">{{ $ride->durationForHumans() }}</span>
-                                @if ($ride->recordedAt())
-                                    <span class="ml-3 text-sm text-zinc-500">{{ $ride->recordedAt()->translatedFormat('j M Y, H:i') }}</span>
-                                @endif
-                            </div>
-
-                            <div class="flex flex-wrap gap-x-5 gap-y-1 font-mono text-sm tabular-nums">
-                                <span>{{ Pomiar::stopnie($ride->lean_left_deg) }}&nbsp;<span class="text-zinc-400">L</span></span>
-                                <span>{{ Pomiar::stopnie($ride->lean_right_deg) }}&nbsp;<span class="text-zinc-400">P</span></span>
-                                <span>{{ Pomiar::przeciazenie($ride->accel_g) }}</span>
-                                <span>{{ Pomiar::przeciazenie($ride->brake_g) }}&nbsp;<span class="text-zinc-400">ham.</span></span>
-                                <span @class(['text-zinc-400' => ! $ride->hasSpeed()])>{{ Pomiar::predkosc($ride->speed_kmh) }}</span>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+                <x-rides-table :rides="$this->latestRides" />
             @endif
         </div>
     @endif

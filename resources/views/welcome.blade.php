@@ -59,18 +59,18 @@
                             // nie ma — przykład, wyraźnie oznaczony jako przykład.
                             $wiersze = $ostatniaJazda === null
                                 ? [
-                                    ['Przechył w lewo', '42°'],
-                                    ['Przechył w prawo', '38°'],
-                                    ['Przyspieszenie', '0,75 g'],
-                                    ['Hamowanie', '0,82 g'],
-                                    ['Prędkość maksymalna', '187 km/h'],
+                                    ['lewo', 'Przechył w lewo', '42°'],
+                                    ['prawo', 'Przechył w prawo', '38°'],
+                                    ['przyspieszenie', 'Przyspieszenie', '0,75 g'],
+                                    ['hamowanie', 'Hamowanie', '0,82 g'],
+                                    ['predkosc', 'Prędkość maksymalna', '187 km/h'],
                                 ]
                                 : [
-                                    ['Przechył w lewo', Pomiar::stopnie($ostatniaJazda->lean_left_deg)],
-                                    ['Przechył w prawo', Pomiar::stopnie($ostatniaJazda->lean_right_deg)],
-                                    ['Przyspieszenie', Pomiar::przeciazenie($ostatniaJazda->accel_g)],
-                                    ['Hamowanie', Pomiar::przeciazenie($ostatniaJazda->brake_g)],
-                                    ['Prędkość maksymalna', Pomiar::predkosc($ostatniaJazda->speed_kmh)],
+                                    ['lewo', 'Przechył w lewo', Pomiar::stopnie($ostatniaJazda->lean_left_deg)],
+                                    ['prawo', 'Przechył w prawo', Pomiar::stopnie($ostatniaJazda->lean_right_deg)],
+                                    ['przyspieszenie', 'Przyspieszenie', Pomiar::przeciazenie($ostatniaJazda->accel_g)],
+                                    ['hamowanie', 'Hamowanie', Pomiar::przeciazenie($ostatniaJazda->brake_g)],
+                                    ['predkosc', 'Prędkość maksymalna', Pomiar::predkosc($ostatniaJazda->speed_kmh)],
                                 ];
                         @endphp
 
@@ -87,14 +87,20 @@
                             </div>
 
                             <dl class="divide-y divide-white/10">
-                                @foreach ($wiersze as [$etykieta, $wartosc])
-                                    <div class="flex items-baseline justify-between gap-4 py-3">
+                                @foreach ($wiersze as [$typ, $etykieta, $wartosc])
+                                    <div class="flex items-center justify-between gap-4 py-3">
                                         <dt class="font-mono text-[11px] tracking-wider text-white/45 uppercase">{{ __($etykieta) }}</dt>
-                                        <dd @class([
-                                            'font-mono text-2xl font-bold tabular-nums',
-                                            'text-white' => $wartosc !== Pomiar::BRAK,
-                                            'text-white/40' => $wartosc === Pomiar::BRAK,
-                                        ])>{{ $wartosc }}</dd>
+
+                                        {{-- Ikona przed liczbą, tak samo jak na kaflach pulpitu. --}}
+                                        <dd class="flex items-center gap-2">
+                                            <x-pomiar-ikona :typ="$typ" :rozmiar="20" class="shrink-0 text-white/40" />
+
+                                            <span @class([
+                                                'font-mono text-2xl font-bold tabular-nums',
+                                                'text-white' => $wartosc !== Pomiar::BRAK,
+                                                'text-white/40' => $wartosc === Pomiar::BRAK,
+                                            ])>{{ $wartosc }}</span>
+                                        </dd>
                                     </div>
                                 @endforeach
                             </dl>
@@ -121,16 +127,20 @@
 
                 <div class="mt-12 grid gap-px border border-zinc-300 bg-zinc-300 sm:grid-cols-2 lg:grid-cols-3 dark:border-neutral-700 dark:bg-neutral-700">
                     @foreach ([
-                        ['01', 'Maksymalny przechył w lewo', 'W stopniach, liczony od pionu ustawionego przy kalibracji.'],
-                        ['02', 'Maksymalny przechył w prawo', 'Osobno dla każdej strony — prawie nikt nie kładzie się symetrycznie.'],
-                        ['03', 'Maksymalne przyspieszenie', 'W jednostkach g, w osi jazdy. Im wyższa liczba, tym mocniejsze wyrwanie.'],
-                        ['04', 'Maksymalne hamowanie', 'Też w g. Pokazuje, jak blisko granicy przyczepności był przedni hamulec.'],
-                        ['05', 'Prędkość maksymalna', 'Najwyższa prędkość osiągnięta w trakcie przejazdu, w km/h.'],
+                        ['01', 'lewo', 'Maksymalny przechył w lewo', 'W stopniach, liczony od pionu ustawionego przy kalibracji.'],
+                        ['02', 'prawo', 'Maksymalny przechył w prawo', 'Osobno dla każdej strony — prawie nikt nie kładzie się symetrycznie.'],
+                        ['03', 'przyspieszenie', 'Maksymalne przyspieszenie', 'W jednostkach g, w osi jazdy. Im wyższa liczba, tym mocniejsze wyrwanie.'],
+                        ['04', 'hamowanie', 'Maksymalne hamowanie', 'Też w g. Pokazuje, jak blisko granicy przyczepności był przedni hamulec.'],
+                        ['05', 'predkosc', 'Prędkość maksymalna', 'Najwyższa prędkość osiągnięta w trakcie przejazdu, w km/h.'],
                     ] as $card)
                         <div class="bg-white p-6 dark:bg-neutral-950">
-                            <span class="font-mono text-sm font-bold text-brand-600 dark:text-brand-500">{{ $card[0] }}</span>
-                            <h3 class="mt-3 font-display text-xl font-semibold tracking-wide uppercase">{{ __($card[1]) }}</h3>
-                            <p class="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{{ __($card[2]) }}</p>
+                            <div class="flex items-center justify-between gap-4">
+                                <span class="font-mono text-sm font-bold text-brand-600 dark:text-brand-500">{{ $card[0] }}</span>
+                                <x-pomiar-ikona :typ="$card[1]" :rozmiar="32" class="text-zinc-400 dark:text-zinc-500" />
+                            </div>
+
+                            <h3 class="mt-3 font-display text-xl font-semibold tracking-wide uppercase">{{ __($card[2]) }}</h3>
+                            <p class="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{{ __($card[3]) }}</p>
                         </div>
                     @endforeach
 
