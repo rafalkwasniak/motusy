@@ -86,13 +86,14 @@ class RidesTest extends TestCase
     }
 
     /**
-     * Ikona śladu stoi przy numerze przejazdu i prowadzi do pliku GPX.
-     * Przejazd bez śladu — a takich jest większość — nie pokazuje niczego.
+     * Ikona śladu przy numerze przejazdu jest **znacznikiem**, nie odnośnikiem:
+     * mówi, że ślad jest, a pobieranie GPX-a stoi na karcie przejazdu. Wiersz
+     * w całości prowadzi do tej karty, więc drugi cel w nim tylko mnożyłby
+     * możliwe kliknięcia.
      */
-    public function test_a_ride_with_a_track_offers_it_for_download(): void
+    public function test_a_ride_with_a_track_is_marked_but_not_downloadable_from_the_list(): void
     {
         $user = User::factory()->create();
-        $bez = Ride::factory()->for($user)->create(['seq' => 1]);
         $ze = Ride::factory()->for($user)->create(['seq' => 2]);
 
         RideTrack::factory()->for($user)->create([
@@ -103,8 +104,21 @@ class RidesTest extends TestCase
 
         Livewire::actingAs($user)
             ->test('pages::rides.index')
-            ->assertSee(route('rides.track.gpx', $ze), escape: false)
-            ->assertDontSee(route('rides.track.gpx', $bez), escape: false);
+            ->assertSee(__('Ten przejazd ma ślad trasy'))
+            ->assertDontSee(route('rides.track.gpx', $ze), escape: false);
+    }
+
+    /**
+     * Przejazd bez śladu — a takich jest większość — nie pokazuje znacznika.
+     */
+    public function test_a_ride_without_a_track_is_not_marked(): void
+    {
+        $user = User::factory()->create();
+        Ride::factory()->for($user)->create(['seq' => 1]);
+
+        Livewire::actingAs($user)
+            ->test('pages::rides.index')
+            ->assertDontSee(__('Ten przejazd ma ślad trasy'));
     }
 
     /**

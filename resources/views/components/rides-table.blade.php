@@ -56,14 +56,14 @@
                                 class="hover:underline"
                             >#{{ $ride->seq }}</a>
 
+                            {{-- Znacznik, nie odnośnik. Pobieranie GPX-a stoi na
+                                 karcie przejazdu — drugi cel w wierszu, który
+                                 sam w całości prowadzi do tej karty, tylko
+                                 mnożyłby możliwe kliknięcia. --}}
                             @if ($ride->track)
-                                <a
-                                    href="{{ route('rides.track.gpx', $ride) }}"
-                                    class="text-zinc-400"
-                                    title="{{ __('Pobierz ślad trasy (GPX)') }}"
-                                >
+                                <span class="text-zinc-400" title="{{ __('Ten przejazd ma ślad trasy') }}">
                                     <x-pomiar-ikona typ="slad" :rozmiar="16" />
-                                </a>
+                                </span>
                             @endif
                         </span>
                     </td>
