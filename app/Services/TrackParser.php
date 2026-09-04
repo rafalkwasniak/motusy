@@ -45,7 +45,9 @@ class TrackParser
         // instrukcję, a oszczędza 422 za nic.
         $lines = array_map(fn (string $line): string => rtrim($line, "\r"), explode("\n", $body));
 
-        if (($lines[0] ?? '') !== self::FORMAT) {
+        // Bez `?? ''`: `explode` zawsze zwraca co najmniej jeden element,
+        // więc zerowy indeks istnieje nawet dla pustego napisu.
+        if ($lines[0] !== self::FORMAT) {
             throw new TrackFormatException('nieznana wersja formatu sladu');
         }
 

@@ -113,6 +113,17 @@ Zmienne `RAYON_NUM_THREADS`, `TOKIO_WORKER_THREADS`, `GOMAXPROCS` i `taskset` pr
 
 Sam projekt jest już odchudzony pod ten limit: zamiast nakładki `vite-plus` (własny runtime tokio startujący przed wczytaniem configu) używamy zwykłego `vite build`, a kroje są self-hostowane zamiast pobierane pluginem `laravel-vite-plugin/fonts`. Zostały więc tylko dwie natywne pule — rolldown i oxide.
 
+**CI sprawdza więcej niż `artisan test`.** GitHub Actions (`.github/workflows/tests.yml`) uruchamia `composer ci:check`, czyli **Pint + PHPStan (poziom 7, z Larastanem) + testy**. Same testy potrafią przejść przy zastrzeżeniach PHPStana — i wtedy z GitHuba przychodzi mail o nieudanym przebiegu, choć lokalnie wszystko wyglądało zielono. Przed commitem uruchamiaj cały łańcuch:
+
+```bash
+mkdir -p /tmp/bin && ln -sf /opt/alt/php85/usr/bin/php /tmp/bin/php
+PATH=/tmp/bin:$PATH /opt/alt/php85/usr/bin/php /usr/local/bin/composer test
+```
+
+Podłożenie `php` w PATH jest konieczne: Composer odpala podprocesy przez `php` z PATH-a, czyli 8.3, i wywala się na `platform_check` (zależności wymagają ≥ 8.4.1).
+
+Dwa komunikaty PHPStana na tym hoście **nie są** błędami projektu: ostrzeżenie o `phpstan_turbo-*.so` (rozszerzenie zbudowane pod nowszy glibc, PHPStan leci wtedy bez niego) oraz jednorazowe `Undefined constant "Larastan\Larastan\LARAVEL_VERSION"` — bootstrap Larastana uruchamia całą aplikację, więc przy zadławionych wątkach (patrz wyżej) potrafi paść, a stała nie zdąży powstać. Po prostu powtórz.
+
 **`migrate:fresh` jest zablokowane**, bo `APP_ENV=production` i Laravel domyślnie zabrania destrukcyjnych komend na produkcji (`DB::prohibitDestructiveCommands`). Flaga `--force` tego nie omija. Gdy trzeba przebudować schemat od zera, tabele kasuje się ręcznie w MySQL, a potem leci zwykłe `migrate --force`.
 
 **Config bywa cache'owany.** Po zmianie `.env` wykonaj `php artisan config:cache`. Uwaga: scache'owany config unieważnia wpisy `<env>` z `phpunit.xml`, przez co testy potrafią pójść po **produkcyjnej** bazie — a `RefreshDatabase` kasuje wtedy prawdziwe dane. `Tests\TestCase::setUp()` pilnuje tego i wywala się z jasnym komunikatem, gdy połączenie nie jest sqlite.
