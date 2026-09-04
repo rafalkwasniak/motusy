@@ -36,8 +36,9 @@ new #[Title('Panel')] class extends Component {
     {
         return Auth::user()
             ->rides()
-            // Tabela pokazuje nazwę urządzenia — bez tego jedno zapytanie na wiersz.
-            ->with('device')
+            // Tabela pokazuje nazwę urządzenia i ikonę śladu — bez tego
+            // po jednym zapytaniu na wiersz.
+            ->with(['device', 'track'])
             ->orderByDesc('seq')
             ->orderByDesc('id')
             ->limit(5)
@@ -66,34 +67,13 @@ new #[Title('Panel')] class extends Component {
         </x-empty-state>
     @else
         {{-- Rekordy --}}
-        <div class="grid gap-px border border-zinc-200 bg-zinc-200 sm:grid-cols-2 lg:grid-cols-5 dark:border-neutral-700 dark:bg-neutral-700">
-            @php
-                $tiles = [
-                    ['lewo', 'Przechył w lewo', Pomiar::stopnie($this->records->lean_left_deg)],
-                    ['prawo', 'Przechył w prawo', Pomiar::stopnie($this->records->lean_right_deg)],
-                    ['przyspieszenie', 'Przyspieszenie', Pomiar::przeciazenie($this->records->accel_g)],
-                    ['hamowanie', 'Hamowanie', Pomiar::przeciazenie($this->records->brake_g)],
-                    ['predkosc', 'Prędkość maksymalna', Pomiar::predkosc($this->records->speed_kmh)],
-                ];
-            @endphp
-
-            @foreach ($tiles as [$typ, $label, $value])
-                <div class="bg-white p-5 dark:bg-neutral-900">
-                    <div class="font-mono text-[11px] tracking-wider text-zinc-500 uppercase">{{ __($label) }}</div>
-
-                    {{-- Ikona stoi przed liczbą i ma jej wysokość, więc rząd
-                         kafli trzyma jedną linię niezależnie od długości podpisu. --}}
-                    <div class="mt-2 flex items-center gap-2">
-                        <x-pomiar-ikona :typ="$typ" :rozmiar="24" class="shrink-0 text-zinc-400 dark:text-zinc-500" />
-
-                        <span @class([
-                            'font-mono text-2xl font-bold tabular-nums',
-                            'text-zinc-400' => $value === Pomiar::BRAK,
-                        ])>{{ $value }}</span>
-                    </div>
-                </div>
-            @endforeach
-        </div>
+        <x-pomiary-siatka :pomiary="[
+            ['lewo', 'Przechył w lewo', Pomiar::stopnie($this->records->lean_left_deg)],
+            ['prawo', 'Przechył w prawo', Pomiar::stopnie($this->records->lean_right_deg)],
+            ['przyspieszenie', 'Przyspieszenie', Pomiar::przeciazenie($this->records->accel_g)],
+            ['hamowanie', 'Hamowanie', Pomiar::przeciazenie($this->records->brake_g)],
+            ['predkosc', 'Prędkość maksymalna', Pomiar::predkosc($this->records->speed_kmh)],
+        ]" />
 
         <flux:text size="sm" class="mt-3">
             {{ __('Liczone ze wszystkich przejazdów zapisanych na koncie.') }}

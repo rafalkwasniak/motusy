@@ -1,7 +1,7 @@
 @props(['typ', 'rozmiar' => 24])
 
 {{--
-    Piktogramy pięciu mierzonych parametrów, rysowane w tej samej konwencji
+    Piktogramy pięciu mierzonych parametrów i śladu trasy, rysowane w tej samej konwencji
     co <x-moto-box-drawing>: rysunek techniczny, proste zakończenia, cienka
     linia odniesienia pod grubym obrysem. Gotowe zestawy (Heroicons, Lucide)
     odpadły — nie mają ani kąta przechyłu, ani hamowania, a ich zaokrąglony
@@ -44,6 +44,18 @@
             ['M12 18 L18 12', 2.25, 1],
             ['M12 18 H20.5', 1.25, 0.45],
         ],
+        // Ślad trasy stoi w tabeli przy numerze przejazdu, czyli przy tekście
+        // o wysokości 14 px — dlatego bez linii pomocniczej, która przy tym
+        // rozmiarze znika w antyaliasingu.
+        //
+        // Serpentyna, a nie łamana w górę: ta druga czyta się jak wykres
+        // giełdowy. Kwadraciki na końcach są stąd, co plakietka w logo,
+        // i mówią, gdzie trasa się zaczyna, a gdzie kończy.
+        'slad' => [
+            ['M5.5 20 C 5.5 15, 11.5 15, 11.5 10.5 S 14 5.5, 18.5 5', 2.25, 1],
+            ['M4 18.5 h3 v3 h-3 z', 1.5, 1],
+            ['M17 3.5 h3 v3 h-3 z', 1.5, 1],
+        ],
     };
 
     $opisy = [
@@ -52,6 +64,7 @@
         'przyspieszenie' => 'Przyspieszenie',
         'hamowanie' => 'Hamowanie',
         'predkosc' => 'Prędkość maksymalna',
+        'slad' => 'Ślad trasy',
     ];
 @endphp
 

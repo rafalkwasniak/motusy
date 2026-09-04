@@ -46,8 +46,9 @@ new #[Title('Przejazdy')] class extends Component {
     {
         return Auth::user()
             ->rides()
-            // Bez tego nazwa urządzenia kosztowałaby jedno zapytanie na wiersz.
-            ->with('device')
+            // Bez tego nazwa urządzenia i ikona śladu kosztowałyby po jednym
+            // zapytaniu na wiersz.
+            ->with(['device', 'track'])
             ->when($this->device !== '', fn ($q) => $q->where('device_id', $this->device))
             ->orderByDesc('seq')
             ->orderByDesc('id')
@@ -66,7 +67,9 @@ new #[Title('Przejazdy')] class extends Component {
         $ride = Auth::user()->rides()->findOrFail($this->deletingId);
 
         // Miękko — twarde kasowanie sprawiłoby, że przejazd wróciłby
-        // przy następnej wysyłce z urządzenia.
+        // przy następnej wysyłce z urządzenia. Ślad idzie razem z nim:
+        // zostawiony pokazywałby trasę przejazdu, którego już nie ma.
+        $ride->track?->delete();
         $ride->delete();
 
         $this->deletingId = null;

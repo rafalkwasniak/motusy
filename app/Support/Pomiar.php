@@ -52,6 +52,26 @@ final class Pomiar
     }
 
     /**
+     * Dystans ze śladu trasy.
+     *
+     * Poniżej kilometra w metrach, wyżej w kilometrach z jednym miejscem —
+     * „0,2 km" mówi mniej niż „177 m", a „12 345 m" mniej niż „12,3 km".
+     *
+     * Sam pomiar jest zaniżony na zakrętach (cięciwa zamiast łuku), więc
+     * dokładność poniżej metra i tak byłaby udawana.
+     */
+    public static function dystans(?int $metry): string
+    {
+        if ($metry === null) {
+            return self::BRAK;
+        }
+
+        return $metry < 1000
+            ? number_format($metry, 0, ',', ' ').' m'
+            : number_format($metry / 1000, 1, ',', ' ').' km';
+    }
+
+    /**
      * Prędkość maksymalna w km/h, w pełnych kilometrach.
      */
     public static function predkosc(?float $wartosc): string

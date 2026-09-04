@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Device;
 use App\Models\Ride;
+use App\Models\RideTrack;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -82,6 +83,51 @@ class RidesTest extends TestCase
         // Miękko, bo twarde kasowanie sprawiłoby, że przejazd wróciłby
         // przy następnej wysyłce z urządzenia.
         $this->assertSoftDeleted($ride);
+    }
+
+    /**
+     * Ikona śladu stoi przy numerze przejazdu i prowadzi do pliku GPX.
+     * Przejazd bez śladu — a takich jest większość — nie pokazuje niczego.
+     */
+    public function test_a_ride_with_a_track_offers_it_for_download(): void
+    {
+        $user = User::factory()->create();
+        $bez = Ride::factory()->for($user)->create(['seq' => 1]);
+        $ze = Ride::factory()->for($user)->create(['seq' => 2]);
+
+        RideTrack::factory()->for($user)->create([
+            'device_id' => $ze->device_id,
+            'seq' => $ze->seq,
+            'ride_id' => $ze->id,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('pages::rides.index')
+            ->assertSee(route('rides.track.gpx', $ze), escape: false)
+            ->assertDontSee(route('rides.track.gpx', $bez), escape: false);
+    }
+
+    /**
+     * Ślad idzie do kosza razem z przejazdem — zostawiony pokazywałby trasę
+     * jazdy, której właściciel już nie chce w historii.
+     */
+    public function test_deleting_a_ride_deletes_its_track(): void
+    {
+        $user = User::factory()->create();
+        $ride = Ride::factory()->for($user)->create(['seq' => 1]);
+
+        $track = RideTrack::factory()->for($user)->create([
+            'device_id' => $ride->device_id,
+            'seq' => $ride->seq,
+            'ride_id' => $ride->id,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('pages::rides.index')
+            ->call('confirmDelete', $ride->id)
+            ->call('deleteRide');
+
+        $this->assertSoftDeleted($track);
     }
 
     public function test_a_ride_belonging_to_someone_else_cannot_be_deleted(): void

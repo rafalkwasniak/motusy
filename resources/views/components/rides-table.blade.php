@@ -5,6 +5,15 @@
 {{-- Ta sama tabela stoi na pulpicie i w pełnej historii, więc kolumny,
      kolejność i zapis pomiarów trzymamy w jednym pliku. Kasowanie włącza się
      flagą: pulpit tylko podgląda, a modal i metody siedzą w historii. --}}
+
+{{-- Podświetlenie wiersza pod kursorem. W arkuszu jest `hover:bg-zinc-50`,
+     ale nie ma odpowiednika na tryb ciemny, a dołożenie klasy Tailwinda
+     wymagałoby przebudowy frontu, której na tym hoście nie wykonujemy
+     (CLAUDE.md §3). Dwie reguły CSS załatwiają to bez builda. --}}
+<style>
+    .wiersz-przejazdu:hover { background-color: #fafafa; }
+    .dark .wiersz-przejazdu:hover { background-color: #262626; }
+</style>
 <div class="overflow-x-auto border border-zinc-200 dark:border-neutral-700">
     <table class="w-full text-left text-sm">
         <thead class="border-b border-zinc-200 bg-zinc-50 font-mono text-[11px] tracking-wider text-zinc-500 uppercase dark:border-neutral-700 dark:bg-neutral-900">
@@ -25,8 +34,39 @@
 
         <tbody class="divide-y divide-zinc-200 dark:divide-neutral-700">
             @foreach ($rides as $ride)
-                <tr wire:key="ride-{{ $ride->id }}">
-                    <td class="px-4 py-3 font-mono text-zinc-500">#{{ $ride->seq }}</td>
+                {{-- Cały wiersz prowadzi do karty przejazdu. Prawdziwy odnośnik
+                     siedzi na numerze — daje ostrość klawiaturze i środkowy
+                     przycisk myszy — a kliknięcie w pozostałe komórki tylko go
+                     wyzwala. Warunek pomija odnośniki i przyciski, żeby ikona
+                     GPX-a i kosz nie porywały kliknięcia do karty. --}}
+                <tr
+                    wire:key="ride-{{ $ride->id }}"
+                    class="wiersz-przejazdu cursor-pointer"
+                    onclick="if (! event.target.closest('a, button')) this.querySelector('[data-karta]').click()"
+                >
+                    {{-- Ślad wisi przy numerze przejazdu, a nie w osobnej
+                         kolumnie: ma go mniejszość jazd, więc pusta kolumna
+                         zajmowałaby miejsce w każdym wierszu. --}}
+                    <td class="px-4 py-3 font-mono text-zinc-500">
+                        <span class="inline-flex items-center gap-2">
+                            <a
+                                href="{{ route('rides.show', $ride) }}"
+                                wire:navigate
+                                data-karta
+                                class="hover:underline"
+                            >#{{ $ride->seq }}</a>
+
+                            @if ($ride->track)
+                                <a
+                                    href="{{ route('rides.track.gpx', $ride) }}"
+                                    class="text-zinc-400"
+                                    title="{{ __('Pobierz ślad trasy (GPX)') }}"
+                                >
+                                    <x-pomiar-ikona typ="slad" :rozmiar="16" />
+                                </a>
+                            @endif
+                        </span>
+                    </td>
 
                     <td class="px-4 py-3">{{ $ride->deviceName() }}</td>
 

@@ -16,6 +16,9 @@ Portal i API przyjmujące dane z **urządzeń Motusy**. Pierwszym i na razie jed
 |---|---|---|
 | [docs/motusy-moto-box.md](docs/motusy-moto-box.md) | MVP samego urządzenia: pomiary, alarm, ekran, przycisk | specyfikacja funkcjonalna; §29 wyklucza z MVP WiFi, API i panel WWW, więc portal jest etapem po niej |
 | [docs/api-telemetria.md](docs/api-telemetria.md) | **kontrakt API telemetrii, wersja 1** | **wiążący** — format jest zaimplementowany w firmware (`lib/telemetry/TelemetryJson.cpp`) i obłożony testami sprawdzającymi dosłowną treść JSON-a |
+| [docs/api-slad-trasy.md](docs/api-slad-trasy.md) | **kontrakt API śladu trasy, wersja 1** (`MMBT1`) | **wiążący** — format zamrożony 4 września 2026 i pokryty testami po stronie firmware'u |
+| [docs/api-slad-implementacja-laravel.md](docs/api-slad-implementacja-laravel.md) | strona serwerowa śladu: migracja, parser, kontroler, GPX | szkic wdrożenia, nie kontrakt; przy rozbieżnościach patrz niżej |
+| [docs/wysylka-z-urzadzenia.md](docs/wysylka-z-urzadzenia.md) | **jak wysyłać: zachowanie działającego serwera** dla obu endpointów | opis stanu faktycznego, pisany dla firmware'u — aktualizować razem z kodem API |
 | `docs/motusy-02.png` | logo „MOTUSY TWO WHEELS SOCIETY" | materiał graficzny; pochodne w `public/images` i ikony w `public/` |
 | `docs/m5sticks3-*.jpg.webp` | fotografia produktowa M5StickS3 | materiał poglądowy — na stronie nie używamy jej wprost, patrz sekcja 3a |
 
@@ -180,9 +183,9 @@ Historia gita założona od nowa 31 sierpnia 2026 i nadpisana na GitHubie (`push
 
 Pulpit i historia pokazują przejazdy **tą samą tabelą** — `<x-rides-table>`. Kasowanie włącza się flagą `deletable`, bo pulpit tylko podgląda: modal potwierdzenia i metoda `confirmDelete()` siedzą w komponencie historii.
 
-**Baza** — `devices` i `rides` zgodne z kontraktem telemetrii, `users` z kolumnami `nickname` i `api_token`.
+**Baza** — `devices` i `rides` zgodne z kontraktem telemetrii, `ride_tracks` zgodne z kontraktem śladu, `users` z kolumnami `nickname` i `api_token`.
 
-**Testy: 103**, przechodzą bez zbudowanego frontu (`withoutVite()` w `Tests\TestCase`).
+**Testy: 150**, przechodzą bez zbudowanego frontu (`withoutVite()` w `Tests\TestCase`).
 
 Front jest zbudowany (`public/build`), strona odpowiada 200.
 
@@ -197,6 +200,21 @@ Trzy rozstrzygnięcia ponad szkic z kontraktu §7, wszystkie obłożone testami:
 - **Ciągłość sprawdzamy wewnątrz przesyłki, nie wobec historii w bazie.** Pierwsza wersja wymagała ciągu od jedynki i **zakleszczała urządzenie**: licznik `seq` rośnie przez całe życie pudełka i nie jest zerowany, więc po wyczyszczeniu bazy serwer czekał na numer 1, którego pudełko już nie ma. Punktem wyjścia potwierdzenia jest najwyższy zapisany numer (ze skasowanymi miękko włącznie), a dziura **w środku przesyłki** nadal zatrzymuje przetwarzanie — potwierdzenie numeru, którego nie zapisaliśmy, kasuje przejazd z urządzenia bezpowrotnie (§3).
 
 Sprawdzone na produkcji według czterech punktów z §8. Urządzenie użyte do prób zostało skasowane twardo.
+
+### API śladu trasy
+
+Dodane 4 września 2026: `POST /api/v1/devices/{deviceId}/rides/{seq}/track` przyjmuje plik `MMBT1` prosto z flasha (tekst, nie JSON), pod tym samym middleware co przejazdy. Statystyki liczy `TrackStats` przy przyjęciu, surowy plik ląduje na prywatnym dysku `tracks` — z niego da się wszystko przeliczyć, gdy parser się poprawi. W panelu ikona przy numerze przejazdu prowadzi do `GET /rides/{ride}/track.gpx` (trasa webowa, sesja — przeglądarka nie ma tokena urządzenia).
+
+Sześć rozstrzygnięć ponad dokumenty, wszystkie obłożone testami:
+
+- **`t0=0` unieważnia czas całego śladu, nie tylko punktu startowego.** Parser sumuje `dt`, więc przy nieznanym czasie startu drugi punkt wychodziłby na 1 stycznia 1970, 00:00:05 — a data 1970 myli programy do map bardziej niż brak `<time>`.
+- **Cudze urządzenie dostaje 403**, tak samo jak przy przejazdach: `device_id` jest publiczny, a klucz idempotencji to `(device_id, seq)`.
+- **415 tylko przy typie jawnie innym niż tekstowy.** Brak nagłówka przepuszczamy — urządzenie traktuje 415 jak awarię i ponawia, więc ostrzejsza reguła zakleszczyłaby pudełko, gdyby przyszłe firmware przestało `Content-Type` wysyłać.
+- **Uszkodzony plik daje 422, nigdy 500.** Nieliczbowe pole, współrzędna spoza globu, przechył poza zakresem `smallint`, `seq` spoza zakresu kolumny — wszystko to jest błędem trwałym. 500 kazałoby pudełku budzić radio aż do rozładowania baterii.
+- **Ślad skasowanego przejazdu: 200, ale nic nie zapisujemy.** Kasowanie w panelu zabiera ślad razem z przejazdem; bez tego wracałby tylnymi drzwiami przy następnej wysyłce.
+- **Statystyki liczymy przy przyjęciu**, wbrew radzie kontraktu §5. I tak parsujemy cały plik, żeby móc odpowiedzieć 422 na uszkodzony — a liczenie ich przy każdym wyświetleniu znaczyłoby parsowanie pliku przy każdym odświeżeniu historii.
+
+Kolumny `corridor_m` i `segment_count` są szersze, niż proponował szkic wdrożenia (`smallint` zamiast `tinyint`, `int` zamiast `smallint`): odbicie kodem 422 pliku z rzadszym zapisem skasowałoby go z urządzenia na zawsze.
 
 ### Dane
 

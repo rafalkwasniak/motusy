@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -72,6 +73,19 @@ class Ride extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Ślad trasy tego przejazdu, o ile urządzenie go zapisało i dowiozło.
+     *
+     * Ślad jest opcją domyślnie wyłączoną i jedzie osobnym żądaniem
+     * (docs/api-slad-trasy.md §1), więc jego brak jest stanem normalnym.
+     *
+     * @return HasOne<RideTrack, $this>
+     */
+    public function track(): HasOne
+    {
+        return $this->hasOne(RideTrack::class);
     }
 
     /**

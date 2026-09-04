@@ -47,6 +47,23 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Ślady tras. Prywatny, nie `public` — ślad jest widoczny wyłącznie
+         * dla właściciela konta i nie ma prawa mieć adresu, który da się
+         * zgadnąć (docs/api-slad-trasy.md §1 i §5).
+         *
+         * `throw` włączone celowo: nieudany zapis ma wywalić 500, po którym
+         * urządzenie ponowi. Ciche `false` zwróciłoby 200 i skasowało ślad
+         * z pudełka, choć nic byśmy nie zapisali.
+         */
+        'tracks' => [
+            'driver' => 'local',
+            'root' => storage_path('app/tracks'),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TrackGpxController;
 use App\Models\Ride;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +14,13 @@ Route::get('/', fn () => view('welcome', [
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', 'pages::dashboard')->name('dashboard');
     Route::livewire('rides', 'pages::rides.index')->name('rides.index');
+
+    Route::livewire('rides/{ride}', 'pages::rides.show')->name('rides.show');
+
+    // Ślad do pobrania jako GPX. Pod sesją, nie w API — link klika właściciel
+    // w panelu, a przeglądarka nie ma tokena urządzenia.
+    Route::get('rides/{ride}/track.gpx', TrackGpxController::class)->name('rides.track.gpx');
+
     Route::livewire('devices', 'pages::devices.index')->name('devices.index');
 });
 

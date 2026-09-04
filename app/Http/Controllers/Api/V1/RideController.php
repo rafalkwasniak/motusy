@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreRidesRequest;
 use App\Models\Device;
 use App\Models\Ride;
+use App\Models\RideTrack;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -137,7 +138,7 @@ class RideController extends Controller
             return;
         }
 
-        Ride::updateOrCreate(
+        $zapisany = Ride::updateOrCreate(
             ['device_id' => $deviceId, 'seq' => $seq],
             [
                 ...$ride,
@@ -147,6 +148,25 @@ class RideController extends Controller
                 'calibrated' => $data['calibrated'],
             ],
         );
+
+        $this->podepnijSlad($user, $deviceId, $seq, $zapisany);
+    }
+
+    /**
+     * Ślad bywa szybszy niż wynik przejazdu — wysyłki są niezależne, a
+     * o kolejności decyduje moment złapania sieci (docs/api-slad-trasy.md §2).
+     * Ślad, który przyszedł pierwszy, czeka z pustym `ride_id`; tutaj dostaje
+     * swój przejazd.
+     *
+     * Skasowane ślady zostają nietknięte: domyślny zasięg modelu je pomija.
+     */
+    private function podepnijSlad(User $user, string $deviceId, int $seq, Ride $ride): void
+    {
+        RideTrack::where('user_id', $user->id)
+            ->where('device_id', $deviceId)
+            ->where('seq', $seq)
+            ->whereNull('ride_id')
+            ->update(['ride_id' => $ride->id]);
     }
 
     /**
