@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property string $device_id
  * @property int $seq
+ * @property string $share_token
  * @property int $duration_s
  * @property int|null $recorded_at
  * @property float $lean_left_deg
@@ -65,6 +66,35 @@ class Ride extends Model
             'speed_kmh' => 'float',
             'calibrated' => 'boolean',
         ];
+    }
+
+    /**
+     * Token publicznego linku powstaje razem z przejazdem.
+     *
+     * Nie leniwie, przy pierwszym udostępnieniu: przejazdy zakłada API
+     * urządzenia, a nie człowiek w panelu, więc nie ma momentu, w którym
+     * ktoś by ten token zamówił. Samo jego istnienie niczego nie ujawnia —
+     * dopóki właściciel nie skopiuje adresu, nikt go nie odgadnie.
+     *
+     * Kolumny nie ma w `#[Fillable]` celowo: przesyłka z urządzenia leci
+     * przez `updateOrCreate`, a token nie jest niczym, co pudełko ma prawo
+     * ustawić ani nadpisać.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (self $ride): void {
+            if (blank($ride->share_token)) {
+                $ride->share_token = bin2hex(random_bytes(16));
+            }
+        });
+    }
+
+    /**
+     * Adres publicznego podglądu — do wysłania komuś bez konta.
+     */
+    public function sharedUrl(): string
+    {
+        return route('rides.shared', $this->share_token);
     }
 
     /**

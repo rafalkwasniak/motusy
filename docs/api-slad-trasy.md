@@ -21,8 +21,19 @@ nie mają prawa się o siebie zahaczać.
 przechyłu, więc wymaga świadomej zgody. Wyłączona opcja znaczy, że urządzenie
 nic nie zapisuje — nie „zapisuje, ale nie wysyła".
 
-**Ślady są prywatne.** Widoczne wyłącznie dla właściciela konta. Nie ma
-publicznego widoku, nie ma udostępniania linkiem.
+**Ślady są prywatne, dopóki właściciel sam nie wyśle linku.** Domyślnie widzi
+je wyłącznie właściciel konta. Od 5 września 2026 każdy przejazd ma dodatkowo
+`rides.share_token` — 128 bitów losowości — a pod adresem `/p/{token}` kartę
+przejazdu razem z mapą, wykresami i GPX-em otwiera bez logowania każdy, kto ten
+adres dostanie. Strona jest oznaczona `noindex`, więc nie wejdzie do
+wyszukiwarki, a bez tokena adres nie istnieje (404).
+
+**Linku nie da się dziś unieważnić.** Token powstaje razem z przejazdem i żyje
+tak długo jak on, więc kto raz dostał adres, ma dostęp na stałe. Wycofanie
+wymagałoby wymiany tokena — do zrobienia, gdy okaże się potrzebne.
+
+Urządzenia to nie dotyczy w żadnym stopniu: pudełko o udostępnianiu nic nie
+wie i niczego w związku z nim nie wysyła.
 
 **Ślad jest kompletny.** Nie ucinamy początku ani końca. Standardowa rada „utnij
 pierwsze 200 m, bo tam jest dom właściciela" rozwiązywałaby problem, którego tu

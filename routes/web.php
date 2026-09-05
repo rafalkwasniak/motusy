@@ -11,6 +11,18 @@ Route::get('/', fn () => view('welcome', [
     'ostatniaJazda' => Ride::query()->latest('id')->first(),
 ]))->name('home');
 
+// Publiczny podgląd jednego przejazdu. Poświadczeniem jest sam adres:
+// `share_token` ma 128 bitów losowości, więc trafienie w cudzy link jest
+// nierealne, a właściciel decyduje o dostępie tym, komu go wyśle.
+//
+// Krótki prefiks `p/` zamiast `rides/`, bo ten adres ląduje w komunikatorach
+// i ma się mieścić w jednej linii razem z tokenem.
+Route::get('p/{ride:share_token}/track.gpx', TrackGpxController::class)
+    ->name('rides.shared.track.gpx');
+
+Route::livewire('p/{ride:share_token}', 'pages::rides.show')
+    ->name('rides.shared');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', 'pages::dashboard')->name('dashboard');
     Route::livewire('rides', 'pages::rides.index')->name('rides.index');

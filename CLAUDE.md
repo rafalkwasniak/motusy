@@ -194,6 +194,19 @@ Historia gita założona od nowa 31 sierpnia 2026 i nadpisana na GitHubie (`push
 
 Pulpit i historia pokazują przejazdy **tą samą tabelą** — `<x-rides-table>`. Kasowanie włącza się flagą `deletable`, bo pulpit tylko podgląda: modal potwierdzenia i metoda `confirmDelete()` siedzą w komponencie historii.
 
+### Udostępnianie przejazdu linkiem
+
+Dodane 5 września 2026. Każdy przejazd ma `rides.share_token` (128 bitów losowości, nadawane w `Ride::booted()`), a `/p/{token}` pokazuje **ten sam komponent** co `/rides/{id}` — łącznie z mapą, wykresami i pobieraniem GPX-a — tyle że bez logowania. Przycisk „Kopiuj link" stoi obok „Pobierz GPX".
+
+Cztery rzeczy warte zapamiętania:
+
+- **Jeden komponent, dwie obudowy.** `pages::rides.show` nie jest dublowany; layout rozstrzyga `layouts/przejazd.blade.php`, wybierając panel albo `layouts/publiczny.blade.php`. Osobny layout publiczny jest konieczny, bo `layouts/app/sidebar` sięga po `auth()->user()->displayName()` i na gościu by padł.
+- **Token nie jest w `#[Fillable]`.** Przesyłka z urządzenia leci przez `updateOrCreate`, a pudełko nie ma prawa tokena ustawić ani nadpisać.
+- **Strona jest `noindex, nofollow`.** Adres jest poświadczeniem, więc nie ma prawa wpaść do wyszukiwarki, gdyby ktoś wkleił go publicznie.
+- **Unieważnienia linku nie ma.** Świadomie, decyzja Rafała z 5 września 2026: prostsze niż przełącznik per przejazd. Konsekwencja jest taka, że raz wysłanego adresu nie da się cofnąć.
+
+**Pułapka Blade'a, na którą już się nadziało:** `@js()` **nie kompiluje się w atrybucie znacznika komponentu** (`<flux:button x-on:click="...@js($x)...">`) — zostaje tam dosłownym napisem, który Alpine próbuje wykonać jako JavaScript. W zwykłym HTML-u (`<div x-data>`, `<span x-text>`) kompiluje się normalnie. Z tego powodu przycisk kopiowania tokena konta na `/devices` nie działał od początku. Wspólny `<x-kopiuj-do-schowka>` trzyma teraz kopiowaną treść w `x-data` na `<div>` i obsługuje oba miejsca.
+
 **Baza** — `devices` i `rides` zgodne z kontraktem telemetrii, `ride_tracks` zgodne z kontraktem śladu, `users` z kolumnami `nickname` i `api_token`.
 
 **Testy: 150**, przechodzą bez zbudowanego frontu (`withoutVite()` w `Tests\TestCase`).

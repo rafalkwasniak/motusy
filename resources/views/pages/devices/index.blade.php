@@ -92,7 +92,7 @@ new #[Title('Moje urządzenia')] class extends Component {
             {{ __('Wpisz go w konfiguracji WiFi pudełka. Jeden token obsługuje wszystkie urządzenia na tym koncie.') }}
         </flux:text>
 
-        <div class="mt-4 flex flex-wrap items-center gap-3" x-data="{ skopiowano: false }">
+        <div class="mt-4 flex flex-wrap items-center gap-3">
             {{-- `user-select` wpisany wprost, bo klasy `select-all` nie ma
                  w zbudowanym arkuszu, a build odpala Rafał ręcznie. --}}
             <code
@@ -100,14 +100,7 @@ new #[Title('Moje urządzenia')] class extends Component {
                 style="user-select: all"
             >{{ auth()->user()->api_token }}</code>
 
-            <flux:button
-                size="sm"
-                variant="filled"
-                icon="clipboard"
-                x-on:click="navigator.clipboard.writeText(@js(auth()->user()->api_token)); skopiowano = true; setTimeout(() => skopiowano = false, 2000)"
-            >
-                <span x-text="skopiowano ? @js(__('Skopiowano')) : @js(__('Kopiuj'))"></span>
-            </flux:button>
+            <x-kopiuj-do-schowka :tekst="auth()->user()->api_token" />
 
             <flux:modal.trigger name="confirm-token-regeneration">
                 <flux:button size="sm" variant="subtle">{{ __('Wydaj nowy') }}</flux:button>

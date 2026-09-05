@@ -8,17 +8,32 @@ use App\Support\Przechyl;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Przejazd')] class extends Component {
+new #[Title('Przejazd')] #[Layout('layouts::przejazd')] class extends Component {
     public Ride $ride;
+
+    /**
+     * Czy oglądamy kartę spod publicznego linku, czy z panelu właściciela.
+     *
+     * Treść jest w obu wypadkach ta sama — różni je obudowa i to, czego
+     * gościowi nie mamy po co pokazywać: powrotu do listy przejazdów,
+     * której i tak nie otworzy, oraz przycisku kopiowania linku, który jest
+     * narzędziem właściciela.
+     */
+    public bool $publiczny = false;
 
     public function mount(Ride $ride): void
     {
-        // Przejazdy i ślady są prywatne (docs/api-slad-trasy.md §1), więc
-        // cudzy ma wyglądać na nieistniejący — 404, nie 403.
-        abort_unless($ride->user_id === Auth::id(), 404);
+        $this->publiczny = request()->routeIs('rides.shared');
+
+        // Przejazd bez publicznego linku jest prywatny, więc cudzy ma
+        // wyglądać na nieistniejący — 404, nie 403. Pod linkiem właściciela
+        // nie ma kogo pytać: poświadczeniem jest `share_token` w adresie,
+        // po którym trasa w ogóle dobrała ten przejazd.
+        abort_unless($this->publiczny || $ride->user_id === Auth::id(), 404);
 
         $this->ride = $ride;
     }
@@ -326,11 +341,13 @@ new #[Title('Przejazd')] class extends Component {
 
 <div class="w-full">
     <div class="relative mb-6 w-full">
-        <flux:link :href="route('rides.index')" wire:navigate class="text-sm">
-            {{ __('← Wszystkie przejazdy') }}
-        </flux:link>
+        @unless ($publiczny)
+            <flux:link :href="route('rides.index')" wire:navigate class="text-sm">
+                {{ __('← Wszystkie przejazdy') }}
+            </flux:link>
+        @endunless
 
-        <flux:heading size="xl" level="1" class="mt-2">
+        <flux:heading size="xl" level="1" @class(['mt-2' => ! $publiczny])>
             {{ __('Przejazd #:seq', ['seq' => $ride->seq]) }}
         </flux:heading>
 
@@ -354,6 +371,19 @@ new #[Title('Przejazd')] class extends Component {
 
     @if ($ride->track === null)
         <div class="mt-10">
+            {{-- Przejazd bez śladu też da się wysłać linkiem — pomiary są
+                 treścią samą w sobie. Bez tego przycisk kopiowania znikałby
+                 razem z sekcją GPX-a. --}}
+            @unless ($publiczny)
+                <div class="mb-4 flex justify-end">
+                    <x-kopiuj-do-schowka
+                        :tekst="$ride->sharedUrl()"
+                        :etykieta="__('Kopiuj link')"
+                        ikona="link"
+                    />
+                </div>
+            @endunless
+
             <x-empty-state :heading="__('Ten przejazd nie ma śladu')">
                 {{ __('Zapis trasy jest w urządzeniu osobną opcją i domyślnie jest wyłączony. Przejazdy sprzed wersji firmware\'u ze śladem nie mają go i mieć nie będą.') }}
             </x-empty-state>
@@ -363,14 +393,26 @@ new #[Title('Przejazd')] class extends Component {
             <div class="mb-4 flex flex-wrap items-end justify-between gap-4">
                 <flux:heading size="lg">{{ __('Ślad trasy') }}</flux:heading>
 
-                <flux:button
-                    :href="route('rides.track.gpx', $ride)"
-                    size="sm"
-                    variant="filled"
-                    icon="arrow-down-tray"
-                >
-                    {{ __('Pobierz GPX') }}
-                </flux:button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <flux:button
+                        :href="$publiczny
+                            ? route('rides.shared.track.gpx', $ride->share_token)
+                            : route('rides.track.gpx', $ride)"
+                        size="sm"
+                        variant="filled"
+                        icon="arrow-down-tray"
+                    >
+                        {{ __('Pobierz GPX') }}
+                    </flux:button>
+
+                    @unless ($publiczny)
+                        <x-kopiuj-do-schowka
+                            :tekst="$ride->sharedUrl()"
+                            :etykieta="__('Kopiuj link')"
+                            ikona="link"
+                        />
+                    @endunless
+                </div>
             </div>
 
             {{-- Mapa nie może dostać wysokości klasą Tailwinda: nowa klasa

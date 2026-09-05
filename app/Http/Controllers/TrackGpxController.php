@@ -11,16 +11,26 @@ use Illuminate\Http\Response;
  * Pobranie śladu jako GPX — docs/api-slad-trasy.md §6.
  *
  * Trasa stoi w `routes/web.php`, pod zwykłą sesją, a nie w API: link ma być
- * do klikania w panelu, a przeglądarka nie ma tokena urządzenia. Ślady są
- * prywatne (§1), więc cudzy przejazd wygląda tu jak nieistniejący.
+ * do klikania w panelu, a przeglądarka nie ma tokena urządzenia. Cudzy
+ * przejazd wygląda tu jak nieistniejący.
+ *
+ * Ten sam kontroler obsługuje publiczny wariant `p/{token}/track.gpx`, żeby
+ * odbiorca udostępnionego linku widział dokładnie to samo co właściciel.
+ * Tam sesji nie ma i rolę poświadczenia gra token w adresie.
  */
 class TrackGpxController extends Controller
 {
     public function __invoke(Request $request, Ride $ride): Response
     {
+        // Publiczny link niesie `share_token` w adresie i to on jest
+        // poświadczeniem — sesji nie ma tu kogo pytać o właściciela.
         // 404, nie 403 — właściciel cudzego przejazdu nie ma się dowiedzieć,
         // że ten przejazd w ogóle istnieje.
-        abort_unless($ride->user_id === $request->user()->id, 404);
+        abort_unless(
+            $request->routeIs('rides.shared.track.gpx')
+                || $ride->user_id === $request->user()?->id,
+            404,
+        );
 
         $track = $ride->track()->firstOrFail();
 
