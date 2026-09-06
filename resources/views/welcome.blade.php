@@ -91,12 +91,19 @@
                             <dl class="divide-y divide-white/10">
                                 @foreach ($wiersze as [$typ, $etykieta, $wartosc])
                                     <div class="flex items-center justify-between gap-4 py-3">
-                                        <dt class="font-mono text-[11px] tracking-wider text-white/45 uppercase">{{ __($etykieta) }}</dt>
-
-                                        {{-- Ikona przed liczbą, tak samo jak na kaflach pulpitu. --}}
-                                        <dd class="flex items-center gap-2">
+                                        {{-- Ikona otwiera wiersz, przed podpisem, a nie przy liczbie.
+                                             Na kaflach pulpitu jest odwrotnie i tam to działa, bo każdy
+                                             kafel zaczyna się w swoim miejscu. Tutaj wiersze stoją jeden
+                                             pod drugim, a liczby są wyrównane do prawej i mają różną
+                                             długość — ikona szła więc za nimi w rytm cyfr, raz dalej,
+                                             raz bliżej. Przy podpisie wszystkie startują z jednej
+                                             krawędzi i tworzą równą pionową kolumnę. --}}
+                                        <dt class="flex items-center gap-3 font-mono text-[11px] tracking-wider text-white/45 uppercase">
                                             <x-pomiar-ikona :typ="$typ" :rozmiar="20" class="shrink-0 text-white/40" />
+                                            <span>{{ __($etykieta) }}</span>
+                                        </dt>
 
+                                        <dd>
                                             <span @class([
                                                 'font-mono text-2xl font-bold tabular-nums',
                                                 'text-white' => $wartosc !== Pomiar::BRAK,

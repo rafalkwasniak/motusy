@@ -151,7 +151,9 @@ Rysunek urządzenia (`<x-moto-box-drawing />`) jest **wektorowy, pisany ręcznie
 
 **Ikony pomiarów** (`<x-pomiar-ikona typ="lewo|prawo|przyspieszenie|hamowanie|predkosc|halas|slad" />`) są rysowane tak samo, w tej samej konwencji: cienka linia odniesienia pod grubym obrysem, proste zakończenia, geometria w tablicy ścieżek na górze pliku. Gotowe zestawy odpadły z dwóch powodów: ani Heroicons (318 sztuk w vendorze Fluxa), ani Lucide (`php artisan flux:icon`) nie mają kąta przechyłu ani hamowania, a ich zaokrąglony rysunek kłóci się z ostrym językiem strony.
 
-Dwie zasady użycia, obie ustalone przez Rafała: **ikona stoi przed wartością**, nie przed etykietą, i ma wysokość liczby, przy której stoi. Poniżej 20 px linia odniesienia znika w antyaliasingu i zostaje sam położony słupek — dlatego w nagłówku tabeli przejazdów (11 px wersalików) ikon nie ma.
+Dwie zasady użycia, obie ustalone przez Rafała: **ikona stoi przed wartością**, nie przed etykietą, i nie schodzi poniżej 20 px. Poniżej tego rozmiaru linia odniesienia znika w antyaliasingu i zostaje sam położony słupek — dlatego w nagłówku tabeli przejazdów (11 px wersalików) ikon nie ma.
+
+**Wyjątek od pierwszej z nich, 6 września 2026: w liście wiersz po wierszu ikona otwiera wiersz, przed podpisem.** Dotyczy panelu „Ostatnia jazda" na stronie głównej. Na kaflach pulpitu ikona przy liczbie jest w porządku, bo każdy kafel zaczyna się w swoim miejscu; w liście wiersze stoją jeden pod drugim, liczby są wyrównane do prawej i mają różną długość, więc ikona wędrowała za nimi w rytm cyfr. Rafał ujął to tak, że były „nieładnie doklejone do wyników" i nie stały w pionie. Przy podpisie startują z jednej krawędzi i tworzą równą kolumnę. Ikona siedzi **wewnątrz `<dt>`** — osobny `<div>` wokół `<dt>` byłby niepoprawnym HTML-em w `<dl>`.
 
 Rozmiar podajemy **atrybutem SVG**, nie klasą Tailwinda. Dzięki temu nowa ikona wchodzi na stronę bez przebudowy frontu, której i tak nie wolno odpalać — warunek jest jeden: użyć wyłącznie klas obecnych już w `public/build/assets/*.css`.
 
