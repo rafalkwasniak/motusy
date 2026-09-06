@@ -494,10 +494,18 @@ new #[Title('Przejazd')] #[Layout('layouts::przejazd')] class extends Component 
                                          rysunkiem: „w górę w prawo" czytało się
                                          tak, jakby motocykl przechylał się w górę.
                                          Napis przy krańcu osi nie zostawia na to
-                                         miejsca — u góry jest prawa strona, u dołu
-                                         lewa, i widać to bez tłumaczenia. --}}
+                                         miejsca — u góry jest lewa strona, u dołu
+                                         prawa, i widać to bez tłumaczenia.
+
+                                         Dlaczego lewo u góry: rysunek czyta się
+                                         jak mapa, czyli z lotu ptaka. Motocykl
+                                         jedzie w nim od lewej krawędzi do prawej,
+                                         więc jego lewa strona wypada u góry, a
+                                         prawa u dołu — tak samo jak na mapie
+                                         obok. Odwrotnie słupek uciekał w stronę
+                                         przeciwną niż zakręt na trasie. --}}
                                     <div>
-                                        <div>{{ __('prawo') }}</div>
+                                        <div>{{ __('lewo') }}</div>
                                         <div>{{ $this->wykres['maks'] }}°</div>
                                     </div>
 
@@ -505,7 +513,7 @@ new #[Title('Przejazd')] #[Layout('layouts::przejazd')] class extends Component 
 
                                     <div>
                                         <div>{{ $this->wykres['maks'] }}°</div>
-                                        <div>{{ __('lewo') }}</div>
+                                        <div>{{ __('prawo') }}</div>
                                     </div>
                                 </div>
 
@@ -549,7 +557,10 @@ new #[Title('Przejazd')] #[Layout('layouts::przejazd')] class extends Component 
                                                 x1="{{ $x }}"
                                                 y1="100"
                                                 x2="{{ $x }}"
-                                                y2="{{ round(100 - $slupek['lean'] / $this->wykres['maks'] * 92, 2) }}"
+                                                {{-- `+`, bo kontrakt śladu §2 liczy przechył
+                                                     w prawo dodatnio, a na osi prawo jest
+                                                     u dołu — czyli tam, gdzie w SVG rośnie `y`. --}}
+                                                y2="{{ round(100 + $slupek['lean'] / $this->wykres['maks'] * 92, 2) }}"
                                                 stroke="{{ $slupek['kolor'] }}"
                                                 stroke-width="{{ round($grubosc, 2) }}"
                                                 vector-effect="non-scaling-stroke"

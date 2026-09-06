@@ -305,6 +305,28 @@ class RideShowTest extends TestCase
         $this->assertStringNotContainsString('raw_block', $html);
     }
 
+    /**
+     * Wykres czyta się jak mapa, z lotu ptaka: motocykl jedzie od lewej
+     * krawędzi rysunku do prawej, więc jego **lewa** strona wypada u góry.
+     * Odwrotnie słupek uciekał w stronę przeciwną niż zakręt na mapie obok.
+     *
+     * Kontrakt śladu §2 liczy przechył w prawo dodatnio, a w SVG `y` rośnie
+     * w dół — więc dodatni przechył musi dać `y2` **większe** od osi zerowej.
+     */
+    public function test_the_lean_chart_puts_the_left_side_up(): void
+    {
+        $user = User::factory()->create();
+
+        $html = Livewire::actingAs($user)
+            ->test('pages::rides.show', ['ride' => $this->przejazd($user)])
+            ->html();
+
+        // Skala: 31° zaokrąglone w górę do 40°, słupek sięga 92 jednostek.
+        // Przechył 12° w prawo — pod oś; 31° w lewo — nad nią.
+        $this->assertStringContainsString('y2="'.round(100 + 12 / 40 * 92, 2).'"', $html);
+        $this->assertStringContainsString('y2="'.round(100 - 31 / 40 * 92, 2).'"', $html);
+    }
+
     public function test_someone_elses_ride_is_invisible(): void
     {
         $ride = $this->przejazd(User::factory()->create());
