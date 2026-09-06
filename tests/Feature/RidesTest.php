@@ -37,6 +37,32 @@ class RidesTest extends TestCase
             ->assertSeeInOrder(['#3', '#2', '#1']);
     }
 
+    /**
+     * Historia pokazuje wyłącznie przejazdy zalogowanego konta.
+     *
+     * Zawężenie robi relacja `User::rides()`, więc dziś dzieje się samo —
+     * i właśnie dlatego warto je przypilnować testem. Przepisanie zapytania
+     * na `Ride::query()` przy jakimś przyszłym filtrze zgubiłoby je bez
+     * jednego błędu, a przejazdy obcych ludzi weszłyby do cudzej historii.
+     */
+    public function test_the_history_shows_only_the_rides_of_the_signed_in_account(): void
+    {
+        $user = User::factory()->create();
+        Device::factory()->for($user)->withDeviceId('a1b2c3d4e5f6')->create();
+
+        Ride::factory()->for($user)->create(['device_id' => 'a1b2c3d4e5f6', 'seq' => 11]);
+
+        $obcy = User::factory()->create();
+        Device::factory()->for($obcy)->withDeviceId('ffeeddccbbaa')->create();
+
+        Ride::factory()->for($obcy)->create(['device_id' => 'ffeeddccbbaa', 'seq' => 22]);
+
+        Livewire::actingAs($user)
+            ->test('pages::rides.index')
+            ->assertSee('#11')
+            ->assertDontSee('#22');
+    }
+
     public function test_missing_speed_is_shown_as_dashes_not_zero(): void
     {
         $user = User::factory()->create();

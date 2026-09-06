@@ -46,6 +46,55 @@ class DashboardTest extends TestCase
     }
 
     /**
+     * „Rekordy konta" znaczy: wszystkie urządzenia **tego** konta i żadne inne.
+     *
+     * Zawężenie robi relacja `User::rides()`, więc dziś dzieje się samo —
+     * i dokładnie dlatego warto je przypilnować. Przepisanie zapytania na
+     * `Ride::query()` zgubiłoby je bez jednego błędu, a na pulpicie stanąłby
+     * rekord obcego motocyklisty.
+     */
+    public function test_records_ignore_rides_belonging_to_other_accounts(): void
+    {
+        $user = User::factory()->create();
+        Device::factory()->for($user)->withDeviceId('a1b2c3d4e5f6')->create();
+
+        // Dwa urządzenia jednego konta — rekord bierze najwyższą wartość
+        // z obu, bo to nadal ten sam właściciel.
+        Device::factory()->for($user)->withDeviceId('0a0b0c0d0e0f')->create();
+
+        Ride::factory()->for($user)->create([
+            'device_id' => 'a1b2c3d4e5f6',
+            'seq' => 1,
+            'speed_kmh' => 140.0,
+            'max_noise_db' => 99.1,
+        ]);
+
+        Ride::factory()->for($user)->create([
+            'device_id' => '0a0b0c0d0e0f',
+            'seq' => 1,
+            'speed_kmh' => 152.0,
+            'max_noise_db' => 103.5,
+        ]);
+
+        $obcy = User::factory()->create();
+        Device::factory()->for($obcy)->withDeviceId('ffeeddccbbaa')->create();
+
+        Ride::factory()->for($obcy)->create([
+            'device_id' => 'ffeeddccbbaa',
+            'seq' => 1,
+            'speed_kmh' => 299.0,
+            'max_noise_db' => 125.9,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('pages::dashboard')
+            ->assertSee('152 km/h')
+            ->assertSee('103,5 dB')
+            ->assertDontSee('299 km/h')
+            ->assertDontSee('125,9 dB');
+    }
+
+    /**
      * Rekord hałasu liczy się tak samo jak rekord prędkości: MAX po całym
      * koncie, z pominięciem przejazdów sprzed mikrofonu. `null` nie może
      * wciągnąć rekordu do zera.
