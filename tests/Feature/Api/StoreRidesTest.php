@@ -251,6 +251,86 @@ class StoreRidesTest extends TestCase
         $this->assertSame(187.0, $ride->speed_kmh);
     }
 
+    /**
+     * Hałas zapisuje się razem z resztą przesyłki.
+     */
+    public function test_the_noise_measurement_is_stored(): void
+    {
+        $user = User::factory()->create();
+
+        $this->wyslij($user, [[
+            ...$this->przejazd(1),
+            'max_noise_db' => 108.4,
+            'noise_at_speed_kmh' => 62,
+            'noise_clipped' => 3,
+            'noise_dropped' => 0,
+            'noise_cal' => 1,
+        ]])->assertOk();
+
+        $ride = Ride::firstWhere('seq', 1);
+
+        $this->assertSame(108.4, $ride->max_noise_db);
+        $this->assertSame(62, $ride->noise_at_speed_kmh);
+        $this->assertSame(3, $ride->noise_clipped);
+        $this->assertTrue($ride->noiseIsClipped());
+        $this->assertFalse($ride->noiseIsIncomplete());
+        $this->assertSame(1, $ride->noise_cal);
+    }
+
+    /**
+     * Przejazd ze starego firmware'u przechodzi bez pól hałasu, a puste
+     * pola zostają puste. Zero znaczyłoby „cisza", a to co innego niż
+     * „nie mierzono" (docs/api-halas-implementacja-laravel.md §5.1).
+     */
+    public function test_a_ride_from_older_firmware_is_accepted_without_noise(): void
+    {
+        $user = User::factory()->create();
+
+        $this->wyslij($user, [$this->przejazd(1)])
+            ->assertOk()
+            ->assertExactJson(['accepted_through' => 1]);
+
+        $ride = Ride::firstWhere('seq', 1);
+
+        $this->assertNull($ride->max_noise_db);
+        $this->assertNull($ride->noise_at_speed_kmh);
+        $this->assertFalse($ride->hasNoise());
+        $this->assertSame(0, $ride->noise_clipped);
+    }
+
+    /**
+     * Wysyłka ze starego firmware'u nie może skasować pomiaru, który już
+     * mamy. Kontroler rozsypuje przesyłkę przez `...$ride`, więc pola,
+     * których w niej nie ma, zostają nietknięte — inaczej niż w szkicu
+     * wdrożenia, gdzie `?? null` nadpisałoby je pustką przy każdej powtórce.
+     */
+    public function test_a_resend_without_noise_fields_keeps_the_stored_measurement(): void
+    {
+        $user = User::factory()->create();
+
+        $this->wyslij($user, [[...$this->przejazd(1), 'max_noise_db' => 101.2, 'noise_cal' => 1]]);
+        $this->wyslij($user, [$this->przejazd(1)])->assertOk();
+
+        $ride = Ride::firstWhere('seq', 1);
+
+        $this->assertSame(101.2, $ride->max_noise_db);
+        $this->assertSame(1, $ride->noise_cal);
+    }
+
+    /**
+     * Wartość niemieszcząca się w kolumnie ma dać 422, nie 500 — inaczej
+     * urządzenie ponawiałoby wysyłkę bez końca.
+     */
+    public function test_a_noise_value_too_large_for_its_column_is_refused(): void
+    {
+        $user = User::factory()->create();
+
+        $this->wyslij($user, [[...$this->przejazd(1), 'noise_cal' => 65536]])
+            ->assertStatus(422);
+
+        $this->assertSame(0, Ride::withTrashed()->count());
+    }
+
     public function test_a_device_belonging_to_another_account_is_refused(): void
     {
         $wlasciciel = User::factory()->create();

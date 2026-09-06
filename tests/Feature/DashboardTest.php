@@ -29,7 +29,7 @@ class DashboardTest extends TestCase
     }
 
     /**
-     * Każdy z pięciu kafli rekordów ma swój piktogram — komplet, bo brakująca
+     * Każdy z sześciu kafli rekordów ma swój piktogram — komplet, bo brakująca
      * ikona w rzędzie rzuca się w oczy bardziej niż jej brak wszędzie.
      */
     public function test_every_record_tile_carries_its_icon(): void
@@ -40,9 +40,66 @@ class DashboardTest extends TestCase
 
         $ekran = Livewire::actingAs($user)->test('pages::dashboard');
 
-        foreach (['Przechył w lewo', 'Przechył w prawo', 'Przyspieszenie', 'Hamowanie', 'Prędkość maksymalna'] as $opis) {
+        foreach (['Przechył w lewo', 'Przechył w prawo', 'Przyspieszenie', 'Hamowanie', 'Prędkość maksymalna', 'Hałas'] as $opis) {
             $ekran->assertSee('aria-label="'.$opis.'"', escape: false);
         }
+    }
+
+    /**
+     * Rekord hałasu liczy się tak samo jak rekord prędkości: MAX po całym
+     * koncie, z pominięciem przejazdów sprzed mikrofonu. `null` nie może
+     * wciągnąć rekordu do zera.
+     */
+    public function test_the_noise_record_is_the_highest_measurement_on_the_account(): void
+    {
+        $user = User::factory()->create();
+        Device::factory()->for($user)->withDeviceId('a1b2c3d4e5f6')->create();
+
+        Ride::factory()->for($user)->create(['device_id' => 'a1b2c3d4e5f6', 'seq' => 1]);
+        Ride::factory()->for($user)->create(['device_id' => 'a1b2c3d4e5f6', 'seq' => 2, 'max_noise_db' => 96.2]);
+        Ride::factory()->for($user)->create(['device_id' => 'a1b2c3d4e5f6', 'seq' => 3, 'max_noise_db' => 111.7]);
+
+        Livewire::actingAs($user)
+            ->test('pages::dashboard')
+            ->assertSee('111,7 dB');
+    }
+
+    /**
+     * Gdy rekord padł na pomiarze obciętym przez przetwornik, kafel mówi
+     * „co najmniej tyle" — inaczej rekord konta udawałby dokładny
+     * (docs/api-halas-implementacja-laravel.md §6).
+     */
+    public function test_a_clipped_noise_record_is_marked_as_at_least(): void
+    {
+        $user = User::factory()->create();
+        Device::factory()->for($user)->withDeviceId('a1b2c3d4e5f6')->create();
+
+        Ride::factory()->for($user)->create(['device_id' => 'a1b2c3d4e5f6', 'seq' => 1, 'max_noise_db' => 96.2]);
+        Ride::factory()->for($user)->create([
+            'device_id' => 'a1b2c3d4e5f6',
+            'seq' => 2,
+            'max_noise_db' => 126.4,
+            'noise_clipped' => 4120,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('pages::dashboard')
+            ->assertSee('≥ 126,4 dB');
+    }
+
+    /**
+     * Konto sprzed mikrofonu pokazuje kreskę, nie zero.
+     */
+    public function test_an_account_without_any_noise_measurement_shows_a_dash(): void
+    {
+        $user = User::factory()->create();
+        Device::factory()->for($user)->withDeviceId('a1b2c3d4e5f6')->create();
+        Ride::factory()->for($user)->create(['device_id' => 'a1b2c3d4e5f6', 'seq' => 1]);
+
+        Livewire::actingAs($user)
+            ->test('pages::dashboard')
+            ->assertSee('———')
+            ->assertDontSee('0,0 dB');
     }
 
     /**
@@ -62,7 +119,7 @@ class DashboardTest extends TestCase
 
         Livewire::actingAs($user)
             ->test('pages::dashboard')
-            ->assertSeeInOrder(['Nr', 'Urządzenie', 'Czas', 'Lewo', 'Prawo', 'Przysp.', 'Ham.', 'Maks.'])
+            ->assertSeeInOrder(['Nr', 'Urządzenie', 'Czas', 'Lewo', 'Prawo', 'Przysp.', 'Ham.', 'Maks.', 'Hałas'])
             ->assertSee('#7')
             ->assertSee('Ninja');
     }

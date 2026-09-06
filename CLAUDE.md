@@ -18,6 +18,7 @@ Portal i API przyjmujące dane z **urządzeń Motusy**. Pierwszym i na razie jed
 | [docs/api-telemetria.md](docs/api-telemetria.md) | **kontrakt API telemetrii, wersja 1** | **wiążący** — format jest zaimplementowany w firmware (`lib/telemetry/TelemetryJson.cpp`) i obłożony testami sprawdzającymi dosłowną treść JSON-a |
 | [docs/api-slad-trasy.md](docs/api-slad-trasy.md) | **kontrakt API śladu trasy, wersja 1** (`MMBT1`) | **wiążący** — format zamrożony 4 września 2026 i pokryty testami po stronie firmware'u |
 | [docs/api-slad-implementacja-laravel.md](docs/api-slad-implementacja-laravel.md) | strona serwerowa śladu: migracja, parser, kontroler, GPX | szkic wdrożenia, nie kontrakt; przy rozbieżnościach patrz niżej |
+| [docs/api-halas-implementacja-laravel.md](docs/api-halas-implementacja-laravel.md) | pięć pól pomiaru hałasu dosyłanych od 6 września 2026 | **addendum do kontraktu telemetrii**, zaimplementowane; sam kontrakt v1 o hałasie nie wie |
 | [docs/wysylka-z-urzadzenia.md](docs/wysylka-z-urzadzenia.md) | **jak wysyłać: zachowanie działającego serwera** dla obu endpointów | opis stanu faktycznego, pisany dla firmware'u — aktualizować razem z kodem API |
 | `docs/motusy-02.png` | logo „MOTUSY TWO WHEELS SOCIETY" | materiał graficzny; pochodne w `public/images` i ikony w `public/` |
 | `docs/m5sticks3-*.jpg.webp` | fotografia produktowa M5StickS3 | materiał poglądowy — na stronie nie używamy jej wprost, patrz sekcja 3a |
@@ -148,7 +149,7 @@ Kroje są **self-hostowane w `public/fonts`** z własnymi `@font-face` w `resour
 
 Rysunek urządzenia (`<x-moto-box-drawing />`) jest **wektorowy, pisany ręcznie**, nie przerobioną fotografią: biała kartka, czarne obrysy, odnośniki z opisami. Filtr krawędziowy na zdjęciu produktowym daje brudną plamę, bo obudowa jest gładka i szara na białym tle. Kolory bierze z `currentColor`, więc chodzi za motywem.
 
-**Ikony pomiarów** (`<x-pomiar-ikona typ="lewo|prawo|przyspieszenie|hamowanie|predkosc" />`) są rysowane tak samo, w tej samej konwencji: cienka linia odniesienia pod grubym obrysem, proste zakończenia, geometria w tablicy ścieżek na górze pliku. Gotowe zestawy odpadły z dwóch powodów: ani Heroicons (318 sztuk w vendorze Fluxa), ani Lucide (`php artisan flux:icon`) nie mają kąta przechyłu ani hamowania, a ich zaokrąglony rysunek kłóci się z ostrym językiem strony.
+**Ikony pomiarów** (`<x-pomiar-ikona typ="lewo|prawo|przyspieszenie|hamowanie|predkosc|halas|slad" />`) są rysowane tak samo, w tej samej konwencji: cienka linia odniesienia pod grubym obrysem, proste zakończenia, geometria w tablicy ścieżek na górze pliku. Gotowe zestawy odpadły z dwóch powodów: ani Heroicons (318 sztuk w vendorze Fluxa), ani Lucide (`php artisan flux:icon`) nie mają kąta przechyłu ani hamowania, a ich zaokrąglony rysunek kłóci się z ostrym językiem strony.
 
 Dwie zasady użycia, obie ustalone przez Rafała: **ikona stoi przed wartością**, nie przed etykietą, i ma wysokość liczby, przy której stoi. Poniżej 20 px linia odniesienia znika w antyaliasingu i zostaje sam położony słupek — dlatego w nagłówku tabeli przejazdów (11 px wersalików) ikon nie ma.
 
@@ -180,17 +181,36 @@ Kontrakt telemetrii zamknął większość pytań: znamy kształt przesyłki, en
 
 ---
 
-## 6. Stan na 3 września 2026
+## 6. Stan na 6 września 2026
+
+### Hałas
+
+Dodany 6 września 2026, na podstawie [docs/api-halas-implementacja-laravel.md](docs/api-halas-implementacja-laravel.md). Pięć kolumn w `rides`: `max_noise_db`, `noise_at_speed_kmh`, `noise_clipped`, `noise_dropped`, `noise_cal`.
+
+**Decyzja Rafała: hałas to taka sama wartość przejazdu jak prędkość maksymalna** i wchodzi wszędzie tam, gdzie stoi `speed_kmh` — kafel na karcie przejazdu, kolumna w tabeli przejazdów, rekord konta na pulpicie, panel ostatniej jazdy i sekcja pomiarów na stronie głównej (stąd „Sześć liczb, które coś znaczą").
+
+Cztery rozstrzygnięcia ponad dokument:
+
+- **Rekord konta liczymy `MAX` po wszystkich urządzeniach**, wbrew §5.2, który odradza mieszanie serii o różnym `noise_cal`. Świadomie: ma się zachowywać identycznie jak rekord prędkości. Pulpit dobiera przy okazji `MAX(CASE WHEN noise_clipped > 0 …)`, żeby wiedzieć, czy rekord padł na pomiarze obciętym — wtedy kafel pokazuje `≥`.
+- **Pola hałasu są w `#[Fillable]` i lecą przez `...$ride`**, a nie przez jawne `?? null` ze szkicu. Różnica jest widoczna: powtórna wysyłka **ze starego firmware'u nie kasuje** zapisanego pomiaru, bo brak klucza zostawia kolumnę nietkniętą. Wariant ze szkicu nadpisałby ją pustką.
+- **`noise_cal` to `smallint`, nie `tinyint`**, i wszystkie pięć pól ma w walidacji górną granicę z pojemności kolumny. Szkic granic nie stawiał, przez co wartość spoza zakresu dałaby 500 zamiast 422 — a odbita przesyłka wraca z pudełka w kółko, więc zakleszcza je na dobre.
+- **Adnotacje z §6 stoją pod siatką kafli, nie w kaflu.** Kafel niesie jedną liczbę; „przy 62 km/h", „szczyt był głośniejszy" i „pomiar niepełny" to trzy zdania, które się w nim nie mieszczą. W tabeli te same ostrzeżenia jadą podpowiedzią, ale samo `≥` zostaje widoczne — ono zmienia znaczenie liczby, a nie tylko ją komentuje.
+
+Siatka `<x-pomiary-siatka>` dobiera teraz szerokość z liczby kafli: sześć pomiarów przejazdu to `lg:grid-cols-6`, pięć statystyk śladu zostaje przy `lg:grid-cols-5`. Klasy stoją w pliku dosłownie — nazwy składanej w locie Tailwind nie zobaczy przy skanowaniu źródeł.
+
+Czego **nie** zrobiliśmy: zapytania kontrolnego z §7 (rozstrzygającego, czy mikrofon słyszy wydech, czy pęd powietrza). To narzędzie diagnostyczne, a nie ekran — wróci, gdy uzbiera się kilkadziesiąt przejazdów z mikrofonem. Nie ma też `docs/pomiar-halasu.md`, do którego dokument linkuje w nagłówku.
+
+## 6a. Stan na 3 września 2026
 
 Historia gita założona od nowa 31 sierpnia 2026 i nadpisana na GitHubie (`push --force`).
 
 ### Co stoi
 
-**Strona główna** — ciemny nagłówek z dużym logo, panel ostatniej jazdy, pięć mierzonych parametrów, wektorowy rysunek urządzenia z opisami, sekcja o alarmie i o koncie, dwa zaproszenia do rejestracji.
+**Strona główna** — ciemny nagłówek z dużym logo, panel ostatniej jazdy, sześć mierzonych parametrów, wektorowy rysunek urządzenia z opisami, sekcja o alarmie i o koncie, dwa zaproszenia do rejestracji.
 
 **Konto** — rejestracja (nick, e-mail, hasło), logowanie, weryfikacja adresu, reset hasła. Jedna strona ustawień: nick, imię i nazwisko, e-mail, zmiana hasła, usunięcie konta. Cały interfejs i e-maile po polsku. Poczta wychodzi przez SMTP `info@motusy.top` — połączenie i logowanie sprawdzone na żywo.
 
-**Panel** — pulpit z pięcioma rekordami konta i pięcioma ostatnimi przejazdami; historia przejazdów po dziesięć na stronę, z filtrem po urządzeniu i miękkim kasowaniem; wykaz urządzeń z nadawaniem nazw i stale widocznym tokenem konta.
+**Panel** — pulpit z sześcioma rekordami konta i pięcioma ostatnimi przejazdami; historia przejazdów po dziesięć na stronę, z filtrem po urządzeniu i miękkim kasowaniem; wykaz urządzeń z nadawaniem nazw i stale widocznym tokenem konta.
 
 Pulpit i historia pokazują przejazdy **tą samą tabelą** — `<x-rides-table>`. Kasowanie włącza się flagą `deletable`, bo pulpit tylko podgląda: modal potwierdzenia i metoda `confirmDelete()` siedzą w komponencie historii.
 
@@ -209,7 +229,7 @@ Cztery rzeczy warte zapamiętania:
 
 **Baza** — `devices` i `rides` zgodne z kontraktem telemetrii, `ride_tracks` zgodne z kontraktem śladu, `users` z kolumnami `nickname` i `api_token`.
 
-**Testy: 150**, przechodzą bez zbudowanego frontu (`withoutVite()` w `Tests\TestCase`).
+**Testy: 193**, przechodzą bez zbudowanego frontu (`withoutVite()` w `Tests\TestCase`).
 
 Front jest zbudowany (`public/build`), strona odpowiada 200.
 

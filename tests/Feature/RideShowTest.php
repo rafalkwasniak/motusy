@@ -67,6 +67,58 @@ class RideShowTest extends TestCase
     }
 
     /**
+     * Hałas jest szóstym pomiarem przejazdu i stoi w tej samej siatce.
+     */
+    public function test_the_card_shows_the_noise_measurement(): void
+    {
+        $user = User::factory()->create();
+        $ride = $this->przejazd($user);
+        $ride->update(['max_noise_db' => 108.4, 'noise_at_speed_kmh' => 62]);
+
+        $this->actingAs($user)
+            ->get("/rides/{$ride->id}")
+            ->assertOk()
+            ->assertSee('108,4 dB')
+            ->assertSee('Rekord hałasu padł przy 62 km/h.');
+    }
+
+    /**
+     * Obcięty pomiar jest zaniżony, więc liczba idzie ze znakiem „≥" —
+     * podanie jej wprost byłoby podaniem wartości, o której wiemy, że jest
+     * za mała (docs/api-halas-implementacja-laravel.md §6).
+     */
+    public function test_a_clipped_noise_measurement_is_shown_as_at_least(): void
+    {
+        $user = User::factory()->create();
+        $ride = $this->przejazd($user);
+        $ride->update(['max_noise_db' => 126.4, 'noise_clipped' => 812]);
+
+        $this->actingAs($user)
+            ->get("/rides/{$ride->id}")
+            ->assertOk()
+            ->assertSee('≥ 126,4 dB')
+            ->assertSee('prawdziwy szczyt był głośniejszy', false);
+    }
+
+    /**
+     * Brak pomiaru to nie cisza. Mikrofon doszedł do urządzenia we wrześniu
+     * 2026, a i później może paść — a urządzenie nie pokazuje tej wartości
+     * na własnym ekranie, więc panel jest jedynym miejscem, gdzie awaria
+     * wyjdzie na jaw (§5.1).
+     */
+    public function test_a_ride_without_noise_shows_a_dash_not_zero(): void
+    {
+        $user = User::factory()->create();
+        $ride = $this->przejazd($user);
+
+        $this->actingAs($user)
+            ->get("/rides/{$ride->id}")
+            ->assertOk()
+            ->assertSee('———')
+            ->assertDontSee('0,0 dB');
+    }
+
+    /**
      * Mapa dostaje linie pocięte na odcinki jednej barwy — to jest jedyny
      * powód, dla którego format niesie `lean` przy każdym punkcie.
      */

@@ -37,7 +37,7 @@
                         </h1>
 
                         <p class="mt-7 max-w-xl leading-relaxed text-white/70">
-                            {{ __('Pudełko wielkości pilota, przykręcone do motocykla. Zapisuje, jak nisko położyłeś się w zakręcie, ile wyciągnąłeś z przyspieszenia, jak ostro hamowałeś i ile pokazał licznik na maksa. Bez telefonu, bez aplikacji — startuje razem ze stacyjką.') }}
+                            {{ __('Pudełko wielkości pilota, przykręcone do motocykla. Zapisuje, jak nisko położyłeś się w zakręcie, ile wyciągnąłeś z przyspieszenia, jak ostro hamowałeś, ile pokazał licznik na maksa i jak głośno było przy tym z wydechu. Bez telefonu, bez aplikacji — startuje razem ze stacyjką.') }}
                         </p>
 
                         <div class="mt-9 flex flex-wrap items-center gap-3">
@@ -64,6 +64,7 @@
                                     ['przyspieszenie', 'Przyspieszenie', '0,75 g'],
                                     ['hamowanie', 'Hamowanie', '0,82 g'],
                                     ['predkosc', 'Prędkość maksymalna', '187 km/h'],
+                                    ['halas', 'Hałas', '104,6 dB'],
                                 ]
                                 : [
                                     ['lewo', 'Przechył w lewo', Pomiar::stopnie($ostatniaJazda->lean_left_deg)],
@@ -71,6 +72,7 @@
                                     ['przyspieszenie', 'Przyspieszenie', Pomiar::przeciazenie($ostatniaJazda->accel_g)],
                                     ['hamowanie', 'Hamowanie', Pomiar::przeciazenie($ostatniaJazda->brake_g)],
                                     ['predkosc', 'Prędkość maksymalna', Pomiar::predkosc($ostatniaJazda->speed_kmh)],
+                                    ['halas', 'Hałas', Pomiar::halas($ostatniaJazda->max_noise_db, $ostatniaJazda->noiseIsClipped())],
                                 ];
                         @endphp
 
@@ -119,7 +121,7 @@
                 </div>
 
                 <h2 class="mt-5 max-w-2xl font-display text-4xl font-bold tracking-wide uppercase sm:text-5xl">
-                    {{ __('Pięć liczb, które coś znaczą') }}
+                    {{ __('Sześć liczb, które coś znaczą') }}
                 </h2>
                 <p class="mt-5 max-w-2xl leading-relaxed text-zinc-600 dark:text-zinc-400">
                     {{ __('Czujnik ruchu liczy przechył i przeciążenia setki razy na sekundę. Zapisywane są wartości skrajne — te, które faktycznie pamiętasz po zjeździe z drogi.') }}
@@ -132,6 +134,7 @@
                         ['03', 'przyspieszenie', 'Maksymalne przyspieszenie', 'W jednostkach g, w osi jazdy. Im wyższa liczba, tym mocniejsze wyrwanie.'],
                         ['04', 'hamowanie', 'Maksymalne hamowanie', 'Też w g. Pokazuje, jak blisko granicy przyczepności był przedni hamulec.'],
                         ['05', 'predkosc', 'Prędkość maksymalna', 'Najwyższa prędkość osiągnięta w trakcie przejazdu, w km/h.'],
+                        ['06', 'halas', 'Hałas', 'Najgłośniejszy fragment jazdy w dB(A). Liczy się poziom, który utrzymał się kilka sekund — stuk kasku o bak rekordu nie ustanawia.'],
                     ] as $card)
                         <div class="bg-white p-6 dark:bg-neutral-950">
                             <div class="flex items-center justify-between gap-4">
@@ -144,7 +147,11 @@
                         </div>
                     @endforeach
 
-                    <div class="bg-zinc-100 p-6 dark:bg-neutral-900">
+                    {{-- Sześć kart wypełnia siatkę równo, więc ten kafel — który
+                         nie jest pomiarem, tylko przypisem do nich — bierze cały
+                         ostatni rząd. Bez rozciągnięcia zostawałby sam w rzędzie
+                         jako sierota obok dwóch dziur. --}}
+                    <div class="bg-zinc-100 p-6 sm:col-span-2 lg:col-span-3 dark:bg-neutral-900">
                         <span class="font-mono text-sm font-bold text-zinc-400">&mdash;</span>
                         <h3 class="mt-3 font-display text-xl font-semibold tracking-wide uppercase">{{ __('Dwa zestawy naraz') }}</h3>
                         <p class="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">

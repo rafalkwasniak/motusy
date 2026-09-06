@@ -12,7 +12,14 @@ new #[Title('Panel')] class extends Component {
     /**
      * Rekordy liczone ze wszystkich przejazdów w koncie.
      * `speed_kmh` bywa puste — MAX pomija null, więc brak GPS-a
-     * daje tu null, a nie zero.
+     * daje tu null, a nie zero. Tak samo `max_noise_db`.
+     *
+     * Hałas liczymy **po całym koncie**, dokładnie jak prędkość maksymalną —
+     * decyzja Rafała z 6 września 2026. Szkic wdrożenia
+     * (docs/api-halas-implementacja-laravel.md §5.2) odradza mieszanie serii
+     * pomiarowych o różnym `noise_cal`, bo leżą na przesuniętej skali. Rekord
+     * konta jest tu świadomie liczony ponad tym podziałem: to ta sama wartość
+     * z przejazdu co prędkość i ma się zachowywać tak samo.
      */
     #[Computed]
     public function records(): ?object
@@ -24,8 +31,27 @@ new #[Title('Panel')] class extends Component {
             ->selectRaw('MAX(accel_g) AS accel_g')
             ->selectRaw('MAX(brake_g) AS brake_g')
             ->selectRaw('MAX(speed_kmh) AS speed_kmh')
+            ->selectRaw('MAX(max_noise_db) AS max_noise_db')
+            // Najgłośniejszy z pomiarów **obciętych** przez przetwornik.
+            // Gdy zrówna się z rekordem, znaczy to, że rekord padł na
+            // obciętym pomiarze i prawdziwy szczyt był wyższy — wtedy
+            // kafel pokazuje „≥". Inaczej rekord konta udawałby dokładny.
+            ->selectRaw('MAX(CASE WHEN noise_clipped > 0 THEN max_noise_db END) AS max_noise_db_clipped')
             ->selectRaw('COUNT(*) AS rides_count')
             ->first();
+    }
+
+    /**
+     * Czy rekord hałasu konta padł na pomiarze obciętym przez przetwornik.
+     */
+    #[Computed]
+    public function noiseRecordIsClipped(): bool
+    {
+        $rekord = $this->records->max_noise_db;
+
+        return $rekord !== null
+            && $this->records->max_noise_db_clipped !== null
+            && (float) $this->records->max_noise_db_clipped === (float) $rekord;
     }
 
     /**
@@ -73,6 +99,7 @@ new #[Title('Panel')] class extends Component {
             ['przyspieszenie', 'Przyspieszenie', Pomiar::przeciazenie($this->records->accel_g)],
             ['hamowanie', 'Hamowanie', Pomiar::przeciazenie($this->records->brake_g)],
             ['predkosc', 'Prędkość maksymalna', Pomiar::predkosc($this->records->speed_kmh)],
+            ['halas', 'Hałas', Pomiar::halas($this->records->max_noise_db, $this->noiseRecordIsClipped)],
         ]" />
 
         <flux:text size="sm" class="mt-3">

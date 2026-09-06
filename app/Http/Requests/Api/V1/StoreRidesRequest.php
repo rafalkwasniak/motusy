@@ -26,6 +26,10 @@ class StoreRidesRequest extends FormRequest
 
     private const MAX_SPEED = 9999.9;        // decimal(5,1)
 
+    private const MAX_NOISE_DB = 9999.9;     // decimal(5,1)
+
+    private const MAX_UNSIGNED_SMALLINT = 65535;
+
     private const MAX_UNSIGNED_INT = 4294967295;
 
     public function authorize(): bool
@@ -60,6 +64,19 @@ class StoreRidesRequest extends FormRequest
             'rides.*.lean_right_deg' => ['required', 'numeric', 'between:-'.self::MAX_LEAN.','.self::MAX_LEAN],
             'rides.*.accel_g' => ['required', 'numeric', 'between:-'.self::MAX_G.','.self::MAX_G],
             'rides.*.brake_g' => ['required', 'numeric', 'between:-'.self::MAX_G.','.self::MAX_G],
+
+            // Hałas — `sometimes`, nie `present`, i to jest tu cała rzecz.
+            // Urządzenia z firmware sprzed 6 września 2026 tych pól nie
+            // wysyłają. Gdyby ich brak odbijał przesyłkę kodem 422, takie
+            // pudełko **zakleszczyłoby się w terenie**: ponawiałoby wysyłkę
+            // w kółko, dostawało 422 i nigdy nie oddało przejazdów. Ta sama
+            // klasa błędu, co wymaganie ciągu `seq` od jedynki
+            // (docs/api-halas-implementacja-laravel.md §4).
+            'rides.*.max_noise_db' => ['sometimes', 'nullable', 'numeric', 'between:-'.self::MAX_NOISE_DB.','.self::MAX_NOISE_DB],
+            'rides.*.noise_at_speed_kmh' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:'.self::MAX_UNSIGNED_SMALLINT],
+            'rides.*.noise_clipped' => ['sometimes', 'integer', 'min:0', 'max:'.self::MAX_UNSIGNED_INT],
+            'rides.*.noise_dropped' => ['sometimes', 'integer', 'min:0', 'max:'.self::MAX_UNSIGNED_INT],
+            'rides.*.noise_cal' => ['sometimes', 'integer', 'min:0', 'max:'.self::MAX_UNSIGNED_SMALLINT],
         ];
     }
 

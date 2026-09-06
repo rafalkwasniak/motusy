@@ -367,7 +367,28 @@ new #[Title('Przejazd')] #[Layout('layouts::przejazd')] class extends Component 
         ['przyspieszenie', 'Przyspieszenie', Pomiar::przeciazenie($ride->accel_g)],
         ['hamowanie', 'Hamowanie', Pomiar::przeciazenie($ride->brake_g)],
         ['predkosc', 'Prędkość maksymalna', Pomiar::predkosc($ride->speed_kmh)],
+        ['halas', 'Hałas', Pomiar::halas($ride->max_noise_db, $ride->noiseIsClipped())],
     ]" />
+
+    {{-- Adnotacje do hałasu stoją pod siatką, a nie w kaflu: kafel niesie
+         jedną liczbę, a te trzy zdania mówią, na ile można jej wierzyć
+         (docs/api-halas-implementacja-laravel.md §6). Pojawiają się tylko
+         wtedy, gdy mają co powiedzieć — czysty pomiar zostaje bez komentarza. --}}
+    @if ($ride->hasNoise() && ($ride->noise_at_speed_kmh !== null || $ride->noiseIsClipped() || $ride->noiseIsIncomplete()))
+        <flux:text size="sm" class="mt-3">
+            @if ($ride->noise_at_speed_kmh !== null)
+                {{ __('Rekord hałasu padł przy :v.', ['v' => Pomiar::predkosc((float) $ride->noise_at_speed_kmh)]) }}
+            @endif
+
+            @if ($ride->noiseIsClipped())
+                {{ __('Przetwornik obcinał sygnał, więc prawdziwy szczyt był głośniejszy niż zapisany.') }}
+            @endif
+
+            @if ($ride->noiseIsIncomplete())
+                {{ __('Część próbek przepadła na przerwach w strumieniu, więc pomiar nie obejmuje całego przejazdu.') }}
+            @endif
+        </flux:text>
+    @endif
 
     @if ($ride->track === null)
         <div class="mt-10">

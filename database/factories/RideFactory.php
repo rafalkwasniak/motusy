@@ -30,6 +30,15 @@ class RideFactory extends Factory
             'recorded_at' => null,
             'speed_kmh' => null,
 
+            // Tak samo hałas: mikrofon doszedł do urządzenia we wrześniu 2026,
+            // więc brak pomiaru jest stanem domyślnym. Liczniki jadą zawsze —
+            // to one odróżniają ciszę od awarii.
+            'max_noise_db' => null,
+            'noise_at_speed_kmh' => null,
+            'noise_clipped' => 0,
+            'noise_dropped' => 0,
+            'noise_cal' => 0,
+
             'lean_left_deg' => $this->faker->randomFloat(1, 5, 52),
             'lean_right_deg' => $this->faker->randomFloat(1, 5, 52),
             'accel_g' => $this->faker->randomFloat(2, 0.1, 1.2),
@@ -47,6 +56,19 @@ class RideFactory extends Factory
         return $this->state(fn () => [
             'recorded_at' => now()->subDay()->getTimestamp(),
             'speed_kmh' => $this->faker->randomFloat(1, 40, 220),
+        ]);
+    }
+
+    /**
+     * Wariant z mikrofonem: zmierzony poziom hałasu i prędkość, przy której
+     * padł rekord. Realny zakres to 50–126 dB(A).
+     */
+    public function withNoise(): static
+    {
+        return $this->state(fn () => [
+            'max_noise_db' => $this->faker->randomFloat(1, 70, 118),
+            'noise_at_speed_kmh' => $this->faker->numberBetween(30, 160),
+            'noise_cal' => 1,
         ]);
     }
 }

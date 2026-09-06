@@ -24,6 +24,11 @@ use Illuminate\Support\Carbon;
  * @property float $accel_g
  * @property float $brake_g
  * @property float|null $speed_kmh
+ * @property float|null $max_noise_db
+ * @property int|null $noise_at_speed_kmh
+ * @property int $noise_clipped
+ * @property int $noise_dropped
+ * @property int $noise_cal
  * @property string $fw
  * @property bool $calibrated
  * @property Carbon|null $created_at
@@ -43,6 +48,11 @@ use Illuminate\Support\Carbon;
     'accel_g',
     'brake_g',
     'speed_kmh',
+    'max_noise_db',
+    'noise_at_speed_kmh',
+    'noise_clipped',
+    'noise_dropped',
+    'noise_cal',
     'fw',
     'calibrated',
 ])]
@@ -64,6 +74,11 @@ class Ride extends Model
             'accel_g' => 'float',
             'brake_g' => 'float',
             'speed_kmh' => 'float',
+            'max_noise_db' => 'float',
+            'noise_at_speed_kmh' => 'integer',
+            'noise_clipped' => 'integer',
+            'noise_dropped' => 'integer',
+            'noise_cal' => 'integer',
             'calibrated' => 'boolean',
         ];
     }
@@ -160,6 +175,39 @@ class Ride extends Model
     public function hasSpeed(): bool
     {
         return $this->speed_kmh !== null;
+    }
+
+    /**
+     * Tak samo z hałasem: `null` znaczy „nie mierzono", a nie „było cicho".
+     *
+     * Urządzenie nie pokazuje tej wartości na własnym ekranie, więc panel
+     * jest jedynym miejscem, w którym właściciel dowie się o padniętym
+     * mikrofonie — pod warunkiem, że nie udaje, że wszystko gra
+     * (docs/api-halas-implementacja-laravel.md §5.1).
+     */
+    public function hasNoise(): bool
+    {
+        return $this->max_noise_db !== null;
+    }
+
+    /**
+     * Przetwornik obcinał sygnał, więc zmierzony poziom jest **zaniżony** —
+     * prawdziwy szczyt leżał gdzieś powyżej. Stąd zapis „≥ 108,4 dB"
+     * zamiast „108,4 dB" (§6).
+     */
+    public function noiseIsClipped(): bool
+    {
+        return $this->noise_clipped > 0;
+    }
+
+    /**
+     * Część próbek przepadła na przerwach w strumieniu I²S, więc pomiar
+     * obejmuje tylko kawałek przejazdu — najgłośniejszy moment mógł wypaść
+     * w dziurze (§6).
+     */
+    public function noiseIsIncomplete(): bool
+    {
+        return $this->noise_dropped > 0;
     }
 
     /**

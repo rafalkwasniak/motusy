@@ -82,4 +82,25 @@ final class Pomiar
 
         return number_format($wartosc, 0, ',', ' ').' km/h';
     }
+
+    /**
+     * Hałas w dB(A), jedno miejsce po przecinku.
+     *
+     * `null` to nie cisza, tylko brak pomiaru — mikrofon doszedł do urządzenia
+     * dopiero we wrześniu 2026, a i później może paść. Urządzenie tej wartości
+     * nie pokazuje na własnym ekranie, więc panel jest jedynym miejscem, gdzie
+     * awaria wyjdzie na jaw (docs/api-halas-implementacja-laravel.md §5.1).
+     *
+     * `$zanizony` włącza zapis „≥ 108,4 dB": gdy przetwornik obcinał sygnał,
+     * prawdziwy szczyt leżał gdzieś powyżej i podanie samej liczby byłoby
+     * podaniem wartości, o której wiemy, że jest za mała (§6).
+     */
+    public static function halas(?float $wartosc, bool $zanizony = false): string
+    {
+        if ($wartosc === null) {
+            return self::BRAK;
+        }
+
+        return ($zanizony ? '≥ ' : '').number_format($wartosc, 1, ',', ' ').' dB';
+    }
 }

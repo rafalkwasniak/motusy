@@ -79,6 +79,10 @@ niż odbić.
 | `rides[].speed_kmh` | klucz **musi być**, wartość może być `null` |
 | `rides[].lean_left_deg`, `lean_right_deg` | liczba, −999,9…999,9 |
 | `rides[].accel_g`, `brake_g` | liczba, −99,99…99,99 |
+| `rides[].max_noise_db` | klucz **może nie być**; wartość liczba lub `null`, −9999,9…9999,9 |
+| `rides[].noise_at_speed_kmh` | klucz **może nie być**; wartość całkowita 0…65 535 lub `null` |
+| `rides[].noise_clipped`, `noise_dropped` | klucz **może nie być**; całkowite, 0…4 294 967 295 |
+| `rides[].noise_cal` | klucz **może nie być**; całkowite, 0…65 535 |
 
 Granice liczbowe wynikają z **pojemności kolumn**, nie z fizyki. Pola, których
 nie ma w tabeli, są po cichu pomijane — dołożenie nowego do JSON-a niczego nie
@@ -86,6 +90,15 @@ zepsuje, ale też nic nie zapisze, dopóki serwer o nim nie wie.
 
 `recorded_at` i `speed_kmh` mają **przychodzić zawsze**, choćby jako `null`.
 Pominięcie klucza to 422, wysłanie `null` jest poprawne i znaczy „bez GPS-a".
+
+Pola hałasu zachowują się **odwrotnie**: wolno ich nie wysyłać w ogóle.
+Firmware sprzed 6 września 2026 ich nie zna, a odbijanie takich przesyłek
+zakleszczyłoby te pudełka na dobre. Konsekwencja dla nowszego firmware'u:
+**przesyłka bez pól hałasu nie kasuje pomiaru już zapisanego** na serwerze —
+brak klucza znaczy „nie mam nic do powiedzenia", nie „wyzeruj". Żeby zapisać
+brak pomiaru, wyślij `max_noise_db: null` jawnie.
+
+Serwer nie interpretuje `noise_cal` — przyjmuje go i pokazuje razem z pomiarem.
 
 ### Co znaczy odpowiedź
 
@@ -290,6 +303,8 @@ Piotrkowa. **Jeśli na mapie wychodzi Afryka, `lon` zamieniło się z `lat`.**
 
 - [ ] `device_id` w **adresie śladu** małymi literami — inaczej 404
 - [ ] `recorded_at` i `speed_kmh` wysyłane zawsze, choćby jako `null`
+- [ ] pola hałasu wolno pominąć, ale gdy mikrofon jest — wysyłać je przy **każdej**
+      próbie, także powtórnej; brak klucza nie kasuje pomiaru zapisanego wcześniej
 - [ ] najwyżej 10 przejazdów w jednej przesyłce, od najstarszego
 - [ ] kasowane wyłącznie to, co objęte przez `accepted_through`
 - [ ] dziura w środku przesyłki → przejazdy powyżej niej wysłać jeszcze raz

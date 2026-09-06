@@ -26,6 +26,7 @@
                 <th class="px-4 py-3 text-right font-medium">{{ __('Przysp.') }}</th>
                 <th class="px-4 py-3 text-right font-medium">{{ __('Ham.') }}</th>
                 <th class="px-4 py-3 text-right font-medium">{{ __('Maks.') }}</th>
+                <th class="px-4 py-3 text-right font-medium">{{ __('Hałas') }}</th>
                 @if ($deletable)
                     <th class="px-4 py-3"><span class="sr-only">{{ __('Akcje') }}</span></th>
                 @endif
@@ -87,6 +88,20 @@
                             {{ Pomiar::predkosc($ride->speed_kmh) }}
                         @else
                             <span class="text-zinc-400" title="{{ __('Urządzenie nie zmierzyło prędkości') }}">{{ Pomiar::BRAK }}</span>
+                        @endif
+                    </td>
+
+                    <td class="px-4 py-3 text-right font-mono tabular-nums">
+                        @if ($ride->hasNoise())
+                            {{-- Ostrzeżenia z §6 nie mieszczą się w komórce, więc
+                                 jadą podpowiedzią. Sam zapis „≥" zostaje widoczny
+                                 bez najeżdżania — bo on zmienia znaczenie liczby,
+                                 a nie tylko ją komentuje. --}}
+                            <span title="{{ $ride->noiseIsIncomplete() ? __('Część próbek przepadła — pomiar nie obejmuje całego przejazdu') : '' }}">
+                                {{ Pomiar::halas($ride->max_noise_db, $ride->noiseIsClipped()) }}
+                            </span>
+                        @else
+                            <span class="text-zinc-400" title="{{ __('Urządzenie nie zmierzyło hałasu') }}">{{ Pomiar::BRAK }}</span>
                         @endif
                     </td>
 

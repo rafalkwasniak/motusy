@@ -1,7 +1,7 @@
 @props(['typ', 'rozmiar' => 24])
 
 {{--
-    Piktogramy pięciu mierzonych parametrów i śladu trasy, rysowane w tej samej konwencji
+    Piktogramy sześciu mierzonych parametrów i śladu trasy, rysowane w tej samej konwencji
     co <x-moto-box-drawing>: rysunek techniczny, proste zakończenia, cienka
     linia odniesienia pod grubym obrysem. Gotowe zestawy (Heroicons, Lucide)
     odpadły — nie mają ani kąta przechyłu, ani hamowania, a ich zaokrąglony
@@ -44,6 +44,18 @@
             ['M12 18 L18 12', 2.25, 1],
             ['M12 18 H20.5', 1.25, 0.45],
         ],
+        // Hałas: źródło jako pionowa kreska i trzy łuki rozchodzące się w prawo,
+        // na cienkiej osi propagacji. Głośnik z falami odpadł — jego lejek to
+        // trapez z ukośnymi bokami, czyli jedyny na tej stronie piktogram
+        // rysujący przedmiot, a nie zjawisko. Łuk jest już w konwencji, bo
+        // stoi w ikonie prędkości.
+        'halas' => [
+            ['M2 12 H21', 1.25, 0.45],
+            ['M6 8 V16', 2.25, 1],
+            ['M10.2 7.8 A 6 6 0 0 1 10.2 16.2', 2.25, 1],
+            ['M13.1 4.9 A 10 10 0 0 1 13.1 19.1', 2.25, 1],
+            ['M17.5 4 A 14 14 0 0 1 17.5 20', 2.25, 1],
+        ],
         // Ślad trasy stoi w tabeli przy numerze przejazdu, czyli przy tekście
         // o wysokości 14 px — dlatego bez linii pomocniczej, która przy tym
         // rozmiarze znika w antyaliasingu.
@@ -64,6 +76,7 @@
         'przyspieszenie' => 'Przyspieszenie',
         'hamowanie' => 'Hamowanie',
         'predkosc' => 'Prędkość maksymalna',
+        'halas' => 'Hałas',
         'slad' => 'Ślad trasy',
     ];
 @endphp

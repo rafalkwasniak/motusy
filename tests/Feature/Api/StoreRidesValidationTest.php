@@ -164,6 +164,71 @@ class StoreRidesValidationTest extends TestCase
         }
     }
 
+    /**
+     * Hałas doszedł 6 września 2026 i jest zmianą addytywną: urządzenia
+     * z wcześniejszym firmware tych pól nie wysyłają. Gdyby ich brak odbijał
+     * przesyłkę, takie pudełko zakleszczyłoby się w terenie — ponawiałoby
+     * wysyłkę, dostawało 422 i nigdy nie oddało przejazdów.
+     */
+    public function test_a_payload_without_the_noise_fields_is_still_accepted(): void
+    {
+        $this->assertTrue($this->przechodzi($this->poprawnaPrzesylka()));
+    }
+
+    public function test_the_noise_fields_from_the_document_are_accepted(): void
+    {
+        $przejazd = [
+            ...$this->poprawnaPrzesylka()['rides'][0],
+            'max_noise_db' => 108.4,
+            'noise_at_speed_kmh' => 62,
+            'noise_clipped' => 0,
+            'noise_dropped' => 0,
+            'noise_cal' => 1,
+        ];
+
+        $this->assertTrue($this->przechodzi($this->poprawnaPrzesylka(['rides' => [$przejazd]])));
+    }
+
+    /**
+     * Mikrofon może paść niezależnie od GPS-a, więc `null` w obu polach
+     * pomiaru jest stanem poprawnym — i nie wolno go mylić z ciszą.
+     */
+    public function test_a_missing_noise_measurement_is_valid(): void
+    {
+        $przejazd = [
+            ...$this->poprawnaPrzesylka()['rides'][0],
+            'max_noise_db' => null,
+            'noise_at_speed_kmh' => null,
+            'noise_clipped' => 0,
+            'noise_dropped' => 4,
+            'noise_cal' => 1,
+        ];
+
+        $this->assertTrue($this->przechodzi($this->poprawnaPrzesylka(['rides' => [$przejazd]])));
+    }
+
+    /**
+     * Ta sama zasada, co wyżej: granicą jest pojemność kolumny, nie fizyka.
+     */
+    public function test_noise_values_too_large_for_their_column_are_rejected(): void
+    {
+        $zaDuze = [
+            'max_noise_db' => 10000.0,        // decimal(5,1)
+            'noise_at_speed_kmh' => 65536,    // unsigned smallint
+            'noise_cal' => 65536,             // unsigned smallint
+            'noise_clipped' => 4294967296,    // unsigned int
+        ];
+
+        foreach ($zaDuze as $pole => $wartosc) {
+            $przejazd = [...$this->poprawnaPrzesylka()['rides'][0], $pole => $wartosc];
+
+            $this->assertFalse(
+                $this->przechodzi($this->poprawnaPrzesylka(['rides' => [$przejazd]])),
+                "wartość [{$wartosc}] w polu [{$pole}] nie mieści się w kolumnie",
+            );
+        }
+    }
+
     public function test_the_sequence_number_starts_at_one(): void
     {
         foreach ([0, -1] as $seq) {
